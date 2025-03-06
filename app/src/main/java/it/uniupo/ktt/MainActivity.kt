@@ -11,37 +11,41 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
+import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.theme.KTTTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        FirebaseApp.initializeApp(this)
+
+        val user = FirebaseAuth.getInstance().currentUser
+
         setContent {
+            val navController = rememberNavController()
+
             KTTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LandingScreen(
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (user == null) "landing" else "home",
                         modifier = Modifier.padding(innerPadding)
-                    )
+                    ) {
+                        composable("landing") { LandingScreen(navController) }
+                        composable("register") { RegisterScreen(navController) }
+                        composable("home") { HomeScreen(navController) }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    KTTTheme {
-        Greeting("Android")
     }
 }
