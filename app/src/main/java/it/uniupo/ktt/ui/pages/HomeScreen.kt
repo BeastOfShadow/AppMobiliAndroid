@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -19,9 +20,10 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    if(FirebaseAuth.getInstance().currentUser == null) {
-        navController.navigate("home") {
-            popUpTo(0) { inclusive = true }
+    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
+        navController.navigate("landing") {
+            popUpTo("home") { inclusive = true }
+            launchSingleTop = true
         }
     }
 
@@ -42,6 +44,7 @@ fun HomeScreen(navController: NavController) {
                 FirebaseAuth.getInstance().signOut()
                 navController.navigate("landing") {
                     popUpTo("home") { inclusive = true }
+                    launchSingleTop = true
                 }
             },
             modifier = Modifier

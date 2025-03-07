@@ -55,6 +55,7 @@ fun RegisterScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser != null) {
         navController.navigate("home") {
             popUpTo("landing") { inclusive = true }
+            launchSingleTop = true
         }
     }
 
@@ -213,6 +214,7 @@ fun RegisterScreen(navController: NavController) {
                                 if (task.isSuccessful) {
                                     navController.navigate("home") {
                                         popUpTo("landing") { inclusive = true }
+                                        launchSingleTop = true
                                     }
                                 } else {
                                     message = task.exception?.message ?: "Unknown error occurred"

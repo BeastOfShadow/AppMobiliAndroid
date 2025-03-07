@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -26,16 +30,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        FirebaseApp.initializeApp(this)
 
         setContent {
+            FirebaseApp.initializeApp(this)
             val navController = rememberNavController()
+            var startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "landing" else "home") }
 
             KTTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = if (FirebaseAuth.getInstance().currentUser == null) "landing" else "home",
+                        startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("landing") { LandingScreen(navController) }
