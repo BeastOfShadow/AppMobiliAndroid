@@ -56,8 +56,7 @@ fun LandingScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.background).padding(top = 100.dp)
     ) {
         Column(
             modifier = Modifier
@@ -108,7 +107,7 @@ fun LandingScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))*/
                 Text(
-                    text = "Continue with Google",
+                    text = "Login with Google",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )

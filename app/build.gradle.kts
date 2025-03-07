@@ -41,6 +41,15 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.credentials.play.services.auth.vlatestversion)
+    implementation (libs.credentials)
+    implementation (libs.googleid.vlatestversion)
+
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation(libs.google.firebase.auth)
+
+    // Also add the dependencies for the Credential Manager libraries and specify their versions
     implementation(libs.androidx.material.icons.extended)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
