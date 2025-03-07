@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.credentials.CredentialManager
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,8 +53,8 @@ import com.google.firebase.auth.oAuthCredential
 @Composable
 fun RegisterScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser != null) {
-        navController.navigate("home"){
-            popUpTo("landing"){inclusive = true}
+        navController.navigate("home") {
+            popUpTo("landing") { inclusive = true }
         }
     }
 
@@ -64,12 +65,15 @@ fun RegisterScreen(navController: NavController) {
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
 
-    
+    var message by remember { mutableStateOf("") }
+
+    val auth = FirebaseAuth.getInstance()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background).padding(top = 100.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(top = 100.dp)
     ) {
         Column(
             modifier = Modifier
@@ -90,9 +94,9 @@ fun RegisterScreen(navController: NavController) {
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f) // Color secondary
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
-            // Button
+            /* Button
             Button(
                 onClick = { /* Aggiungi azione sign up con Google */ },
                 shape = RoundedCornerShape(5.dp),
@@ -128,7 +132,7 @@ fun RegisterScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
-
+            */
             // Email Input
             OutlinedTextField(
                 value = email,
@@ -194,17 +198,38 @@ fun RegisterScreen(navController: NavController) {
 
             // Button
             Button(
-                onClick = { /* Aggiungi azione login */ },
+                onClick = {
+                    if (email.isEmpty() || email.isBlank()) {
+                        message = "Email is required.\n"
+                    } else if (password.isEmpty() || password.isBlank()) {
+                        message = "Password is required.\n"
+                    } else if (confirmPassword.isEmpty() || confirmPassword.isBlank()) {
+                        message = "Confirm password is required.\n"
+                    } else if (password != confirmPassword) {
+                        message = "Passwords do not match.\n"
+                    } else {
+                        auth.createUserWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    navController.navigate("home") {
+                                        popUpTo("landing") { inclusive = true }
+                                    }
+                                } else {
+                                    message = task.exception?.message ?: "Unknown error occurred"
+                                }
+                            }
+                    }
+                },
                 shape = RoundedCornerShape(5.dp),
-                elevation = ButtonDefaults.buttonElevation( // Aggiunge ombra
-                    defaultElevation = 5.dp, // Ombra normale
-                    pressedElevation = 2.dp, // Ombra più bassa quando premuto
-                    hoveredElevation = 8.dp, // Ombra più alta quando il mouse passa sopra
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 5.dp,
+                    pressedElevation = 2.dp,
+                    hoveredElevation = 8.dp,
                     focusedElevation = 8.dp
                 ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // Usa il colore primario
-                    contentColor = MaterialTheme.colorScheme.onPrimary // Testo in contrasto
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,12 +250,16 @@ fun RegisterScreen(navController: NavController) {
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.clickable { navController.navigate("landing") }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (message.isNotEmpty()) Text(text = message, color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
 @Preview
 @Composable
-fun RegisterScreenPreview(){
+fun RegisterScreenPreview() {
     RegisterScreen(navController = NavController(context = LocalContext.current))
 }

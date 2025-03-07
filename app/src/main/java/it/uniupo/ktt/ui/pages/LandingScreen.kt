@@ -43,20 +43,23 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun LandingScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser != null) {
-        navController.navigate("home"){
-            popUpTo("landing"){inclusive = true}
+        navController.navigate("home") {
+            popUpTo("landing") { inclusive = true }
         }
     }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    var message by remember { mutableStateOf("") }
+
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background).padding(top = 100.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(top = 100.dp)
     ) {
         Column(
             modifier = Modifier
@@ -78,9 +81,9 @@ fun LandingScreen(navController: NavController) {
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f) // Color secondary
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
-            // Button
+            /* Button
             Button(
                 onClick = { /* Aggiungi azione login con Google */ },
                 shape = RoundedCornerShape(5.dp),
@@ -116,6 +119,7 @@ fun LandingScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(16.dp))
+            */
 
             // Email Input
             OutlinedTextField(
@@ -158,7 +162,25 @@ fun LandingScreen(navController: NavController) {
 
             // Button
             Button(
-                onClick = { /* Aggiungi azione login */ },
+                onClick = {
+                    if (email.isEmpty() || email.isBlank()) {
+                        message = "Email is required.\n"
+                    } else if (password.isEmpty() || password.isBlank()) {
+                        message = "Password is required.\n"
+                    } else {
+                        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    navController.navigate("home") {
+                                        popUpTo("landing") { inclusive = true }
+                                    }
+                                } else {
+                                    message = task.exception?.message ?: "Unknown error occurred"
+                                }
+                            }
+                    }
+
+                },
                 shape = RoundedCornerShape(5.dp),
                 elevation = ButtonDefaults.buttonElevation( // Aggiunge ombra
                     defaultElevation = 5.dp, // Ombra normale
@@ -189,12 +211,16 @@ fun LandingScreen(navController: NavController) {
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.clickable { navController.navigate("register") }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (message.isNotEmpty()) Text(text = message, color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
 @Preview
 @Composable
-fun LandingScreenPreview(){
+fun LandingScreenPreview() {
     LandingScreen(navController = NavController(context = LocalContext.current))
 }

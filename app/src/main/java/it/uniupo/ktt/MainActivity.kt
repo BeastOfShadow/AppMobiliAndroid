@@ -28,8 +28,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         FirebaseApp.initializeApp(this)
 
-        val user = FirebaseAuth.getInstance().currentUser
-
         setContent {
             val navController = rememberNavController()
 
@@ -37,7 +35,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = if (user == null) "landing" else "home",
+                        startDestination = if (FirebaseAuth.getInstance().currentUser == null) "landing" else "home",
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("landing") { LandingScreen(navController) }
