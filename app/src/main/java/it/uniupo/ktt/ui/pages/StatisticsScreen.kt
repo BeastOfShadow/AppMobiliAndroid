@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.PageTitle
 
 @Composable
 fun StatisticsScreen(navController: NavController) {
@@ -48,47 +49,10 @@ fun StatisticsScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                FilledIconButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.size(34.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowBackIosNew,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp)
-                        .padding(end = 34.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        .padding(vertical = 8.dp),
-                ) {
-                    Text(
-                        text = "Statistics",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
+            PageTitle(
+                navController = navController,
+                title = "Statistics",
+            )
         }
     }
 }

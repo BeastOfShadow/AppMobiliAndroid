@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.PageTitle
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -73,47 +76,10 @@ fun NewTaskScreen(navController: NavController) {
             .padding(20.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FilledIconButton(
-                onClick = {
-                    navController.popBackStack()
-                },
-                modifier = Modifier.size(34.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.ArrowBackIosNew,
-                    contentDescription = "Back",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-                    .padding(end = 34.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = MaterialTheme.shapes.medium
-                    )
-                    .padding(vertical = 8.dp),
-            ) {
-                Text(
-                    text = "New Task",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
+        PageTitle(
+            navController = navController,
+            title = "New Task"
+        )
 
         Spacer(modifier = Modifier.size(30.dp))
 
@@ -255,7 +221,7 @@ fun NewTaskScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Row(
+            /*Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -284,7 +250,7 @@ fun NewTaskScreen(navController: NavController) {
                     }
                 }
                 Spacer(modifier = Modifier.weight(1f))
-            }
+            }*/
         }
     }
 }

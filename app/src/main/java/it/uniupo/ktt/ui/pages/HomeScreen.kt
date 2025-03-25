@@ -37,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
@@ -46,6 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.MenuLabel
+import it.uniupo.ktt.ui.theme.primary
+import it.uniupo.ktt.ui.theme.subtitleColor
+import it.uniupo.ktt.ui.theme.titleColor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -92,37 +99,20 @@ fun HomeScreen(navController: NavController) {
                        modifier = Modifier.size(18.dp)
                    )
                }
-
-               Box(
-                   modifier = Modifier
-                       .weight(1f)
-                       .padding(horizontal = 16.dp)
-                       .padding(end = 34.dp)
-                       .background(
-                           color = MaterialTheme.colorScheme.primaryContainer,
-                           shape = MaterialTheme.shapes.medium
-                       )
-                       .padding(vertical = 8.dp),
-               ) {
-                   Text(
-                       text = "Home",
-                       fontWeight = FontWeight.SemiBold,
-                       fontSize = 20.sp,
-                       color = MaterialTheme.colorScheme.onPrimaryContainer,
-                       modifier = Modifier.align(Alignment.Center)
-                   )
-               }
            }
 
-           Spacer(modifier = Modifier.height(50.dp))
+           Spacer(modifier = Modifier.height(80.dp))
 
            Box(
                modifier = Modifier
                    .size(110.dp)
-                   .background(
-                       MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                   .graphicsLayer {
+                       shadowElevation = 4.dp.toPx() // Altezza dell'ombra
                        shape = CircleShape
-                   )
+                       clip = false
+                       alpha = 1f
+                   }
+                   .background(primary, CircleShape)
                    .padding(16.dp)
                    .align(Alignment.CenterHorizontally),
                contentAlignment = Alignment.Center
@@ -142,7 +132,7 @@ fun HomeScreen(navController: NavController) {
                text = "Franca Bruni",
                fontWeight = FontWeight.SemiBold,
                fontSize = 20.sp,
-               color = MaterialTheme.colorScheme.primary,
+               color = titleColor,
                modifier = Modifier.align(Alignment.CenterHorizontally)
            )
 
@@ -151,7 +141,7 @@ fun HomeScreen(navController: NavController) {
                text = "Status",
                fontWeight = FontWeight.ExtraLight,
                fontSize = 16.sp,
-               color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), // Color secondary
+               color = subtitleColor, // Color secondary
                modifier = Modifier.align(Alignment.CenterHorizontally)
            )
 
@@ -161,203 +151,39 @@ fun HomeScreen(navController: NavController) {
                text = "Main menu",
                fontWeight = FontWeight.Normal,
                fontSize = 16.sp,
-               color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+               color = subtitleColor
            )
 
-           Box(
-               modifier = Modifier
-                   .fillMaxWidth()
-                   .padding(top = 10.dp)
-                   .clickable {navController.navigate("task manager")}
-           ) {
-               Box(
-                   modifier = Modifier
-                       .background(
-                           color = MaterialTheme.colorScheme.primaryContainer,
-                           shape = MaterialTheme.shapes.medium
-                       )
-                       .fillMaxWidth()
-                       .padding(top = 10.dp, bottom = 10.dp, start = 10.dp)
-               ) {
-                   Row(
-                       modifier = Modifier.fillMaxWidth()
-                   ) {
-                       Box(
-                           modifier = Modifier
-                               .size(52.dp)
-                               .background(
-                                   MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
-                                   shape = CircleShape
-                               )
-                               .padding(8.dp),
-                           contentAlignment = Alignment.Center
-                       ) {
-                           Icon(
-                               imageVector = Icons.Outlined.BorderColor,
-                               contentDescription = "Profile Icon",
-                               modifier = Modifier.size(80.dp),
-                               tint = MaterialTheme.colorScheme.primary
-                           )
-                       }
-                       Column (
-                           modifier = Modifier.padding(start = 10.dp)
-                               .weight(1f)
-                               .align(Alignment.CenterVertically)
-                       ) {
-                           Text(
-                               text = "Task Manager",
-                               fontWeight = FontWeight.SemiBold,
-                               fontSize = 20.sp,
-                               color = MaterialTheme.colorScheme.primary
-                           )
+            MenuLabel(
+                navController = navController,
+                navPage = "task manager",
+                title = "Task Manager",
+                description = "Create, update, delete tasks and subtasks",
+                icon = Icons.Outlined.BorderColor,
+                iconDescription = "Profile Icon"
+            )
 
-                           Text(
-                               text = "Create, update, delete tasks and subtasks",
-                               fontWeight = FontWeight.Light,
-                               fontSize = 12.sp,
-                               color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                           )
-                       }
-                       Icon(
-                           imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
-                           contentDescription = "Back",
-                           modifier = Modifier.size(30.dp)
-                               .align(Alignment.CenterVertically)
-                               .padding(end = 10.dp)
-                       )
-                   }
-               }
-           }
+            Spacer(modifier = Modifier.height(10.dp))
 
-           Box(
-               modifier = Modifier
-                   .fillMaxWidth()
-                   .padding(top = 10.dp)
-                   .clickable {navController.navigate("chat")}
-           ) {
-               Box(
-                   modifier = Modifier
-                       .background(
-                           color = MaterialTheme.colorScheme.primaryContainer,
-                           shape = MaterialTheme.shapes.medium
-                       )
-                       .fillMaxWidth()
-                       .padding(top = 10.dp, bottom = 10.dp, start = 10.dp)
-               ) {
-                   Row(
-                       modifier = Modifier.fillMaxWidth()
-                   ) {
-                       Box(
-                           modifier = Modifier
-                               .size(52.dp)
-                               .background(
-                                   MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
-                                   shape = CircleShape
-                               )
-                               .padding(8.dp),
-                           contentAlignment = Alignment.Center
-                       ) {
-                           Icon(
-                               imageVector = Icons.AutoMirrored.Outlined.Chat,
-                               contentDescription = "Profile Icon",
-                               modifier = Modifier.size(80.dp),
-                               tint = MaterialTheme.colorScheme.primary
-                           )
-                       }
-                       Column (
-                           modifier = Modifier.padding(start = 10.dp)
-                               .weight(1f)
-                               .align(Alignment.CenterVertically)
-                       ) {
-                           Text(
-                               text = "Chat",
-                               fontWeight = FontWeight.SemiBold,
-                               fontSize = 20.sp,
-                               color = MaterialTheme.colorScheme.primary
-                           )
+            MenuLabel(
+                navController = navController,
+                navPage = "chat",
+                title = "Chat",
+                description = "Direct messages to your employees",
+                icon = Icons.AutoMirrored.Outlined.Chat,
+                iconDescription = "Chat Icon"
+            )
 
-                           Text(
-                               text = "Direct messages to your employees",
-                               fontWeight = FontWeight.Light,
-                               fontSize = 12.sp,
-                               color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                           )
-                       }
-                       Icon(
-                           imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
-                           contentDescription = "Back",
-                           modifier = Modifier.size(30.dp)
-                               .align(Alignment.CenterVertically)
-                               .padding(end = 10.dp)
-                       )
-                   }
-               }
-           }
+            Spacer(modifier = Modifier.height(10.dp))
 
-           Box(
-               modifier = Modifier
-                   .fillMaxWidth()
-                   .padding(top = 10.dp)
-                   .clickable {navController.navigate("statistics")}
-           ) {
-               Box(
-                   modifier = Modifier
-                       .background(
-                           color = MaterialTheme.colorScheme.primaryContainer,
-                           shape = MaterialTheme.shapes.medium
-                       )
-                       .fillMaxWidth()
-                       .padding(top = 10.dp, bottom = 10.dp, start = 10.dp)
-               ) {
-                   Row(
-                       modifier = Modifier.fillMaxWidth()
-                   ) {
-                       Box(
-                           modifier = Modifier
-                               .size(52.dp)
-                               .background(
-                                   MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
-                                   shape = CircleShape
-                               )
-                               .padding(8.dp),
-                           contentAlignment = Alignment.Center
-                       ) {
-                           Icon(
-                               imageVector = Icons.AutoMirrored.Outlined.ShowChart,
-                               contentDescription = "Profile Icon",
-                               modifier = Modifier.size(80.dp),
-                               tint = MaterialTheme.colorScheme.primary
-                           )
-                       }
-                       Column (
-                           modifier = Modifier.padding(start = 10.dp)
-                               .weight(1f)
-                               .align(Alignment.CenterVertically)
-                       ) {
-                           Text(
-                               text = "Statistics",
-                               fontWeight = FontWeight.SemiBold,
-                               fontSize = 20.sp,
-                               color = MaterialTheme.colorScheme.primary
-                           )
-
-                           Text(
-                               text = "Check the work done by each employee",
-                               fontWeight = FontWeight.Light,
-                               fontSize = 12.sp,
-                               color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                           )
-                       }
-                       Icon(
-                           imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
-                           contentDescription = "Back",
-                           modifier = Modifier.size(30.dp)
-                               .align(Alignment.CenterVertically)
-                               .padding(end = 10.dp)
-                       )
-                   }
-               }
-           }
+           MenuLabel(
+               navController = navController,
+               navPage = "statistics",
+               title = "Statistics",
+               description = "Check the work done by each employee",
+               icon = Icons.AutoMirrored.Outlined.ShowChart,
+               iconDescription = "Statistics Icon"
+           )
 
            /*Button(
            onClick = {

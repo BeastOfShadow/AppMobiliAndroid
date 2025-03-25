@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.theme.buttonTextColor
+import it.uniupo.ktt.ui.theme.primary
+import it.uniupo.ktt.ui.theme.tertiary
 
 @Composable
 fun TaskManagerScreen(navController: NavController) {
@@ -55,57 +60,57 @@ fun TaskManagerScreen(navController: NavController) {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()) // Scroll solo per il contenuto
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                FilledIconButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.size(34.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ArrowBackIosNew,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+            PageTitle(
+                navController = navController,
+                title = "Task Manager"
+            )
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp)
-                        .padding(end = 34.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = MaterialTheme.shapes.medium
-                        )
-                        .padding(vertical = 8.dp),
-                ) {
-                    Text(
-                        text = "Task Manager",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.size(20.dp))
+
+            Text(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                text = "Ready",
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.size(20.dp))
+
+            Text(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                text = "Ongoing",
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.size(20.dp))
+
+            Text(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                text = "Completed",
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
+
 
         SmallFloatingActionButton(
             onClick = { navController.navigate("new task") },
             shape = CircleShape,
             modifier = Modifier
                 .align(Alignment.BottomEnd) // Posiziona in basso a destra
-                .padding(16.dp)
+                .padding(16.dp),
+            containerColor = tertiary
         ) {
-            Icon(Icons.Filled.Add, "Large floating action button")
+            Icon(
+                Icons.Filled.Add,
+                "Large floating action button",
+                tint = buttonTextColor
+            )
+
         }
     }
 }
