@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.outlined.PhoneMissed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,12 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import it.uniupo.ktt.ui.theme.lighterSubtitle
 import it.uniupo.ktt.ui.theme.lighterTitle
 import it.uniupo.ktt.ui.theme.primary
@@ -103,4 +105,19 @@ fun MenuLabel(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MenuLabel() {
+    val navController = rememberNavController()
+
+    MenuLabel(
+        navController = navController,
+        navPage = "Titolo di prova",
+        title = "Titolo di prova",
+        description = "Titolo di prova",
+        icon = Icons.AutoMirrored.Outlined.PhoneMissed,
+        iconDescription = "Titolo di prova"
+    )
 }
