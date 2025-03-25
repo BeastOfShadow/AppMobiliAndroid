@@ -130,8 +130,8 @@ fun HomeScreen(navController: NavController) {
            // Title
            Text(
                text = "Franca Bruni",
-               fontWeight = FontWeight.SemiBold,
-               fontSize = 20.sp,
+               style = MaterialTheme.typography, // This will use Poppins
+
                color = titleColor,
                modifier = Modifier.align(Alignment.CenterHorizontally)
            )
@@ -178,7 +178,7 @@ fun HomeScreen(navController: NavController) {
 
            MenuLabel(
                navController = navController,
-               navPage = "statistics",
+               navPage = "CareGiver Statistic",
                title = "Statistics",
                description = "Check the work done by each employee",
                icon = Icons.AutoMirrored.Outlined.ShowChart,
