@@ -47,7 +47,7 @@ fun PageTitle(
         ) {
             FilledIconButton(
                 onClick = {
-                    navController.popBackStack()
+                    navController.popBackStack() //return
                 },
                 modifier = Modifier.size(34.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(

@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.pages.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.ChatScreen
 import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
@@ -53,6 +54,9 @@ class MainActivity : ComponentActivity() {
                         composable("chat") { ChatScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
                         composable("new chat") { NewChatScreen(navController) }
+
+                        //new ROUTE
+                        composable("CareGiver Statistic") { CG_StatisticPage(navController) }
                     }
                 }
             }
