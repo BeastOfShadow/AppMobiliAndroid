@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,9 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.AvgComplationBar
 import it.uniupo.ktt.ui.components.DailyTasksBubbleChart
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.theme.titleColor
+
 
 @Composable
 fun CG_StatisticPage(navController: NavController) {
@@ -57,7 +60,7 @@ fun CG_StatisticPage(navController: NavController) {
                 style = MaterialTheme.typography.bodyLarge, //Poppins
 
                 fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight(500),
 
 
                 color = titleColor,
@@ -69,8 +72,8 @@ fun CG_StatisticPage(navController: NavController) {
                     .fillMaxSize()
             ) {
                 // esempi valori:
-                val completedTasks = 10
-                val ongoingTasks = 20
+                val completedTasks = 26
+                val ongoingTasks = 26
                 val readyTasks = 26
 
                 //riferimenti traformazioni Dimensioni Cerchi
@@ -81,8 +84,8 @@ fun CG_StatisticPage(navController: NavController) {
                 val maxDimBubble = 80f
 
 
-
-                DailyTasksBubbleChart( //COMPONENT: implementa logica
+                //BubbleChart COMPONENT
+                DailyTasksBubbleChart(
                     completed = when {
                         completedTasks < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
                         completedTasks > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
@@ -102,6 +105,39 @@ fun CG_StatisticPage(navController: NavController) {
                     onGoingNumb = ongoingTasks,
                     readyNumb = readyTasks
                 )
+
+                Text(
+                    text = "Average Completion Time",
+                    style = MaterialTheme.typography.bodyLarge, //Poppins
+
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight(500),
+
+
+                    color = titleColor,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(
+                    modifier = Modifier.height(32.dp)
+                )
+
+
+
+
+
+                // esempi valori:
+                val completionTimeToday = 16.41
+                val completionTimeGeneral = 26.55
+                val ratioTime = completionTimeToday/completionTimeGeneral
+
+                AvgComplationBar(
+                    todayTime = completionTimeToday.toFloat(),
+                    generalTime = completionTimeGeneral.toFloat(),
+                    ratio = ratioTime.toFloat()
+                )
+
+
+
             }
 
 

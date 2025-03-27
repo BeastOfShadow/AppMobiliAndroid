@@ -1,13 +1,17 @@
 package it.uniupo.ktt.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -15,10 +19,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.text.drawText
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalDensity
 
 
 @Composable
@@ -33,9 +43,78 @@ fun DailyTasksBubbleChart(
     //val maxValue = maxOf(completed, ongoing, ready)
     val scale = 2.5f // fattore moltiplicativo per dimensionare bene i cerchi
 
-    val completedRadius = completed * scale
-    val ongoingRadius = ongoing * scale
-    val readyRadius = ready * scale
+    //Valori finali NUMBER
+    val density = LocalDensity.current
+    val finalTextSizePx = with(density) { 33.sp.toPx() } //dimensione numeri finale
+
+
+                                        //ANIMAZIONI
+
+    //Stato BubbleCharts
+    var animateStart by remember { mutableStateOf(false) }
+    //Stato Numbers
+    var animateTextStart by remember { mutableStateOf(false) }
+
+    //Avvia Animazioni all'ingresso nella page
+    LaunchedEffect(Unit) {
+        animateStart = true                     //Avvia BubbleCharts
+        kotlinx.coroutines.delay(500)  // Delay
+        animateTextStart = true                 //Avvia Numers
+    }
+
+    //NUMBER ANIMATION (zoom + spring)
+    val animatedTextSizeCompleted by animateFloatAsState(
+        targetValue = if (animateTextStart) finalTextSizePx else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "textSizeCompleted"
+    )
+
+    val animatedTextSizeOngoing by animateFloatAsState(
+        targetValue = if (animateTextStart) finalTextSizePx else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "textSizeOngoing"
+    )
+
+    val animatedTextSizeReady by animateFloatAsState(
+        targetValue = if (animateTextStart) finalTextSizePx else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "textSizeReady"
+    )
+
+
+    //BUBBLE ANIMATION (da "0" a "DIM finale passata")
+    val animatedCompletedRadius by animateFloatAsState(
+        targetValue = if (animateStart) completed * scale else 0f,
+        animationSpec = tween(durationMillis = 700, delayMillis = 0),
+        label = "completedRadius"
+    )
+
+    val animatedOngoingRadius by animateFloatAsState(
+        targetValue = if (animateStart) ongoing * scale else 0f,
+        animationSpec = tween(durationMillis = 700, delayMillis = 150),
+        label = "ongoingRadius"
+    )
+
+    val animatedReadyRadius by animateFloatAsState(
+        targetValue = if (animateStart) ready * scale else 0f,
+        animationSpec = tween(durationMillis = 700, delayMillis = 300),
+        label = "readyRadius"
+    )
+
+
+
+
+
+
 
     Box(
         modifier = Modifier
@@ -43,103 +122,106 @@ fun DailyTasksBubbleChart(
             .height(350.dp),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()
+        Canvas(modifier = Modifier
+            .fillMaxSize()
             .aspectRatio(1f) //mantieni 1:1 anche dopo l'inserimento nella column
         ) {
             val center = Offset(size.width / 2, size.height / 2)
+            
 
-
-
-
-                                    // Completed Tasks
+                                    // COMPLETED TASKS
             // Completed Tasks Circle
             drawCircle(
                 color = Color(0xFF6326A9),
-                radius = completedRadius,
-                center = center + Offset(8f+20f, -56f-40f)
+                radius = animatedCompletedRadius,
+                center = center + Offset(8f, -186f)
             )
-
-
-                                        // Ready Tasks
-            // Ready Tasks Circle
-            drawCircle(
-                color = Color(0xFFF5DFFA),
-                radius = readyRadius,
-                center = center + Offset(37f+100f, 41f+180f)
-            )
-            // + border Circle
-            drawCircle(
-                color = Color(0xFF6326A9).copy(alpha = 0.2f),
-                radius = readyRadius,
-                center = center + Offset(37f+100f, 41f+180f),
-                style = Stroke( // Set the style to Stroke to create a border
-                    width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
-                )
-
-            )
-
-
-                                        // OnGoing Tasks
-            // Ongoing Tasks Circle
-            drawCircle(
-                color = Color(0xFFA47BD4),
-                radius = ongoingRadius,
-                center = center + Offset(-39f-60f, 12f+100f)
-
-            )
-            // + border Circle
-            drawCircle(
-                color = Color(0xFF6326A9).copy(alpha = 0.2f),
-                radius = ongoingRadius,
-                center = center + Offset(-39f-60f, 12f+100f),
-                style = Stroke( // Set the style to Stroke to create a border
-                    width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
-                )
-            )
-
-
-            //Scrivi il numero dei Tasks al centro dei Cerchi
+            // Completed Task Number
             drawIntoCanvas { canvas ->
                 val completedPaint = android.graphics.Paint().apply {
                     textAlign = android.graphics.Paint.Align.CENTER
-                    textSize = 33.sp.toPx() // Adjust the text size as needed
+                    textSize = animatedTextSizeCompleted // Adjust the text size as needed
                     color = android.graphics.Color.WHITE // Text color
                 }
-                val ongoingPaint = android.graphics.Paint().apply {
-                    textAlign = android.graphics.Paint.Align.CENTER
-                    textSize = 33.sp.toPx() // Adjust the text size as needed
-                    color = android.graphics.Color.BLACK // Text color
-                }
-                val readyPaint = android.graphics.Paint().apply {
-                    textAlign = android.graphics.Paint.Align.CENTER
-                    textSize = 33.sp.toPx() // Adjust the text size as needed
-                    color = android.graphics.Color.WHITE // Text color
-                }
-
                 // completedNumb
                 canvas.nativeCanvas.drawText(
                     "$completedNumb",
-                    (center.x + 8f + 20f),
-                    (center.y - 56f - 8f),
+                    (center.x + 8f),
+                    (center.y - 154f),
                     completedPaint
                 )
 
+            }
+
+
+                                        // READY TASKS
+            // Ready Tasks Circle
+            drawCircle(
+                color = Color(0xFFF5DFFA),
+                radius = animatedReadyRadius,
+                center = center + Offset(117f, 131f)
+            )
+            // + border Circle
+            drawCircle(
+                color = Color(0xFF6326A9).copy(alpha = 0.2f),
+                radius = animatedReadyRadius,
+                center = center + Offset(117f, 131f),
+                style = Stroke( // Set the style to Stroke to create a border
+                    width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
+                )
+
+            )
+            // Ready Task Number
+            drawIntoCanvas { canvas ->
+                val readyPaint = android.graphics.Paint().apply {
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    textSize = animatedTextSizeReady // Adjust the text size as needed
+                    color = Color(0xFF6326A9).toArgb() // Text color
+                }
                 // readyNumb
                 canvas.nativeCanvas.drawText(
                     "$readyNumb",
-                    (center.x + 37f + 99f) ,
-                    (center.y + 41f + 212f),
+                    (center.x + 116f),
+                    (center.y + 163f),
                     readyPaint
                 )
+            }
 
+
+
+                                        // ONGOING TASK
+            // Ongoing Tasks Circle
+            drawCircle(
+                color = Color(0xFFA47BD4),
+                radius = animatedOngoingRadius,
+                center = center + Offset(-119f, 22f)
+
+            )
+            // + border Circle
+            drawCircle(
+                color = Color(0xFF6326A9).copy(alpha = 0.2f),
+                radius = animatedOngoingRadius,
+                center = center + Offset(-119f, 22f),
+                style = Stroke( // Set the style to Stroke to create a border
+                    width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
+                )
+            )
+            // Ongoing Task Number
+            drawIntoCanvas { canvas ->
+                val ongoingPaint = android.graphics.Paint().apply {
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    textSize = animatedTextSizeOngoing // Adjust the text size as needed
+                    color = Color(0xFFF5DFFA).toArgb() /* Text color */
+                }
                 // onGoingNumb
                 canvas.nativeCanvas.drawText(
                     "$onGoingNumb",
-                    (center.x - 39f - 60f),
-                    (center.y + 12f + 132f),
+                    (center.x - 119f),
+                    (center.y + 54f),
                     ongoingPaint
                 )
             }
+
         }
     }
 }
@@ -148,5 +230,5 @@ fun DailyTasksBubbleChart(
 @Preview(showBackground = true)
 @Composable
 fun DailyTasksBubbleChartPreview() {
-    DailyTasksBubbleChart(15f, 15f, 15f, 0, 0 ,0)
+    DailyTasksBubbleChart(80f, 80f, 80f, 200, 200 ,200)
 }
