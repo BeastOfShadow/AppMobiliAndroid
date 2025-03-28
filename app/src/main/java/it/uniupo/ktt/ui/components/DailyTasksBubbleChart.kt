@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -23,11 +24,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalDensity
 
 
@@ -54,15 +55,18 @@ fun DailyTasksBubbleChart(
     var animateStart by remember { mutableStateOf(false) }
     //Stato Numbers
     var animateTextStart by remember { mutableStateOf(false) }
+    //Stato BubbleChartBadge
+    var animateBubbleChart by remember { mutableStateOf(false) }
 
     //Avvia Animazioni all'ingresso nella page
     LaunchedEffect(Unit) {
         animateStart = true                     //Avvia BubbleCharts
         kotlinx.coroutines.delay(500)  // Delay
         animateTextStart = true                 //Avvia Numers
+        animateBubbleChart = true               //Avvia Badge BubbleChart
     }
 
-    //NUMBER ANIMATION (zoom + spring)
+                            //NUMBER ANIMATION (zoom + spring)
     val animatedTextSizeCompleted by animateFloatAsState(
         targetValue = if (animateTextStart) finalTextSizePx else 0f,
         animationSpec = spring(
@@ -91,7 +95,7 @@ fun DailyTasksBubbleChart(
     )
 
 
-    //BUBBLE ANIMATION (da "0" a "DIM finale passata")
+                            //BUBBLE ANIMATION (zoom: da "0" a "DIM finale passata")
     val animatedCompletedRadius by animateFloatAsState(
         targetValue = if (animateStart) completed * scale else 0f,
         animationSpec = tween(durationMillis = 700, delayMillis = 0),
@@ -110,6 +114,24 @@ fun DailyTasksBubbleChart(
         label = "readyRadius"
     )
 
+                            //BUBBLE-BADGE ANIMATION (zoom)
+    val animatedBubbleScaleCompleted by animateFloatAsState(
+        targetValue = if (animateBubbleChart) 0.63f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 0),
+        label = "completedScale"
+    )
+
+    val animatedBubbleScaleOngoing by animateFloatAsState(
+        targetValue = if (animateBubbleChart) 0.63f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 150),
+        label = "ongoingScale"
+    )
+
+    val animatedBubbleScaleReady by animateFloatAsState(
+        targetValue = if (animateBubbleChart) 0.63f else 0f,
+        animationSpec = tween(durationMillis = 400, delayMillis = 300),
+        label = "readyScale"
+    )
 
 
 
@@ -136,6 +158,7 @@ fun DailyTasksBubbleChart(
                 radius = animatedCompletedRadius,
                 center = center + Offset(8f, -186f)
             )
+
             // Completed Task Number
             drawIntoCanvas { canvas ->
                 val completedPaint = android.graphics.Paint().apply {
@@ -152,6 +175,7 @@ fun DailyTasksBubbleChart(
                 )
 
             }
+
 
 
                                         // READY TASKS
@@ -223,6 +247,48 @@ fun DailyTasksBubbleChart(
             }
 
         }
+
+                                    //BADGE-BUBBLECHART
+        //COMPLETED TASKS BADGE
+        StatStatusBadge(
+            statusColor = Color(0xFF6326A9),
+            statusText = "Completed",
+
+            //Modifier aggiuntivi utili passabili
+            modifier = Modifier
+
+                .offset(x = (-40).dp, y = (-145).dp)
+                .scale(animatedBubbleScaleCompleted)
+
+        )
+        //ONGOING TASKS BADGE
+        StatStatusBadge(
+            statusColor = Color(0xFFA47BD4),
+            statusText = "Ongoing",
+
+            //Modifier aggiuntivi utili passabili
+            modifier = Modifier
+
+                .offset(x = (-110).dp, y = (-35).dp)
+                .scale(animatedBubbleScaleOngoing)
+
+        )
+        //READY TASKS BADGE
+        StatStatusBadge(
+            statusColor = Color(0xFFF5DFFA),
+            statusText = "Ready",
+
+            //Modifier aggiuntivi utili passabili
+            modifier = Modifier
+
+                .offset(x = (110).dp, y = (90).dp)
+                .scale(animatedBubbleScaleReady)
+
+        )
+
+
+
+
     }
 }
 
