@@ -130,7 +130,7 @@ fun HomeScreen(navController: NavController) {
            // Title
            Text(
                text = "Franca Bruni",
-               style = MaterialTheme.typography, // This will use Poppins
+               style = MaterialTheme.typography.titleLarge, // This will use Poppins
 
                color = titleColor,
                modifier = Modifier.align(Alignment.CenterHorizontally)

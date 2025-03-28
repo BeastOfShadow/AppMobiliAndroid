@@ -80,8 +80,11 @@ fun PageTitle(
         ) {
             Text(
                 text = title,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge, //Poppins
+
+                fontSize = 23.sp,
+                fontWeight = FontWeight(400),
+
                 color = titleColor,
                 modifier = Modifier.align(Alignment.Center)
             )
