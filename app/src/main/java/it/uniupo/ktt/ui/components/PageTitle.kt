@@ -75,8 +75,8 @@ fun PageTitle(
                     color = secondary,
                     shape = MaterialTheme.shapes.extraExtraLarge
                 )
-                // prima era 8.dp
-                .padding(vertical = 15.dp),
+                // possibile cambiare a 15.dp
+                .padding(vertical = 8.dp),
         ) {
             Text(
                 text = title,
