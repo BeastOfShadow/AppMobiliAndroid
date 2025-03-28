@@ -1,39 +1,24 @@
 package it.uniupo.ktt.ui.pages
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,14 +29,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.components.PageTitle
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -83,30 +71,18 @@ fun NewTaskScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.size(30.dp))
 
-        OutlinedTextField(
-            value = taskName,
-            onValueChange = { newText -> taskName = newText },
-            label = { Text("Task Name") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.fillMaxWidth()
+        CustomTextField(
+            label = "Task name:",
+            textfieldValue = taskName,
+            onValueChange = { taskName = it }
         )
 
-        Spacer(modifier = Modifier.size(15.dp))
+        Spacer(modifier = Modifier.size(20.dp))
 
-        OutlinedTextField(
-            value = employee,
-            onValueChange = { newText -> employee = newText },
-            label = { Text("Employee") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.fillMaxWidth()
+        CustomTextField(
+            label = "Employee:",
+            textfieldValue = employee,
+            onValueChange = { employee = it }
         )
 
         Row(
@@ -115,7 +91,11 @@ fun NewTaskScreen(navController: NavController) {
         ) {
             Text(
                 text = "Share position: ",
-                style = MaterialTheme.typography.bodyLarge
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(500),
+                    color = Color(0xFF403E3E),
+                ),
             )
             Switch(
                 checked = isChecked,
@@ -127,7 +107,13 @@ fun NewTaskScreen(navController: NavController) {
         Spacer(modifier = Modifier.size(10.dp))
 
         Text(
-            text = "Subtask List:"
+            text = "Subtask List:",
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight(500),
+                color = Color(0xFF403E3E),
+            ),
+            modifier = Modifier.padding(bottom = 15.dp)
         )
 
         Column {

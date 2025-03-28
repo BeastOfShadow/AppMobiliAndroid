@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.titleColor
@@ -73,7 +75,8 @@ fun PageTitle(
                     color = secondary,
                     shape = MaterialTheme.shapes.extraExtraLarge
                 )
-                .padding(vertical = 8.dp),
+                // prima era 8.dp
+                .padding(vertical = 15.dp),
         ) {
             Text(
                 text = title,
@@ -87,4 +90,15 @@ fun PageTitle(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PageTitlePreview() {
+    val navController = rememberNavController()
+
+    PageTitle(
+        navController = navController,
+        title = "Titolo di prova"
+    )
 }

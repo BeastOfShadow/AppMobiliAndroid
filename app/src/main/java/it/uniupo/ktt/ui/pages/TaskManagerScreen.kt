@@ -3,10 +3,8 @@ package it.uniupo.ktt.ui.pages
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -14,12 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LargeFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
@@ -36,7 +29,6 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.theme.buttonTextColor
-import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.tertiary
 
 @Composable
@@ -71,7 +63,7 @@ fun TaskManagerScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = "Ready",
                 fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
@@ -81,7 +73,7 @@ fun TaskManagerScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = "Ongoing",
                 fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
@@ -91,7 +83,7 @@ fun TaskManagerScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 text = "Completed",
                 fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -101,7 +93,7 @@ fun TaskManagerScreen(navController: NavController) {
             onClick = { navController.navigate("new task") },
             shape = CircleShape,
             modifier = Modifier
-                .align(Alignment.BottomEnd) // Posiziona in basso a destra
+                .align(Alignment.BottomEnd)
                 .padding(16.dp),
             containerColor = tertiary
         ) {
