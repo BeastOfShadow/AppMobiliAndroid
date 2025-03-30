@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Blender
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -197,22 +198,20 @@ fun TaskManagerScreen(navController: NavController) {
 
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                    .size(44.dp)
+                                    .shadow(4.dp, shape = CircleShape, clip = false)
                                     .background(
                                         color = tertiary,
-                                        shape = MaterialTheme.shapes.extraExtraLarge
+                                        shape = CircleShape
                                     )
                                     .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "Start",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight(400),
-                                    color = buttonTextColor,
-                                    modifier = Modifier.align(Alignment.Center)
-                                                .padding(start = 16.dp, end = 16.dp)
+                                Icon(
+                                    imageVector = Icons.Default.RocketLaunch, // Sostituisci con l'icona desiderata
+                                    contentDescription = "Start",
+                                    tint = buttonTextColor,
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
