@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,7 +21,10 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +45,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.theme.secondary
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -55,6 +60,7 @@ fun NewTaskScreen(navController: NavController) {
     var taskName by remember { mutableStateOf("") }
     var employee by remember { mutableStateOf("") }
     var isChecked by remember { mutableStateOf(false) }
+    var duration by remember { mutableStateOf("") }
     var subtasks by remember { mutableStateOf(listOf("Subtask 1", "Subtask 2", "Subtask 3")) }
 
     Column(
@@ -84,25 +90,80 @@ fun NewTaskScreen(navController: NavController) {
             textfieldValue = employee,
             onValueChange = { employee = it }
         )
-
+        
         Row(
             modifier = Modifier.padding(top = 15.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text(
-                text = "Share position: ",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(500),
-                    color = Color(0xFF403E3E),
-                ),
-            )
-            Switch(
-                checked = isChecked,
-                onCheckedChange = { isChecked = it },
-                modifier = Modifier.scale(0.7f)
-            )
+            // "Share position" e il Switch
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row (
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Share position: ",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight(500),
+                            color = Color(0xFF403E3E),
+                        ),
+                    )
+                    Switch(
+                        checked = isChecked,
+                        onCheckedChange = { isChecked = it },
+                        modifier = Modifier.scale(0.7f),
+                        colors = SwitchDefaults.colors(
+                            // checkedThumbColor = Color.Green,   // Colore del pallino quando il switch è acceso
+                            // uncheckedThumbColor = Color.Gray,  // Colore del pallino quando il switch è spento
+                            checkedTrackColor = secondary,    // Colore del tracciato quando il switch è acceso
+                            // uncheckedTrackColor = Color.LightGray  // Colore del tracciato quando il switch è spento
+                        )
+                    )
+                }
+            }
+
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row (
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Duration: ",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight(500),
+                            color = Color(0xFF403E3E),
+                        ),
+                    )
+                    TextField(
+                        value = duration,
+                        onValueChange = { newText ->
+                            if (newText.length <= 5) {
+                                duration = newText
+                            }
+                        },
+                        label = { Text("HH:MM") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF5DFFA),
+                            unfocusedContainerColor = Color(0xFFF5DFFA),
+                            cursorColor = Color.Black,
+                            disabledLabelColor = Color.Red,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        modifier = Modifier.width(90.dp)
+                    )
+                }
+            }
         }
+
 
         Spacer(modifier = Modifier.size(10.dp))
 
