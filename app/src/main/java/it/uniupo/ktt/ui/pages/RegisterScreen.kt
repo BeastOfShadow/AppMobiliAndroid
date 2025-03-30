@@ -55,6 +55,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.oAuthCredential
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -244,6 +245,38 @@ fun RegisterScreen(navController: NavController) {
                         auth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
+
+
+                                    // ++ Creazione User DataBase ++
+                                    val uid= FirebaseAuth.getInstance().currentUser?.uid
+                                    val db = FirebaseFirestore.getInstance()
+
+                                    val user = hashMapOf(
+                                        "email" to email,
+                                        "role" to "employee"
+                                        //"name" e "surname" da aggiornare in un secondo momento
+                                    )
+
+                                    //post on DB
+                                    if (uid != null) {
+                                        Log.d("UID", uid ?: "UID nullo")
+
+                                        db.collection("users").document(uid)
+                                            .set(user)
+                                            .addOnSuccessListener {
+                                                Log.d("Firestore", "Utente aggiunto con successo")
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Log.w("Firestore", "Errore nell'aggiunta utente", e)
+                                            }
+                                    }
+                                    else{
+                                        Log.d("UID", "UID nullo")
+                                    }
+
+
+
+
                                     navController.navigate("home") {
                                         popUpTo("landing") { inclusive = true }
                                         launchSingleTop = true
