@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +69,7 @@ fun TaskManagerScreen(navController: NavController) {
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
     val events = listOf(
-        "Evento 1" to "Mario Rossi",
+        "Evento prova del 9" to "Mario Rossi",
         "Evento 2" to "Luca Bianchi",
         "Evento 3" to "Giulia Verdi",
         "Evento 4" to "Anna Neri",
@@ -80,7 +81,7 @@ fun TaskManagerScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -165,17 +166,25 @@ fun TaskManagerScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .padding(start = 10.dp)
+                            .width(160.dp)
+                            .height(160.dp)
                             .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
                             .background(primary, shape = MaterialTheme.shapes.extraLarge)
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = eventTitle,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = titleColor
+                                color = titleColor,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Text(
                                 text = personName,
@@ -233,30 +242,40 @@ fun TaskManagerScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .padding(start = 10.dp)
+                            .width(160.dp)
+                            .height(160.dp)
                             .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
                             .background(primary, shape = MaterialTheme.shapes.extraLarge)
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = eventTitle,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = titleColor
+                                color = titleColor,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Text(
                                 text = personName,
                                 fontWeight = FontWeight.Light,
                                 fontSize = 14.sp,
-                                color = subtitleColor
+                                color = subtitleColor,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.size(15.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
@@ -320,30 +339,40 @@ fun TaskManagerScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .padding(start = 10.dp)
+                            .width(160.dp)
+                            .height(160.dp)
                             .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
                             .background(primary, shape = MaterialTheme.shapes.extraLarge)
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = eventTitle,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = titleColor
+                                color = titleColor,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Text(
                                 text = personName,
                                 fontWeight = FontWeight.Light,
                                 fontSize = 14.sp,
-                                color = subtitleColor
+                                color = subtitleColor,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.size(15.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
@@ -368,8 +397,8 @@ fun TaskManagerScreen(navController: NavController) {
                                                 shape = CircleShape
                                             )
                                             .padding(6.dp)
-                                            .height(35.dp)
-                                            .width(35.dp)
+                                            .height(38.dp)
+                                            .width(38.dp)
                                     ) {
                                         Text(
                                             text = "12:47",
@@ -384,8 +413,9 @@ fun TaskManagerScreen(navController: NavController) {
                     }
                 }
             }
-        }
 
+            Spacer(modifier = Modifier.size(10.dp))
+        }
 
         SmallFloatingActionButton(
             onClick = { navController.navigate("new task") },
