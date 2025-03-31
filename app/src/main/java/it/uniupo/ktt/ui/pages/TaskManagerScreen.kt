@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,7 +74,7 @@ fun TaskManagerScreen(navController: NavController) {
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
     val events = listOf(
-        "Evento prova del 9" to "Mario Rossi",
+        "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Anche il nome e cognome non sono da meno",
         "Evento 2" to "Luca Bianchi",
         "Evento 3" to "Giulia Verdi",
         "Evento 4" to "Anna Neri",
@@ -160,62 +161,75 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                events.forEach { (eventTitle, personName) ->
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                            .width(160.dp)
-                            .height(160.dp)
-                            .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                            .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
+            if(events.isEmpty())
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "There are no ready events.",
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 15.sp,
+                )
+            else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    events.forEach { (eventTitle, personName) ->
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 10.dp)
+                                .width(180.dp)
+                                .height(180.dp)
+                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = eventTitle,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = titleColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = personName,
-                                fontWeight = FontWeight.Light,
-                                fontSize = 14.sp,
-                                color = subtitleColor
-                            )
-
-                            Spacer(modifier = Modifier.size(10.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .shadow(4.dp, shape = CircleShape, clip = false)
-                                    .background(
-                                        color = tertiary,
-                                        shape = CircleShape
-                                    )
-                                    .padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.RocketLaunch, // Sostituisci con l'icona desiderata
-                                    contentDescription = "Start",
-                                    tint = buttonTextColor,
-                                    modifier = Modifier.size(24.dp)
+                                Text(
+                                    text = eventTitle,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = titleColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
+                                Text(
+                                    text = personName,
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 14.sp,
+                                    color = subtitleColor,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+
+                                Spacer(modifier = Modifier.size(10.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .shadow(4.dp, shape = CircleShape, clip = false)
+                                        .background(
+                                            color = tertiary,
+                                            shape = CircleShape
+                                        )
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.RocketLaunch, // Sostituisci con l'icona desiderata
+                                        contentDescription = "Start",
+                                        tint = buttonTextColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -234,82 +248,95 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                events.forEach { (eventTitle, personName) ->
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                            .width(160.dp)
-                            .height(160.dp)
-                            .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                            .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
+            if(events.isEmpty())
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "There are no ongoing events.",
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 15.sp,
+                )
+            else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    events.forEach { (eventTitle, personName) ->
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 10.dp)
+                                .width(180.dp)
+                                .height(180.dp)
+                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = eventTitle,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = titleColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = personName,
-                                fontWeight = FontWeight.Light,
-                                fontSize = 14.sp,
-                                color = subtitleColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.size(15.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.task_sun),
-                                        contentDescription = "Clock",
-                                        modifier = Modifier.size(55.dp)
-                                    )
-                                }
+                                Text(
+                                    text = eventTitle,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = titleColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = personName,
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 14.sp,
+                                    color = subtitleColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
 
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Spacer(modifier = Modifier.size(15.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceAround,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .border(
-                                                width = 3.dp,
-                                                color = Color(0xFFEED547),
-                                                shape = CircleShape
-                                            )
-                                            .padding(6.dp)
-                                            .height(38.dp)
-                                            .width(38.dp)
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(
-                                            text = "12:47",
-                                            fontSize = 14.sp,
-                                            color = subtitleColor,
-                                            modifier = Modifier.align(Alignment.Center)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.task_sun),
+                                            contentDescription = "Clock",
+                                            modifier = Modifier.size(55.dp)
                                         )
+                                    }
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .border(
+                                                    width = 3.dp,
+                                                    color = Color(0xFFEED547),
+                                                    shape = CircleShape
+                                                )
+                                                .padding(6.dp)
+                                                .height(38.dp)
+                                                .width(38.dp)
+                                        ) {
+                                            Text(
+                                                text = "12:47",
+                                                fontSize = 14.sp,
+                                                color = subtitleColor,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -330,82 +357,95 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                events.forEach { (eventTitle, personName) ->
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 10.dp)
-                            .width(160.dp)
-                            .height(160.dp)
-                            .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                            .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween,
-                            horizontalAlignment = Alignment.CenterHorizontally
+            if(events.isEmpty())
+                Text(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    text = "There are no ready events.",
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 15.sp,
+                )
+            else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    events.forEach { (eventTitle, personName) ->
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 10.dp)
+                                .width(180.dp)
+                                .height(180.dp)
+                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = eventTitle,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = titleColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = personName,
-                                fontWeight = FontWeight.Light,
-                                fontSize = 14.sp,
-                                color = subtitleColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.size(15.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.task_finished),
-                                        contentDescription = "Endline",
-                                        modifier = Modifier.size(50.dp)
-                                    )
-                                }
+                                Text(
+                                    text = eventTitle,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = titleColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = personName,
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 14.sp,
+                                    color = subtitleColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
 
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Spacer(modifier = Modifier.size(15.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceAround,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .border(
-                                                width = 3.dp,
-                                                color = Color(0xFFEED547),
-                                                shape = CircleShape
-                                            )
-                                            .padding(6.dp)
-                                            .height(38.dp)
-                                            .width(38.dp)
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Text(
-                                            text = "12:47",
-                                            fontSize = 14.sp,
-                                            color = subtitleColor,
-                                            modifier = Modifier.align(Alignment.Center)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.task_finished),
+                                            contentDescription = "Endline",
+                                            modifier = Modifier.size(50.dp)
                                         )
+                                    }
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .border(
+                                                    width = 3.dp,
+                                                    color = Color(0xFFEED547),
+                                                    shape = CircleShape
+                                                )
+                                                .padding(6.dp)
+                                                .height(38.dp)
+                                                .width(38.dp)
+                                        ) {
+                                            Text(
+                                                text = "12:47",
+                                                fontSize = 14.sp,
+                                                color = subtitleColor,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
                                     }
                                 }
                             }
