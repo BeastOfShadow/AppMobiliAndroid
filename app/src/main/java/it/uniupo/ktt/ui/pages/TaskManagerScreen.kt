@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.pages
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,6 +43,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.primary
@@ -280,11 +283,10 @@ fun TaskManagerScreen(navController: NavController) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.WbSunny,
+                                    Image(
+                                        painter = painterResource(id = R.drawable.task_sun),
                                         contentDescription = "Clock",
-                                        modifier = Modifier.size(38.dp),
-                                        tint = titleColor
+                                        modifier = Modifier.size(55.dp)
                                     )
                                 }
 
@@ -377,11 +379,10 @@ fun TaskManagerScreen(navController: NavController) {
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Blender,
-                                        contentDescription = "Clock",
-                                        modifier = Modifier.size(38.dp),
-                                        tint = titleColor
+                                    Image(
+                                        painter = painterResource(id = R.drawable.task_finished),
+                                        contentDescription = "Endline",
+                                        modifier = Modifier.size(50.dp)
                                     )
                                 }
 

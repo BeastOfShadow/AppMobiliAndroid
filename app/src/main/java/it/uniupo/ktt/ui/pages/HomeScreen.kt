@@ -4,6 +4,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.MenuLabel
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
@@ -136,14 +138,23 @@ fun HomeScreen(navController: NavController) {
                modifier = Modifier.align(Alignment.CenterHorizontally)
            )
 
-           // Solicitous
-           Text(
-               text = "Status",
-               fontWeight = FontWeight.ExtraLight,
-               fontSize = 16.sp,
-               color = subtitleColor, // Color secondary
-               modifier = Modifier.align(Alignment.CenterHorizontally)
-           )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.menu_stats_a),
+                    contentDescription = "Endline",
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = " Status",
+                    fontWeight = FontWeight.ExtraLight,
+                    fontSize = 16.sp,
+                    color = subtitleColor
+                )
+            }
 
            Spacer(modifier = Modifier.height(65.dp))
 
@@ -159,8 +170,8 @@ fun HomeScreen(navController: NavController) {
                 navPage = "task manager",
                 title = "Task Manager",
                 description = "Create, update, delete tasks and subtasks",
-                icon = Icons.Outlined.BorderColor,
-                iconDescription = "Profile Icon"
+                image = R.drawable.menu_task_new,
+                imageDescription = "Profile Icon"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -170,8 +181,8 @@ fun HomeScreen(navController: NavController) {
                 navPage = "chat",
                 title = "Chat",
                 description = "Direct messages to your employees",
-                icon = Icons.AutoMirrored.Outlined.Chat,
-                iconDescription = "Chat Icon"
+                image = R.drawable.menu_chat,
+                imageDescription = "Chat Icon"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -181,8 +192,8 @@ fun HomeScreen(navController: NavController) {
                navPage = "CareGiver Statistic",
                title = "Statistics",
                description = "Check the work done by each employee",
-               icon = Icons.AutoMirrored.Outlined.ShowChart,
-               iconDescription = "Statistics Icon"
+               image = R.drawable.menu_stats_a,
+               imageDescription = "Statistics Icon"
            )
 
            /*Button(
