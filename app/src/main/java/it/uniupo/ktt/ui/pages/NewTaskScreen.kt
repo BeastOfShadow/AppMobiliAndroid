@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -32,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -244,10 +248,7 @@ fun NewTaskScreen(navController: NavController) {
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
                                         color = titleColor,
-                                        textAlign = TextAlign.Start,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
+                                        textAlign = TextAlign.Start
                                     )
 
                                     Text(
@@ -266,19 +267,16 @@ fun NewTaskScreen(navController: NavController) {
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
                                         color = titleColor,
-                                        textAlign = TextAlign.Start,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
+                                        textAlign = TextAlign.Start
                                     )
 
                                     Image(
                                         painter = painterResource(id = R.drawable.edit_rewrite),
                                         contentDescription = "Extend",
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(24.dp)
                                             .align(Alignment.End)
                                             .clickable {
-
+                                                navController.navigate("update subtask")
                                             },
                                     )
                                 }
@@ -291,28 +289,31 @@ fun NewTaskScreen(navController: NavController) {
                             .padding(start = 10.dp)
                             .width(100.dp)
                             .height(100.dp)
-                            .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                            .clickable {
+
+                            }
+                            .shadow(
+                                4.dp,
+                                shape = MaterialTheme.shapes.extraLarge,
+                                clip = false)
                             .background(primary, shape = MaterialTheme.shapes.extraLarge)
                             .padding(16.dp)
                             .align(Alignment.CenterVertically)
-                            .clickable {
-
-                            },
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(90.dp)
-                                .shadow(4.dp, shape = CircleShape, clip = false)
                                 .background(
                                     color = tertiary,
                                     shape = CircleShape
                                 )
                                 .align(Alignment.Center)
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.task_extend),
-                                contentDescription = "Extend",
-                                modifier = Modifier.size(22.dp)
+                            Icon(
+                                Icons.Filled.Add,
+                                "Large floating action button",
+                                tint = buttonTextColor,
+                                modifier = Modifier.size(55.dp)
                                     .align(Alignment.Center)
                             )
                         }
