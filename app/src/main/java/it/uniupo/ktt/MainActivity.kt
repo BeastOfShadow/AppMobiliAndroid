@@ -16,12 +16,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import it.uniupo.ktt.ui.pages.CG_StatisticPage
-import it.uniupo.ktt.ui.pages.ChatScreen
+import it.uniupo.ktt.ui.pages.Caregiver.Chat.ChatPage
+import it.uniupo.ktt.ui.pages.Caregiver.Statistics.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
-import it.uniupo.ktt.ui.pages.NewChatScreen
+import it.uniupo.ktt.ui.pages.Caregiver.Chat.NewChatPage
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.pages.StatisticsScreen
@@ -51,12 +51,14 @@ class MainActivity : ComponentActivity() {
                         composable("home") { HomeScreen(navController) }
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("statistics") { StatisticsScreen(navController) }
-                        composable("chat") { ChatScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
-                        composable("new chat") { NewChatScreen(navController) }
 
-                        //new ROUTE
+                                                        //new ROUTE
+                        //Statistics
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
+                        //Chats
+                        composable("chat") { ChatPage(navController) }
+                        composable("new chat") { NewChatPage(navController) }
                     }
                 }
             }

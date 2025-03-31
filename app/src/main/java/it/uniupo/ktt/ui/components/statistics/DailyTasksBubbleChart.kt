@@ -1,4 +1,4 @@
-package it.uniupo.ktt.ui.components
+package it.uniupo.ktt.ui.components.statistics
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState

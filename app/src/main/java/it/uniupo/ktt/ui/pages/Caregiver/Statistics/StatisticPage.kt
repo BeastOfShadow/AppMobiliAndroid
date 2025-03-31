@@ -1,4 +1,4 @@
-package it.uniupo.ktt.ui.pages
+package it.uniupo.ktt.ui.pages.Caregiver.Statistics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,10 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import it.uniupo.ktt.ui.components.AvgComplationBar
-import it.uniupo.ktt.ui.components.DailyTasksBubbleChart
+import it.uniupo.ktt.ui.components.statistics.AvgComplationBar
+import it.uniupo.ktt.ui.components.statistics.DailyTasksBubbleChart
 import it.uniupo.ktt.ui.components.PageTitle
-import it.uniupo.ktt.ui.components.StatStatusBadge
+import it.uniupo.ktt.ui.components.statistics.StatStatusBadge
 import it.uniupo.ktt.ui.theme.titleColor
 
 
@@ -156,7 +155,6 @@ fun CG_StatisticPage(navController: NavController) {
                         modifier = Modifier
                             .scale(0.6f)
                             .offset(x = (-30).dp, y = (-30).dp)
-                        //.align(Alignment.TopStart)
                     )
                     Text(
                         text = "(today)",
