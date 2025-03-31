@@ -22,10 +22,12 @@ import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
 import it.uniupo.ktt.ui.pages.Caregiver.Chat.NewChatPage
+import it.uniupo.ktt.ui.pages.CommentSubtaskScreen
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
+import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
 import it.uniupo.ktt.ui.theme.KTTTheme
 
 class MainActivity : ComponentActivity() {
@@ -54,6 +56,8 @@ class MainActivity : ComponentActivity() {
                         composable("new task") { NewTaskScreen(navController) }
 
                                                         //new ROUTE
+                        composable("update subtask") { UpdateSubtaskScreen(navController) }
+                        composable("comment subtask") { CommentSubtaskScreen(navController) }
                         //Statistics
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
                         //Chats

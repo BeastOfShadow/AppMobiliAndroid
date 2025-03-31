@@ -1,13 +1,6 @@
 package it.uniupo.ktt.ui.pages
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.credentials.CredentialManager
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,7 +20,6 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -53,9 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.oAuthCredential
 import com.google.firebase.firestore.FirebaseFirestore
+import it.uniupo.ktt.ui.roles.UserRole
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -67,6 +58,8 @@ fun RegisterScreen(navController: NavController) {
     }
 
     var email by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var surname by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
@@ -109,7 +102,7 @@ fun RegisterScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(55.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Title
             Text(
@@ -128,7 +121,7 @@ fun RegisterScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            Spacer(modifier = Modifier.height(150.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
             /* Button
             Button(
@@ -172,6 +165,36 @@ fun RegisterScreen(navController: NavController) {
                 value = email,
                 onValueChange = { newText -> email = newText },
                 label = { Text("Enter email") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    cursorColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Name Input
+            OutlinedTextField(
+                value = name,
+                onValueChange = { newText -> name = newText },
+                label = { Text("Enter name") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    cursorColor = MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Surname Input
+            OutlinedTextField(
+                value = surname,
+                onValueChange = { newText -> surname = newText },
+                label = { Text("Enter surname") },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -235,6 +258,10 @@ fun RegisterScreen(navController: NavController) {
                 onClick = {
                     if (email.isEmpty() || email.isBlank()) {
                         message = "Email is required.\n"
+                    } else if (name.isEmpty() || name.isBlank()) {
+                        message = "Name is required.\n"
+                    } else if (surname.isEmpty() || surname.isBlank()) {
+                        message = "Surname is required.\n"
                     } else if (password.isEmpty() || password.isBlank()) {
                         message = "Password is required.\n"
                     } else if (confirmPassword.isEmpty() || confirmPassword.isBlank()) {
@@ -252,9 +279,10 @@ fun RegisterScreen(navController: NavController) {
                                     val db = FirebaseFirestore.getInstance()
 
                                     val user = hashMapOf(
-                                        "email" to email,
-                                        "role" to "employee"
-                                        //"name" e "surname" da aggiornare in un secondo momento
+                                        "email" to email.lowercase(),
+                                        "role" to UserRole.EMPLOYEE,
+                                        "name" to name.lowercase().replaceFirstChar { it.uppercase() },
+                                        "surname" to surname.lowercase().replaceFirstChar { it.uppercase() }
                                     )
 
                                     //post on DB
