@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.auth.User
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.MenuLabel
 import it.uniupo.ktt.ui.firebase.getNameSurnameByUserId
@@ -48,13 +47,19 @@ import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.titleColor
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun EmployeeHomeScreen(navController: NavController) {
     var role = getRoleByUserId()
-    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null && !role.equals(UserRole.CAREGIVER))  {
+    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null)  {
         navController.navigate("landing") {
-            popUpTo("home") { inclusive = true }
+            popUpTo("employee home") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    if(!role.equals(UserRole.EMPLOYEE)) {
+        navController.navigate("caregiver home") {
+            popUpTo("employee home") { inclusive = true }
             launchSingleTop = true
         }
     }
@@ -84,54 +89,54 @@ fun HomeScreen(navController: NavController) {
                             launchSingleTop = true
                         }
                     },
-                   modifier = Modifier.size(34.dp),
-                   colors = IconButtonDefaults.filledIconButtonColors(
-                       containerColor = MaterialTheme.colorScheme.primaryContainer,
-                       contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                   )
-               ) {
-                   Icon(
-                       imageVector = Icons.Outlined.ArrowBackIosNew,
-                       contentDescription = "Back",
-                       modifier = Modifier.size(18.dp)
-                   )
-               }
-           }
+                    modifier = Modifier.size(34.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ArrowBackIosNew,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
 
-           Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
-           Box(
-               modifier = Modifier
-                   .size(110.dp)
-                   .graphicsLayer {
-                       shadowElevation = 4.dp.toPx() // Altezza dell'ombra
-                       shape = CircleShape
-                       clip = false
-                       alpha = 1f
-                   }
-                   .background(primary, CircleShape)
-                   .padding(16.dp)
-                   .align(Alignment.CenterHorizontally),
-               contentAlignment = Alignment.Center
-           ) {
-               Icon(
-                   imageVector = Icons.Outlined.AccountCircle,
-                   contentDescription = "Profile Icon",
-                   modifier = Modifier.size(80.dp),
-                   tint = MaterialTheme.colorScheme.primary
-               )
-           }
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .graphicsLayer {
+                        shadowElevation = 4.dp.toPx() // Altezza dell'ombra
+                        shape = CircleShape
+                        clip = false
+                        alpha = 1f
+                    }
+                    .background(primary, CircleShape)
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AccountCircle,
+                    contentDescription = "Profile Icon",
+                    modifier = Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
 
-           Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-           // Title
-           Text(
-               text = nameSurname,
-               style = MaterialTheme.typography.titleLarge, // This will use Poppins
+            // Title
+            Text(
+                text = nameSurname,
+                style = MaterialTheme.typography.titleLarge, // This will use Poppins
 
-               color = titleColor,
-               modifier = Modifier.align(Alignment.CenterHorizontally)
-           )
+                color = titleColor,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -151,14 +156,14 @@ fun HomeScreen(navController: NavController) {
                 )
             }
 
-           Spacer(modifier = Modifier.height(65.dp))
+            Spacer(modifier = Modifier.height(65.dp))
 
-           Text(
-               text = "Main menu",
-               fontWeight = FontWeight.Normal,
-               fontSize = 16.sp,
-               color = subtitleColor
-           )
+            Text(
+                text = "Main menu",
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                color = subtitleColor
+            )
 
             MenuLabel(
                 navController = navController,
@@ -182,37 +187,37 @@ fun HomeScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-           MenuLabel(
-               navController = navController,
-               navPage = "CareGiver Statistic",
-               title = "Statistics",
-               description = "Check the work done by each employee",
-               image = R.drawable.menu_stats_a,
-               imageDescription = "Statistics Icon"
-           )
+            MenuLabel(
+                navController = navController,
+                navPage = "CareGiver Statistic",
+                title = "Statistics",
+                description = "Check the work done by each employee",
+                image = R.drawable.menu_stats_a,
+                imageDescription = "Statistics Icon"
+            )
 
-           /*Button(
-           onClick = {
-               FirebaseAuth.getInstance().signOut()
-               navController.navigate("landing") {
-                   popUpTo("home") { inclusive = true }
-                   launchSingleTop = true
-               }
-           },
-           modifier = Modifier
-               .fillMaxWidth()
-               .padding(top = 10.dp)
-       ) {
-           Text(
-               text = "Logout"
-           )
-       }*/
-       }
-   }
+            /*Button(
+            onClick = {
+                FirebaseAuth.getInstance().signOut()
+                navController.navigate("landing") {
+                    popUpTo("home") { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+        ) {
+            Text(
+                text = "Logout"
+            )
+        }*/
+        }
+    }
 }
 
 @Preview
 @Composable
-fun HomeScreenPreview() {
-   HomeScreen(navController = NavController(context = LocalContext.current))
+fun EmployeeHomeScreen() {
+    CaregiverHomeScreen(navController = NavController(context = LocalContext.current))
 }

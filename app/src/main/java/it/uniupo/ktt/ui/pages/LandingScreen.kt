@@ -25,11 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.firebase.getInitialRoute
+import it.uniupo.ktt.ui.firebase.getRoleByUserId
+import it.uniupo.ktt.ui.roles.UserRole
 
 @Composable
 fun LandingScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser != null) {
-        navController.navigate("home") {
+        navController.navigate(getInitialRoute()) {
             popUpTo("landing") { inclusive = true }
             launchSingleTop = true
         }

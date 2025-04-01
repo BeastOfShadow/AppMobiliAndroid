@@ -16,18 +16,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.firebase.getRoleByUserId
 import it.uniupo.ktt.ui.pages.Caregiver.Chat.ChatPage
 import it.uniupo.ktt.ui.pages.Caregiver.Statistics.CG_StatisticPage
-import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
 import it.uniupo.ktt.ui.pages.Caregiver.Chat.NewChatPage
+import it.uniupo.ktt.ui.pages.CaregiverHomeScreen
 import it.uniupo.ktt.ui.pages.CommentSubtaskScreen
+import it.uniupo.ktt.ui.pages.EmployeeHomeScreen
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
 import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
+import it.uniupo.ktt.ui.roles.UserRole
 import it.uniupo.ktt.ui.theme.KTTTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,7 +41,17 @@ class MainActivity : ComponentActivity() {
         setContent {
             FirebaseApp.initializeApp(this)
             val navController = rememberNavController()
-            val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "landing" else "home") }
+            var startDestination = "landing"
+
+            if(FirebaseAuth.getInstance().currentUser != null)
+            {
+                val role = getRoleByUserId()
+                if(role.equals(UserRole.CAREGIVER))
+                    startDestination = "caregiver home"
+                else if(role.equals(UserRole.EMPLOYEE))
+                    startDestination = "employee home"
+            }
+
 
             KTTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -50,7 +63,8 @@ class MainActivity : ComponentActivity() {
                         composable("landing") { LandingScreen(navController) }
                         composable("login") { LoginScreen(navController) }
                         composable("register") { RegisterScreen(navController) }
-                        composable("home") { HomeScreen(navController) }
+                        composable("caregiver home") { CaregiverHomeScreen(navController) }
+                        composable("employee home") { EmployeeHomeScreen(navController) }
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("statistics") { StatisticsScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }

@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.ui.firebase.getInitialRoute
+import it.uniupo.ktt.ui.firebase.getInitialRouteNonComposable
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -191,6 +194,14 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(55.dp))
 
+
+            var initialRoute by remember { mutableStateOf<String?>(null) }
+
+            LaunchedEffect(initialRoute) {
+                if (FirebaseAuth.getInstance().currentUser != null) {
+                    initialRoute = getInitialRouteNonComposable()
+                }
+            }
             // Button
             Button(
                 onClick = {
@@ -199,12 +210,15 @@ fun LoginScreen(navController: NavController) {
                     } else if (password.isEmpty() || password.isBlank()) {
                         message = "Password is required.\n"
                     } else {
+
                         FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
-                                    navController.navigate("home") {
-                                        popUpTo("landing") { inclusive = true }
-                                        launchSingleTop = true
+                                    initialRoute?.let {
+                                        navController.navigate(it) {
+                                            popUpTo("landing") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
                                     }
                                 } else {
                                     message = task.exception?.message ?: "Unknown error occurred"
