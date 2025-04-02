@@ -93,7 +93,7 @@ fun LoginScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(55.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Title
             Text(

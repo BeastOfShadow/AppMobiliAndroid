@@ -19,10 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.titleColor
@@ -38,7 +41,7 @@ fun PageTitle(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
             .padding(10.dp)
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.White)
     ) {
         Box(
             modifier = Modifier
@@ -47,7 +50,7 @@ fun PageTitle(
         ) {
             FilledIconButton(
                 onClick = {
-                    navController.popBackStack()
+                    navController.popBackStack() //return
                 },
                 modifier = Modifier.size(34.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
@@ -73,15 +76,30 @@ fun PageTitle(
                     color = secondary,
                     shape = MaterialTheme.shapes.extraExtraLarge
                 )
+                // possibile cambiare a 15.dp
                 .padding(vertical = 8.dp),
         ) {
             Text(
                 text = title,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge, //Poppins
+
+                fontSize = 23.sp,
+                fontWeight = FontWeight(400),
+
                 color = titleColor,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PageTitlePreview() {
+    val navController = rememberNavController()
+
+    PageTitle(
+        navController = navController,
+        title = "Titolo di prova"
+    )
 }

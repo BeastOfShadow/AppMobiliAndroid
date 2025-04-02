@@ -1,9 +1,8 @@
 package it.uniupo.ktt.ui.pages
 
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,16 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
-import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.automirrored.outlined.ShowChart
-import androidx.compose.material.icons.materialIcon
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material.icons.outlined.ArrowForwardIos
-import androidx.compose.material.icons.outlined.BorderColor
-import androidx.compose.material.icons.outlined.Chat
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -37,8 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -49,7 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.auth.User
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.MenuLabel
+import it.uniupo.ktt.ui.firebase.getNameSurnameByUserId
+import it.uniupo.ktt.ui.firebase.getRoleByUserId
+import it.uniupo.ktt.ui.roles.UserRole
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.titleColor
@@ -57,12 +51,15 @@ import it.uniupo.ktt.ui.theme.titleColor
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
+    var role = getRoleByUserId()
+    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null && !role.equals(UserRole.CAREGIVER))  {
         navController.navigate("landing") {
             popUpTo("home") { inclusive = true }
             launchSingleTop = true
         }
     }
+
+    var nameSurname = getNameSurnameByUserId()
 
     Box(
         modifier = Modifier
@@ -129,21 +126,30 @@ fun HomeScreen(navController: NavController) {
 
            // Title
            Text(
-               text = "Franca Bruni",
-               fontWeight = FontWeight.SemiBold,
-               fontSize = 20.sp,
+               text = nameSurname,
+               style = MaterialTheme.typography.titleLarge, // This will use Poppins
+
                color = titleColor,
                modifier = Modifier.align(Alignment.CenterHorizontally)
            )
 
-           // Solicitous
-           Text(
-               text = "Status",
-               fontWeight = FontWeight.ExtraLight,
-               fontSize = 16.sp,
-               color = subtitleColor, // Color secondary
-               modifier = Modifier.align(Alignment.CenterHorizontally)
-           )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.menu_stats_a),
+                    contentDescription = "Endline",
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = " ${role.lowercase().replaceFirstChar { it.uppercase() }}",
+                    fontWeight = FontWeight.ExtraLight,
+                    fontSize = 16.sp,
+                    color = subtitleColor
+                )
+            }
 
            Spacer(modifier = Modifier.height(65.dp))
 
@@ -159,8 +165,8 @@ fun HomeScreen(navController: NavController) {
                 navPage = "task manager",
                 title = "Task Manager",
                 description = "Create, update, delete tasks and subtasks",
-                icon = Icons.Outlined.BorderColor,
-                iconDescription = "Profile Icon"
+                image = R.drawable.menu_task_new,
+                imageDescription = "Profile Icon"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -170,19 +176,19 @@ fun HomeScreen(navController: NavController) {
                 navPage = "chat",
                 title = "Chat",
                 description = "Direct messages to your employees",
-                icon = Icons.AutoMirrored.Outlined.Chat,
-                iconDescription = "Chat Icon"
+                image = R.drawable.menu_chat,
+                imageDescription = "Chat Icon"
             )
 
             Spacer(modifier = Modifier.height(10.dp))
 
            MenuLabel(
                navController = navController,
-               navPage = "statistics",
+               navPage = "CareGiver Statistic",
                title = "Statistics",
                description = "Check the work done by each employee",
-               icon = Icons.AutoMirrored.Outlined.ShowChart,
-               iconDescription = "Statistics Icon"
+               image = R.drawable.menu_stats_a,
+               imageDescription = "Statistics Icon"
            )
 
            /*Button(

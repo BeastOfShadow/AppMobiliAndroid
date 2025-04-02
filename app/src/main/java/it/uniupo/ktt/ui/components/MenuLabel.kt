@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.outlined.PhoneMissed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,12 +20,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.lighterSubtitle
 import it.uniupo.ktt.ui.theme.lighterTitle
 import it.uniupo.ktt.ui.theme.primary
@@ -35,8 +40,8 @@ fun MenuLabel(
     navPage: String,
     title: String,
     description: String,
-    icon: ImageVector,
-    iconDescription: String
+    image: Int,
+    imageDescription: String
 ) {
     Box(
         modifier = Modifier
@@ -64,14 +69,13 @@ fun MenuLabel(
                             secondary,
                             shape = CircleShape
                         )
-                        .padding(10.dp),
+                        .padding(5.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = iconDescription,
-                        modifier = Modifier.size(80.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                    Image(
+                        painter = painterResource(id = image),
+                        contentDescription = imageDescription,
+                        modifier = Modifier.size(120.dp)
                     )
                 }
                 Column (
@@ -103,4 +107,19 @@ fun MenuLabel(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MenuLabel() {
+    val navController = rememberNavController()
+
+    MenuLabel(
+        navController = navController,
+        navPage = "Titolo di prova",
+        title = "Titolo di prova",
+        description = "Titolo di prova",
+        image = R.drawable.menu_chat,
+        imageDescription = "Titolo di prova"
+    )
 }

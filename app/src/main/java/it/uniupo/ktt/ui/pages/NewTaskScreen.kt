@@ -1,41 +1,33 @@
 package it.uniupo.ktt.ui.pages
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,16 +35,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.R
+import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.theme.buttonTextColor
+import it.uniupo.ktt.ui.theme.lightGray
+import it.uniupo.ktt.ui.theme.primary
+import it.uniupo.ktt.ui.theme.secondary
+import it.uniupo.ktt.ui.theme.tertiary
+import it.uniupo.ktt.ui.theme.titleColor
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -67,190 +74,307 @@ fun NewTaskScreen(navController: NavController) {
     var taskName by remember { mutableStateOf("") }
     var employee by remember { mutableStateOf("") }
     var isChecked by remember { mutableStateOf(false) }
-    var subtasks by remember { mutableStateOf(listOf("Subtask 1", "Subtask 2", "Subtask 3")) }
-
-    Column(
+    var duration by remember { mutableStateOf("") }
+    val subtasks = listOf(
+        "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Mario Rossi",
+    )
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(20.dp)
-            .verticalScroll(rememberScrollState())
+            .background(Color.White)
     ) {
-        PageTitle(
-            navController = navController,
-            title = "New Task"
-        )
-
-        Spacer(modifier = Modifier.size(30.dp))
-
-        OutlinedTextField(
-            value = taskName,
-            onValueChange = { newText -> taskName = newText },
-            label = { Text("Task Name") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.size(15.dp))
-
-        OutlinedTextField(
-            value = employee,
-            onValueChange = { newText -> employee = newText },
-            label = { Text("Employee") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                cursorColor = MaterialTheme.colorScheme.primary
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row(
-            modifier = Modifier.padding(top = 15.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .padding(bottom = 80.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                text = "Share position: ",
-                style = MaterialTheme.typography.bodyLarge
+            PageTitle(
+                navController = navController,
+                title = "New Task"
             )
-            Switch(
-                checked = isChecked,
-                onCheckedChange = { isChecked = it },
-                modifier = Modifier.scale(0.7f)
+
+            Spacer(modifier = Modifier.size(30.dp))
+
+            CustomTextField(
+                label = "Task name:",
+                textfieldValue = taskName,
+                onValueChange = { taskName = it }
             )
-        }
 
-        Spacer(modifier = Modifier.size(10.dp))
+            Spacer(modifier = Modifier.size(20.dp))
 
-        Text(
-            text = "Subtask List:"
-        )
+            CustomTextField(
+                label = "Employee:",
+                textfieldValue = employee,
+                onValueChange = { employee = it }
+            )
 
-        Column {
-            for (i in subtasks.indices step 2) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Primo box
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(16.dp)
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Subtask ${i + 1}",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Icon(
-                                    imageVector = Icons.Filled.Image,
-                                    contentDescription = "Subtask Image",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = subtasks[i],
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    // Secondo box (se esiste)
-                    if (i + 1 < subtasks.size) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(16.dp)
-                        ) {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = "Subtask ${i + 2}",
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Filled.Image,
-                                        contentDescription = "Subtask Image",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    text = subtasks[i + 1],
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.weight(1f)) // Placeholder for odd number of items
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            /*Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                modifier = Modifier.padding(top = 15.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .aspectRatio(1f) // Rende la box quadrata
-                        .background(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(16.dp)
-                        .clickable {
-                            subtasks = subtasks + "New Subtask"
-                        }
+                // "Share position" e il Switch
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add Subtask",
-                            modifier = Modifier.size(24.dp)
+                        Text(
+                            text = "Share position: ",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight(500),
+                                color = Color(0xFF403E3E),
+                            ),
+                        )
+                        Switch(
+                            checked = isChecked,
+                            onCheckedChange = { isChecked = it },
+                            modifier = Modifier.scale(0.7f),
+                            colors = SwitchDefaults.colors(
+                                // checkedThumbColor = Color.Green,   // Colore del pallino quando il switch è acceso
+                                // uncheckedThumbColor = Color.Gray,  // Colore del pallino quando il switch è spento
+                                checkedTrackColor = secondary,    // Colore del tracciato quando il switch è acceso
+                                // uncheckedTrackColor = Color.LightGray  // Colore del tracciato quando il switch è spento
+                            )
                         )
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-            }*/
+
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Duration: ",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight(500),
+                                color = Color(0xFF403E3E),
+                            ),
+                        )
+                        TextField(
+                            value = duration,
+                            onValueChange = { newText ->
+                                if (newText.length <= 5) {
+                                    duration = newText
+                                }
+                            },
+                            label = { Text("HH:MM") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5DFFA),
+                                unfocusedContainerColor = Color(0xFFF5DFFA),
+                                cursorColor = Color.Black,
+                                disabledLabelColor = Color.Red,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            ),
+                            modifier = Modifier.width(90.dp)
+                        )
+                    }
+                }
+            }
+
+
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Text(
+                text = "Subtask List:",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(500),
+                    color = Color(0xFF403E3E),
+                ),
+                modifier = Modifier.padding(bottom = 15.dp)
+            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    if (subtasks.isNotEmpty()) {
+                        subtasks.forEachIndexed { index, (description) ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 10.dp)
+                                    .width(180.dp)
+                                    .height(220.dp)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
+                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(27.dp)
+                                            .background(
+                                                color = lightGray,
+                                                shape = CircleShape
+                                            )
+                                            .align(Alignment.End)
+                                    ) {
+                                        Text(
+                                            text = "${index + 1}",
+                                            fontSize = 14.sp,
+                                            color = buttonTextColor,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                    Text(
+                                        text = "Description:",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = titleColor,
+                                        textAlign = TextAlign.Start
+                                    )
+
+                                    Text(
+                                        text = description,
+                                        fontWeight = FontWeight.Light,
+                                        fontSize = 16.sp,
+                                        color = titleColor,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        maxLines = 4,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Text(
+                                        text = "Photo:",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = titleColor,
+                                        textAlign = TextAlign.Start
+                                    )
+
+                                    Image(
+                                        painter = painterResource(id = R.drawable.edit_rewrite),
+                                        contentDescription = "Extend",
+                                        modifier = Modifier.size(24.dp)
+                                            .align(Alignment.End)
+                                            .clickable {
+                                                navController.navigate("update subtask")
+                                            },
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 10.dp)
+                            .width(100.dp)
+                            .height(100.dp)
+                            .clickable {
+
+                            }
+                            .shadow(
+                                4.dp,
+                                shape = MaterialTheme.shapes.extraLarge,
+                                clip = false)
+                            .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                            .padding(16.dp)
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(90.dp)
+                                .background(
+                                    color = tertiary,
+                                    shape = CircleShape
+                                )
+                                .align(Alignment.Center)
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                "Large floating action button",
+                                tint = buttonTextColor,
+                                modifier = Modifier.size(55.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(45.dp)
+                    .shadow(
+                        4.dp,
+                        shape = MaterialTheme.shapes.large,
+                        clip = false
+                    )
+                    .background(
+                        color = tertiary,
+                        shape = MaterialTheme.shapes.large
+                    )
+                    .clickable { /* Cancella */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Cancel",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(45.dp)
+                    .shadow(
+                        4.dp,
+                        shape = MaterialTheme.shapes.large,
+                        clip = false
+                    )
+                    .background(
+                        color = tertiary,
+                        shape = MaterialTheme.shapes.large
+                    )
+                    .clickable { /* Crea task */ },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Create",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
