@@ -1,4 +1,4 @@
-package it.uniupo.ktt.ui.pages.Caregiver.Statistics
+package it.uniupo.ktt.ui.pages.caregiver.statistics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
