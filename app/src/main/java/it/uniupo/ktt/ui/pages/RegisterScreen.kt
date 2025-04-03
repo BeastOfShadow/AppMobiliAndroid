@@ -279,6 +279,7 @@ fun RegisterScreen(navController: NavController) {
                                     val uid= BaseRepository.currentUid()
 
                                     val user = User(
+                                        uid = uid.toString(),
                                         email = email.lowercase(),
                                         role = UserRole.EMPLOYEE.toString(),
                                         name = name.lowercase().replaceFirstChar { it.uppercase() },
