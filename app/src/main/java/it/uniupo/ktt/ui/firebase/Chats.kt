@@ -13,6 +13,8 @@ import kotlinx.coroutines.tasks.await
 
 object ChatRepository {
 
+        //OK
+    // blocca il thread e necessito di coroutine per poterla richiamare ("scope" nei Button & "LaunchedEffect" nei composable)
     suspend fun getUserByEmail(
         email: String,
     ): User?{
@@ -23,6 +25,7 @@ object ChatRepository {
                 .get()
                 .await()
 
+            // return "User" al completo
             snapshot.documents.firstOrNull()?.toObject(User::class.java)
         }
         catch (e: Exception){
@@ -30,13 +33,16 @@ object ChatRepository {
         }
     }
 
+
+        //OK
+    // non blocca il Thread -> usa firestore async, quindi non necessito di coroutine per usarla ma solo di un "LaunchedEffect(){}"
     fun postNewContact(
         newContact: Contact,
         onSuccess: () -> Unit = {},
         onError: (Exception) -> Unit = {}
     ) {
         BaseRepository.db
-            .collection("contacts") // <- correggi se era "contacts"
+            .collection("contacts")
             .add(newContact)
             .addOnSuccessListener {
                 Log.d("Firestore", "Contatto aggiunto con successo")
@@ -48,6 +54,48 @@ object ChatRepository {
             }
     }
 
+
+        // OK
+    fun getAllConntactsByUid(
+        uid: String,
+        onSuccess: (List<Contact>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("contacts")
+            .whereEqualTo("uidPersonal", uid)
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Contact Brooonti
+                val contacts = snapshot.documents.mapNotNull { it.toObject(Contact::class.java) }
+                Log.d("Firestore", "Trovati ${contacts.size} contatti dato uid: $uid")
+                onSuccess(contacts)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Errore durante la query getAllConntactsByUid", e)
+                onError(e)
+            }
+    }
+
+
+
+
+
+//    suspend fun getAllContactsByUid(
+//        uid: String,
+//    ): User?{
+//        return try {
+//            val snapshot = BaseRepository.db
+//                .collection("contacts")
+//                .whereEqualTo("uidPersonal", uid)
+//                .get()
+//                .await()
+//
+//            snapshot.documents.firstOrNull()?.toObject(User::class.java)
+//        }
+//        catch (e: Exception){
+//            null
+//        }
+//    }
 
                                 // GET ALL CHATS by uid
 //    fun fetchChatsForUser(

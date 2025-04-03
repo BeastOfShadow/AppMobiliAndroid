@@ -1,18 +1,29 @@
 package it.uniupo.ktt.ui.components.chats
 
 import android.util.Log
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.repeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,120 +33,193 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.IntOffset
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Contact
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 
 @Composable
-fun ModalAddContact(onDismiss: () -> Unit) {
+fun ModalAddContact(
+    onDismiss: () -> Unit,
+    contactList: MutableState<List<Contact>>
+    ) {
+
+    //snackBar (modale info)
+    val snackbarHostState = remember { SnackbarHostState() }
+
     var name by remember { mutableStateOf("") }
     var surname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .background(Color(0xFFC5B5D8), shape = RoundedCornerShape(16.dp)) // lilla scuro
-            .padding(24.dp)
-            .width(300.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-                                // CAMPI
-        CustomChatTextField(
-            label = "Name:",
-            textfieldValue = name,
-            onValueChange = { name = it }
-        )
+    // Shake Animation (errore Email non trovata)
+    var shakeEmail by remember { mutableStateOf(false) }
+    val offsetX by animateFloatAsState(
+        targetValue = if (shakeEmail) 10f else 0f,
+        animationSpec = repeatable(
+            iterations = 6,
+            animation = tween(durationMillis = 90, easing = FastOutLinearInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shake"
+    )
 
-        CustomChatTextField(
-            label = "Surname:",
-            textfieldValue = surname,
-            onValueChange = { surname = it }
-        )
-
-
-        CustomChatTextField(
-            label = "Email:",
-            textfieldValue = email,
-            onValueChange = { email = it }
-        )
-
-        Spacer(modifier = Modifier.size(20.dp))
+    // Reset automatico dello shake
+    LaunchedEffect(shakeEmail) {
+        if (shakeEmail) {
+            delay(300) // durata equivalente all'animazione
+            shakeEmail = false
+        }
+    }
 
 
-        // Bottoni
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+    // Wrap Column con ScaffHold (per mostrare SNACKBAR)
+    Scaffold (
+        snackbarHost = {SnackbarHost(hostState = snackbarHostState)},
+        containerColor = Color.Transparent
+    ) { paddingValues ->
 
-            //CANCEL BUTTON
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBBA5E1)) // viola chiaro
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
+        ){
+            Column(
+                modifier = Modifier
+                    //.padding(paddingValues)
+                    .background(Color(0xFFC5B5D8), shape = RoundedCornerShape(16.dp)) // lilla scuro
+                    .padding(24.dp)
+                    .width(300.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Cancel")
-            }
+                                        // CAMPI
+                CustomChatTextField(
+                    label = "Name:",
+                    textfieldValue = name,
+                    onValueChange = { name = it }
+                )
 
-            // coroutine ref
-            val scope = rememberCoroutineScope()
+                CustomChatTextField(
+                    label = "Surname:",
+                    textfieldValue = surname,
+                    onValueChange = { surname = it }
+                )
 
-            //ADD BUTTON
-            Button(
-                onClick = {
-                    scope.launch{
-                                    // POST CONTACT on DB
-                        val emailLowerCase = email.lowercase() //trasforma in Lowercase
-                        val myUid = BaseRepository.currentUid().toString()
-                        val targetUser = ChatRepository.getUserByEmail(emailLowerCase)
+                CustomChatTextField(
+                    label = "Email:",
+                    textfieldValue = email,
+                    onValueChange = { email = it },
 
-                        if(targetUser!= null && targetUser.isValid()) { //utente trovato
-                            try {
-                                val newContact = Contact(
-                                    email = emailLowerCase,
-                                    name = name,
-                                    surname = surname,
-                                    uidPersonal = myUid,
-                                    uidContact = targetUser.uid
-                                )
-                                //Log.d("DEBUG", "Contatto: $newContact")
+                    modifier = Modifier.offset { IntOffset(offsetX.roundToInt(), 0) }
+                )
 
-                                //POST NEW CONTACT
-                                ChatRepository.postNewContact(
-                                    newContact = newContact,
-                                    onSuccess = {
-                                        Log.d("DEBUG", "Contatto creato con successo")
-                                        onDismiss()
-                                    },
-                                    onError = { e ->
-                                        Log.e("DEBUG", "Errore nel salvataggio del contatto", e)
-                                        // Mostra errore in UI se vuoi (es. Snackbar, Toast)
-                                    }
-                                )
-                            }
-                            catch (e: IllegalArgumentException){
-                                Log.e("DEBUG", "Dati non validi: ${e.message}")
-                                // puoi anche mostrare un Toast o uno Snackbar all’utente qui
-                            }
+                Spacer(modifier = Modifier.size(20.dp))
 
-                        }
-                        else{ //utente non trovato
-                            Log.d("DEBUG", "Email cercata: $email | targetUser: $targetUser")
+                                            // BUTTONS
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 
-                            //fai tremare la textfield? e msg "email non trovata nel database"
-
-                        }
+                    //CANCEL BUTTON
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBBA5E1)) // viola chiaro
+                    ) {
+                        Text("Cancel")
                     }
 
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C46FF)) // viola più scuro
-            ) {
-                Text("Add")
+                    // coroutine riferimento (corutine dato che uso .await)
+                    val scope = rememberCoroutineScope()
+
+                    //ADD BUTTON
+                    Button(
+                        onClick = {
+                            // Validazione campi
+                            if (name.isBlank() || surname.isBlank() || email.isBlank()) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Tutti i campi sono obbligatori")
+                                }
+                                return@Button
+                            }
+
+                            // Coroutine Space
+                            scope.launch{
+
+                                //Il contatto che voglio aggiungere è già tra i miei contatti??
+                                // in NewChatPage ricevo la lista dei miei contatti per poterla popolare quindi potrei
+                                // passarla al modale per un confronto
+
+                                /*
+                                *
+                                *           CONFRONTO MAIL CHE VOGLIO INSERIRE CON LA LISTA RICEVUTA IN INPUT
+                                *
+                                *
+                                * */
+
+                                // POST CONTACT on DB
+                                val emailLowerCase = email.lowercase() //trasforma in Lowercase
+                                val myUid = BaseRepository.currentUid().toString()
+                                val targetUser = ChatRepository.getUserByEmail(emailLowerCase)
+
+                                if(targetUser!= null && targetUser.isValid()) { //utente trovato
+                                    try {
+                                        val newContact = Contact(
+                                            email = emailLowerCase,
+                                            name = name,
+                                            surname = surname,
+                                            uidPersonal = myUid,
+                                            uidContact = targetUser.uid
+                                        )
+                                        //Log.d("DEBUG", "Contatto: $newContact")
+
+                                        //POST NEW CONTACT
+                                        ChatRepository.postNewContact(
+                                            newContact = newContact,
+                                            onSuccess = {
+                                                Log.d("DEBUG", "Contatto creato con successo")
+
+                                                contactList.value = contactList.value + newContact // aggiorna la variabile reattiva "contactList"
+                                                onDismiss() //callback visibilità modale OFF (chiudi modale)
+                                            },
+                                            onError = { e ->
+                                                Log.e("DEBUG", "Errore nel salvataggio del contatto", e)
+                                                // Mostra errore in UI se vuoi (es. Snackbar, Toast)
+                                            }
+                                        )
+                                    }
+                                    catch (e: IllegalArgumentException){
+                                        Log.e("DEBUG", "Dati non validi: ${e.message}")
+                                        // puoi anche mostrare un Toast o uno Snackbar all’utente qui
+                                    }
+
+                                }
+                                else{ //utente non trovato
+                                    Log.d("DEBUG", "Email cercata: $email | targetUser: $targetUser")
+
+                                    //SHAKE + SNACKBAR
+                                    shakeEmail = true
+                                    snackbarHostState.showSnackbar("Email non presente nel database")
+                                }
+                            }
+
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C46FF)) // viola più scuro
+                    ) {
+                        Text("Add")
+                    }
+                }
             }
         }
+
+
     }
 }
 
