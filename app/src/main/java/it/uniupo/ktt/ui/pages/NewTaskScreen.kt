@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
@@ -73,8 +74,12 @@ fun NewTaskScreen(navController: NavController) {
 
     var taskName by remember { mutableStateOf("") }
     var employee by remember { mutableStateOf("") }
-    var isChecked by remember { mutableStateOf(false) }
     var duration by remember { mutableStateOf("") }
+    var subtaskDescription by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    var isChecked by remember { mutableStateOf(false) }
+
+
     val subtasks = listOf(
         "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Mario Rossi",
     )
@@ -290,7 +295,7 @@ fun NewTaskScreen(navController: NavController) {
                             .width(100.dp)
                             .height(100.dp)
                             .clickable {
-
+                                showDialog = true
                             }
                             .shadow(
                                 4.dp,
@@ -316,6 +321,232 @@ fun NewTaskScreen(navController: NavController) {
                                 modifier = Modifier.size(55.dp)
                                     .align(Alignment.Center)
                             )
+                        }
+                        if (showDialog) {
+                            Dialog(onDismissRequest = { showDialog = false }) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFFC5B5D8), shape = RoundedCornerShape(16.dp)) // lilla scuro
+                                        .padding(24.dp)
+                                        .fillMaxWidth(),
+                                )
+                                {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        CustomTextField(
+                                            label = "Subtask Description:",
+                                            textfieldValue = subtaskDescription,
+                                            onValueChange = { subtaskDescription = it }
+                                        )
+
+                                        Spacer(modifier = Modifier.size(20.dp))
+
+                                        Text(
+                                            text = "Photo:",
+                                            style = TextStyle(
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight(500),
+                                                color = Color(0xFF403E3E),
+                                            ),
+                                            modifier = Modifier.padding(start = 20.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.size(10.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceAround
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .shadow(
+                                                        4.dp,
+                                                        shape = MaterialTheme.shapes.extraLarge,
+                                                        clip = false
+                                                    )
+                                                    .background(
+                                                        color = Color.White,
+                                                        shape = MaterialTheme.shapes.extraLarge
+                                                    )
+                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Text(
+                                                        text = "See",
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = lightGray
+                                                    )
+
+                                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .shadow(
+                                                                4.dp,
+                                                                shape = CircleShape,
+                                                                clip = false
+                                                            )
+                                                            .background(
+                                                                color = tertiary,
+                                                                shape = CircleShape
+                                                            )
+                                                            .size(32.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.image_see),
+                                                            contentDescription = "Extend",
+                                                            modifier = Modifier.size(24.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .shadow(
+                                                        4.dp,
+                                                        shape = MaterialTheme.shapes.extraLarge,
+                                                        clip = false
+                                                    )
+                                                    .background(
+                                                        color = Color.White,
+                                                        shape = MaterialTheme.shapes.extraLarge
+                                                    )
+                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Text(
+                                                        text = "Add",
+                                                        fontSize = 16.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = lightGray
+                                                    )
+
+                                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .shadow(
+                                                                4.dp,
+                                                                shape = CircleShape,
+                                                                clip = false
+                                                            )
+                                                            .background(
+                                                                color = tertiary,
+                                                                shape = CircleShape
+                                                            )
+                                                            .size(32.dp),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.image_upload),
+                                                            contentDescription = "Extend",
+                                                            modifier = Modifier.size(24.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .shadow(
+                                                        4.dp,
+                                                        shape = MaterialTheme.shapes.extraLarge,
+                                                        clip = false
+                                                    )
+                                                    .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
+                                                    .padding(6.dp)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .shadow(
+                                                            4.dp,
+                                                            shape = MaterialTheme.shapes.extraLarge,
+                                                            clip = false
+                                                        )
+                                                        .background(color = tertiary, shape = MaterialTheme.shapes.extraLarge)
+                                                        .padding(6.dp)
+                                                ) {
+                                                    Image(
+                                                        painter = painterResource(id = R.drawable.trashcan),
+                                                        contentDescription = "Extend",
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.size(50.dp))
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = 10.dp),
+                                            horizontalArrangement = Arrangement.SpaceEvenly
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(120.dp)
+                                                    .height(45.dp)
+                                                    .shadow(
+                                                        4.dp,
+                                                        shape = MaterialTheme.shapes.large,
+                                                        clip = false
+                                                    )
+                                                    .background(
+                                                        color = tertiary,
+                                                        shape = MaterialTheme.shapes.large
+                                                    )
+                                                    .clickable {
+                                                        subtaskDescription = ""
+                                                        showDialog = false
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    "Cancel",
+                                                    color = Color.White,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(120.dp)
+                                                    .height(45.dp)
+                                                    .shadow(
+                                                        4.dp,
+                                                        shape = MaterialTheme.shapes.large,
+                                                        clip = false
+                                                    )
+                                                    .background(
+                                                        color = tertiary,
+                                                        shape = MaterialTheme.shapes.large
+                                                    )
+                                                    .clickable { /* Crea task */ },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    "Create",
+                                                    color = Color.White,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -138,7 +138,7 @@ fun HomeScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.menu_stats_a),
+                    painter = painterResource(id = R.drawable.caregiver),
                     contentDescription = "Endline",
                     modifier = Modifier.size(20.dp)
                 )
