@@ -38,11 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.auth.User
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.MenuLabel
-import it.uniupo.ktt.ui.firebase.getNameSurnameByUserId
-import it.uniupo.ktt.ui.firebase.getRoleByUserId
+import it.uniupo.ktt.ui.firebase.UserRepository.getNameSurnameByUserId
+import it.uniupo.ktt.ui.firebase.UserRepository.getRoleByUserId
 import it.uniupo.ktt.ui.roles.UserRole
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor

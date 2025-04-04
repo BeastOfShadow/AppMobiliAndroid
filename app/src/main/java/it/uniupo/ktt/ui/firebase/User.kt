@@ -10,46 +10,51 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-@Composable
-fun getRoleByUserId(): String {
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
-    var role by remember { mutableStateOf("Loading...") }
+object UserRepository {
 
-    val db = FirebaseFirestore.getInstance()
+    @Composable
+    fun getRoleByUserId(): String {
+        val userId = BaseRepository.currentUid()
+        var role by remember { mutableStateOf("Loading...") }
 
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            try {
-                val document = db.collection("users").document(userId).get().await()
-                role = document.getString("role").toString()
-            } catch (e: Exception) {
-                role = "Error loading role"
+        val db = BaseRepository.db
+
+        LaunchedEffect(userId) {
+            if (userId != null) {
+                try {
+                    val document = db.collection("users").document(userId).get().await()
+                    role = document.getString("role").toString()
+                } catch (e: Exception) {
+                    role = "Error loading role"
+                }
             }
         }
+
+        return role
     }
 
-    return role
-}
+    @Composable
+    fun getNameSurnameByUserId(): String {
+        val userId = BaseRepository.currentUid()
+        var userName by remember { mutableStateOf("Loading...") }
 
-@Composable
-fun getNameSurnameByUserId(): String {
-    val userId = FirebaseAuth.getInstance().currentUser?.uid
-    var userName by remember { mutableStateOf("Loading...") }
+        val db = FirebaseFirestore.getInstance()
 
-    val db = FirebaseFirestore.getInstance()
-
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            try {
-                val document = db.collection("users").document(userId).get().await()
-                val name = document.getString("name")?.replaceFirstChar { it.uppercase() } ?: "Unknown"
-                val surname = document.getString("surname")?.replaceFirstChar { it.uppercase() } ?: "User"
-                userName = "$name $surname"
-            } catch (e: Exception) {
-                userName = "Error loading name"
+        LaunchedEffect(userId) {
+            if (userId != null) {
+                try {
+                    val document = db.collection("users").document(userId).get().await()
+                    val name =
+                        document.getString("name")?.replaceFirstChar { it.uppercase() } ?: "Unknown"
+                    val surname =
+                        document.getString("surname")?.replaceFirstChar { it.uppercase() } ?: "User"
+                    userName = "$name $surname"
+                } catch (e: Exception) {
+                    userName = "Error loading name"
+                }
             }
         }
-    }
 
-    return userName
+        return userName
+    }
 }
