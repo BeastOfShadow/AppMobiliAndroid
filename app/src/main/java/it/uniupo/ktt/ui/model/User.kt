@@ -9,7 +9,6 @@ data class User(
     val surname: String = ""
 ){
 
-
     /* Non metto controlli "require" dato che per la creazione è otttimo, ma per
     la deserializzazione è un casino dato che ".toObject" passa un
     oggetto serializzato che non ha campi esatti fino alla deserializzazione

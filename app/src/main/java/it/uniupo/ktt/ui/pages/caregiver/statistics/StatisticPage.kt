@@ -33,6 +33,7 @@ import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.statistics.StatStatusBadge
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.StatisticsRepository
+import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.theme.titleColor
 
 @Composable
@@ -157,20 +158,83 @@ fun CG_StatisticPage(navController: NavController) {
                         .height(100.dp)
                 ){
 
+                    // OTTIENI 2 MEDIE
+                    /*
+                    *  1) Media "completionTimeToday": ovvero la media della Duratio dei lavori "completed"
+                    *                                  svolti da tutti i tuoi dipendenti oggi
+                    *
+                    *  2) Media "completionTimeGeneral": ovvero la media della durata di tutti i lavori "completed"
+                    *                                    svolti in generale
+                    *
+                    * */
+
+                    // 1.1) Lista completionTimeToday: -------------------------------------------
+                    val dailyTasksCompletedList = remember { mutableStateOf<List<Task>>(emptyList()) }
+
+                    LaunchedEffect(personalUid) {
+                        if (personalUid != null) {
+                            StatisticsRepository.getAllDailyCompletedTaskByCaregiverUid(
+
+                                uid = personalUid,
+                                onSuccess = { dailyCompletedTasks ->
+                                    Log.d("DEBUG", "Lista tasks: ${dailyCompletedTasks.joinToString(separator = "\n")}")
+                                    dailyTasksCompletedList.value = dailyCompletedTasks.filter { it.isValid() }
+                                },
+                                onError = { e ->
+                                    Log.e("DEBUG", "Errore nella getAllDailyCompletedTaskByCaregiverUid query", e)
+                                }
+                            )
+                        }
+                    }
+
+                    // 1.2) calcola la media TodayCompletionTime:
+                    val avgDailyCompletionTime = dailyTasksCompletedList.value
+                        .map { it.completionTimeActual }   // seleziona campo
+                        .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
+                        .average()  // calcola media
+
+                    // 2.1) Lista completionTimeGeneral: -------------------------------------------
+                    val generalTasksCompletedList = remember { mutableStateOf<List<Task>>(emptyList()) }
+
+                    LaunchedEffect(personalUid) {
+                        if (personalUid != null) {
+                            StatisticsRepository.getGeneralCompletedTaskByCaregiverUid(
+
+                                uid = personalUid,
+                                onSuccess = { generalCompletedTasks ->
+                                    Log.d("DEBUG", "Lista tasks: ${generalCompletedTasks.joinToString(separator = "\n")}")
+                                    generalTasksCompletedList.value = generalCompletedTasks.filter { it.isValid() }
+                                },
+                                onError = { e ->
+                                    Log.e("DEBUG", "Errore nella getGeneralCompletedTaskByCaregiverUid query", e)
+                                }
+                            )
+                        }
+                    }
+
+                    // 2.2) calcola la media GeneralcompletionTime:
+                    val avgGeneralCompletionTime = dailyTasksCompletedList.value
+                        .map { it.completionTimeActual }   // seleziona campo
+                        .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
+                        .average()  // calcola media
+
+
+                    // ho le 2 medie, stampale per controllare che tutto sia OK
+                    // se tutto ok ->
+
+                    // val ratioTime = avgDailyCompletionTime/avgGeneralCompletionTime
+
+
+
+
+
                     // esempi valori(in futuro ottienili da DB e calcolali):
                     val completionTimeToday = 16.41
                     val completionTimeGeneral = 26.55
                     val ratioTime = completionTimeToday/completionTimeGeneral
 
-                    // come calcolare i valori?
-                    /*
-                    *  idee ...  allora teoricamente vogliamo una media
-                    * */
-
                     //BAR
                     AvgComplationBar(
-                        todayTime = completionTimeToday.toFloat(),
-                        generalTime = completionTimeGeneral.toFloat(),
                         ratio = ratioTime.toFloat()
                     )
 
