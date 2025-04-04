@@ -9,13 +9,16 @@ data class Contact(
     val uidPersonal: String = "",
     val uidContact: String = ""
     ){
-        init {
-            //validazione campi
-            require(email.isNotBlank()) { "email non inserita." }
-            require(name.isNotBlank()) { "nome non inserito." }
-            require(surname.isNotBlank()) { "cognome non inserito." }
+        /* Non metto controlli "require" dato che anche se per la creazione va bene, per
+        la deserializzazione è problematico dato che ".toObject" passa un
+        oggetto serializzato che non ha campi esatti fino alla deserializzazione
+        quindi: 1) deserializzo 2)controllo i campi con fun "isValid" */
 
-            require(uidPersonal.isNotBlank()) { "uid Personale non inserito." }
-            require(uidContact.isNotBlank()) { "uid Contatto non inserito." }
-        }
+    fun isValid(): Boolean {
+        return email.isNotBlank() &&
+                name.isNotBlank() &&
+                surname.isNotBlank() &&
+                uidPersonal.isNotBlank() &&
+                uidContact.isNotBlank()
+    }
 }

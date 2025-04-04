@@ -16,12 +16,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import it.uniupo.ktt.ui.pages.Caregiver.Chat.ChatPage
-import it.uniupo.ktt.ui.pages.Caregiver.Statistics.CG_StatisticPage
+import it.uniupo.ktt.ui.pages.caregiver.chat.ChatPage
+import it.uniupo.ktt.ui.pages.caregiver.statistics.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.HomeScreen
 import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
-import it.uniupo.ktt.ui.pages.Caregiver.Chat.NewChatPage
+import it.uniupo.ktt.ui.pages.caregiver.chat.NewChatPage
 import it.uniupo.ktt.ui.pages.CommentSubtaskScreen
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen

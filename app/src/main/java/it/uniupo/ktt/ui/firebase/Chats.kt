@@ -1,13 +1,101 @@
 package it.uniupo.ktt.ui.firebase
 
+import android.provider.ContactsContract.CommonDataKinds.Email
 import android.util.Log
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
+import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.ui.model.User
+import kotlinx.coroutines.tasks.await
 
 
 object ChatRepository {
 
+        //OK
+    // blocca il thread e necessito di coroutine per poterla richiamare ("scope" nei Button & "LaunchedEffect" nei composable)
+    suspend fun getUserByEmail(
+        email: String,
+    ): User?{
+        return try {
+            val snapshot = BaseRepository.db
+                .collection("users")
+                .whereEqualTo("email", email.lowercase())
+                .get()
+                .await()
+
+            // return "User" al completo
+            snapshot.documents.firstOrNull()?.toObject(User::class.java)
+        }
+        catch (e: Exception){
+            null
+        }
+    }
+
+
+        //OK
+    // non blocca il Thread -> usa firestore async, quindi non necessito di coroutine per usarla ma solo di un "LaunchedEffect(){}"
+    fun postNewContact(
+        newContact: Contact,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("contacts")
+            .add(newContact)
+            .addOnSuccessListener {
+                Log.d("Firestore", "Contatto aggiunto con successo")
+                onSuccess()
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Errore nell'aggiunta contatto", e)
+                onError(e)
+            }
+    }
+
+
+        // OK
+    fun getAllConntactsByUid(
+        uid: String,
+        onSuccess: (List<Contact>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("contacts")
+            .whereEqualTo("uidPersonal", uid)
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Contact Brooonti
+                val contacts = snapshot.documents.mapNotNull { it.toObject(Contact::class.java) }
+                Log.d("Firestore", "Trovati ${contacts.size} contatti dato uid: $uid")
+                onSuccess(contacts)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Errore durante la query getAllConntactsByUid", e)
+                onError(e)
+            }
+    }
+
+
+
+
+
+//    suspend fun getAllContactsByUid(
+//        uid: String,
+//    ): User?{
+//        return try {
+//            val snapshot = BaseRepository.db
+//                .collection("contacts")
+//                .whereEqualTo("uidPersonal", uid)
+//                .get()
+//                .await()
+//
+//            snapshot.documents.firstOrNull()?.toObject(User::class.java)
+//        }
+//        catch (e: Exception){
+//            null
+//        }
+//    }
 
                                 // GET ALL CHATS by uid
 //    fun fetchChatsForUser(
@@ -35,36 +123,34 @@ object ChatRepository {
 
 
                                     //POST NEW CHAT
-    fun createChat(
-        chatId: String,
-        caregiverPath: String,
-        employeePath: String,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
-    ) {
-        val uid = BaseRepository.currentUid()
-        val db = BaseRepository.db
-
-        val chatData = hashMapOf(
-            "chatId" to chatId,
-            "caregiver" to caregiverPath,
-            "employee" to employeePath,
-            "lastMsg" to "",
-            "lastSender" to "",
-            "lastTimeStamp" to Timestamp.now()
-        )
-
-        db.collection("chats").document(chatId)
-            .set(chatData)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Chat $chatId creata")
-                onSuccess()
-            }
-            .addOnFailureListener { e ->
-                Log.w("Firestore", "Errore creazione chat", e)
-                onFailure(e)
-            }
-    }
+//    fun createChat(
+//        caregiverPath: String,
+//        employeePath: String,
+//        onSuccess: () -> Unit = {},
+//        onFailure: (Exception) -> Unit = {}
+//    ) {
+//        val uid = BaseRepository.currentUid()
+//        val db = BaseRepository.db
+//
+//        val chatData = hashMapOf(
+//            "caregiver" to caregiverPath,
+//            "employee" to employeePath,
+////            "lastMsg" to "",
+////            "lastSender" to "",
+////            "lastTimeStamp" to Timestamp.now()
+//        )
+//
+//        db.collection("chats").document(chatId)
+//            .set(chatData)
+//            .addOnSuccessListener {
+//                Log.d("Firestore", "Chat $chatId creata")
+//                onSuccess()
+//            }
+//            .addOnFailureListener { e ->
+//                Log.w("Firestore", "Errore creazione chat", e)
+//                onFailure(e)
+//            }
+//    }
 
 
 

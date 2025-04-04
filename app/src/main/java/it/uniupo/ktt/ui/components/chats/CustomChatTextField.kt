@@ -26,9 +26,10 @@ import androidx.compose.ui.unit.sp
 fun CustomChatTextField(
     label: String,
     textfieldValue: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
             fontWeight = FontWeight.Medium,
