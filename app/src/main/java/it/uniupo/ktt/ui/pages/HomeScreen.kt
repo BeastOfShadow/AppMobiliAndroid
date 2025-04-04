@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.auth.User
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.MenuLabel
 import it.uniupo.ktt.ui.firebase.getNameSurnameByUserId
@@ -139,7 +138,7 @@ fun HomeScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.menu_stats_a),
+                    painter = painterResource(id = R.drawable.caregiver),
                     contentDescription = "Endline",
                     modifier = Modifier.size(20.dp)
                 )
