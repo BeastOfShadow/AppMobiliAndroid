@@ -12,7 +12,7 @@ data class Task(
     val overallComment: String = "",
     val overallRating: Int = 0,
 
-    val status: String = "" //ready, running, completed
+    val status: String = "" //ready, ongoing, completed
 ){
     init {
         //validazione campi
