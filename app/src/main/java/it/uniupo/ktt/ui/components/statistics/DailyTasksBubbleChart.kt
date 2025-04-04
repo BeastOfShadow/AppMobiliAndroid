@@ -34,9 +34,12 @@ import androidx.compose.ui.platform.LocalDensity
 
 @Composable
 fun DailyTasksBubbleChart(
+    // "completed, ongoing, ready" sono il Raggio finale del cerchio rappresentato
     completed: Float,
     ongoing: Float,
     ready: Float,
+
+    // "completedNumb, ongoingNumb, readyNumb" sono il Numero nel cerchio rappresentato
     completedNumb: Int,
     onGoingNumb: Int,
     readyNumb: Int
@@ -58,7 +61,7 @@ fun DailyTasksBubbleChart(
     //Stato BubbleChartBadge
     var animateBubbleChart by remember { mutableStateOf(false) }
 
-    //Avvia Animazioni all'ingresso nella page
+    //Avvia Animazioni all'ingresso nella page con ordine preciso
     LaunchedEffect(Unit) {
         animateStart = true                     //Avvia BubbleCharts
         kotlinx.coroutines.delay(500)  // Delay
@@ -183,13 +186,13 @@ fun DailyTasksBubbleChart(
             drawCircle(
                 color = Color(0xFFF5DFFA),
                 radius = animatedReadyRadius,
-                center = center + Offset(117f, 131f)
+                center = center + Offset(120f, 144f) // 117f, 131f
             )
             // + border Circle
             drawCircle(
                 color = Color(0xFF6326A9).copy(alpha = 0.2f),
                 radius = animatedReadyRadius,
-                center = center + Offset(117f, 131f),
+                center = center + Offset(120f, 144f),
                 style = Stroke( // Set the style to Stroke to create a border
                     width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
                 )
@@ -205,8 +208,8 @@ fun DailyTasksBubbleChart(
                 // readyNumb
                 canvas.nativeCanvas.drawText(
                     "$readyNumb",
-                    (center.x + 116f),
-                    (center.y + 163f),
+                    (center.x + 119f),
+                    (center.y + 176f),
                     readyPaint
                 )
             }
@@ -218,14 +221,14 @@ fun DailyTasksBubbleChart(
             drawCircle(
                 color = Color(0xFFA47BD4),
                 radius = animatedOngoingRadius,
-                center = center + Offset(-119f, 22f)
+                center = center + Offset(-126f, 38f)  // x=  -119f, y = 22f
 
             )
             // + border Circle
             drawCircle(
                 color = Color(0xFF6326A9).copy(alpha = 0.2f),
                 radius = animatedOngoingRadius,
-                center = center + Offset(-119f, 22f),
+                center = center + Offset(-126f, 38f),
                 style = Stroke( // Set the style to Stroke to create a border
                     width = 1.dp.toPx() // Set the thickness of the border (3 pixels in this case)
                 )
@@ -240,8 +243,8 @@ fun DailyTasksBubbleChart(
                 // onGoingNumb
                 canvas.nativeCanvas.drawText(
                     "$onGoingNumb",
-                    (center.x - 119f),
-                    (center.y + 54f),
+                    (center.x - 126f),
+                    (center.y + 70f),
                     ongoingPaint
                 )
             }
@@ -285,10 +288,6 @@ fun DailyTasksBubbleChart(
                 .scale(animatedBubbleScaleReady)
 
         )
-
-
-
-
     }
 }
 

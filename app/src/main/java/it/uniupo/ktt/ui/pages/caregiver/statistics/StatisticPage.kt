@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.pages.caregiver.statistics
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -23,17 +27,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.components.statistics.AvgComplationBar
 import it.uniupo.ktt.ui.components.statistics.DailyTasksBubbleChart
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.statistics.StatStatusBadge
+import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.firebase.StatisticsRepository
 import it.uniupo.ktt.ui.theme.titleColor
-
 
 @Composable
 fun CG_StatisticPage(navController: NavController) {
-    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
+    if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing") {
             popUpTo("new chat") { inclusive = true }
             launchSingleTop = true
@@ -74,14 +78,33 @@ fun CG_StatisticPage(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                // esempi valori(in futuro ottienili da DB e calcolali):
-                val completedTasks = 26
-                val ongoingTasks = 26 //16
-                val readyTasks = 30
+                // 3 Variabili BASE da cui derivo "completed"
+                val completedTasks = remember { mutableStateOf(0) }
+                val ongoingTasks = remember { mutableStateOf(0) }
+                val readyTasks = remember { mutableStateOf(0) }
+
+                // Multi-Query -> per ottenere il numero tot. dei tasks nei loro 3 Stati
+                val personalUid = BaseRepository.currentUid()
+
+                LaunchedEffect(personalUid) {
+                    if(personalUid!= null){
+                        StatisticsRepository.getTaskCountsByStatus(
+                            uid = personalUid,
+                            // classica Logica Val Mutable in Lambda expression -> che verrà modificato
+                            onResult = { ready, ongoing, completed ->
+                                readyTasks.value = ready
+                                ongoingTasks.value = ongoing
+                                completedTasks.value = completed
+                            },
+                            onError = { e -> Log.e("DEBUG", "Errore nella query", e)}
+                        )
+                    }
+
+                }
 
                 //riferimenti Chiave traformazioni Dimensioni Cerchi (NON MODIFICARE)
-                val minTasks = 11
-                val maxTasks = 25
+                val minTasks = 11       // Default: 11
+                val maxTasks = 25       // Default: 25
 
                 val minDimBubble = 35f
                 val maxDimBubble = 80f
@@ -89,24 +112,25 @@ fun CG_StatisticPage(navController: NavController) {
 
                 //BubbleChart COMPONENT
                 DailyTasksBubbleChart(
+                    // "completed, ongoing, ready" sono il Raggio finale del cerchio rappresentato
                     completed = when {
-                        completedTasks < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        completedTasks > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((completedTasks - 10) *3f)         //caso intermedio Bubble
+                        completedTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                        completedTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                        else -> 35f + ((completedTasks.value - 10) *3f)         //caso intermedio Bubble
                     },
                     ongoing = when {
-                        ongoingTasks < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        ongoingTasks > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((ongoingTasks - 10) *3f)         //caso intermedio Bubble
+                        ongoingTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                        ongoingTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                        else -> 35f + ((ongoingTasks.value - 10) *3f)         //caso intermedio Bubble
                     },
                     ready = when {
-                        readyTasks < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        readyTasks > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((readyTasks - 10) *3f)         //caso intermedio Bubble
+                        readyTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                        readyTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                        else -> 35f + ((readyTasks.value - 10) *3f)         //caso intermedio Bubble
                     },
-                    completedNumb = completedTasks,
-                    onGoingNumb = ongoingTasks,
-                    readyNumb = readyTasks
+                    completedNumb = completedTasks.value,
+                    onGoingNumb = ongoingTasks.value,
+                    readyNumb = readyTasks.value
                 )
 
                 Text(
@@ -138,6 +162,10 @@ fun CG_StatisticPage(navController: NavController) {
                     val completionTimeGeneral = 26.55
                     val ratioTime = completionTimeToday/completionTimeGeneral
 
+                    // come calcolare i valori?
+                    /*
+                    *  idee ...  allora teoricamente vogliamo una media
+                    * */
 
                     //BAR
                     AvgComplationBar(
@@ -158,7 +186,7 @@ fun CG_StatisticPage(navController: NavController) {
                     )
                     Text(
                         text = "(today)",
-                        style = MaterialTheme.typography.bodyLarge, //Poppins
+                        style = MaterialTheme.typography.labelSmall, //Poppins
 
                         fontSize = 13.sp,
                         fontWeight = FontWeight(400),
@@ -188,7 +216,7 @@ fun CG_StatisticPage(navController: NavController) {
 
                         color = Color(0xFF827676),
                         modifier = Modifier
-                            .offset(x = (252).dp, y = (55).dp)
+                            .offset(x = (255).dp, y = (59).dp)
                     )
 
                 }
@@ -207,4 +235,5 @@ fun CG_StatisticPage(navController: NavController) {
 fun CG_StatisticPagePreview() {
     CG_StatisticPage(navController = NavController(context = LocalContext.current))
 }
+
 
