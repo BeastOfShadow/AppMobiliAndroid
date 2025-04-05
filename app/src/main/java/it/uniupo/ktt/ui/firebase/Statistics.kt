@@ -1,7 +1,16 @@
 package it.uniupo.ktt.ui.firebase
 
+import android.icu.util.Calendar
+import android.util.Log
+import com.google.firebase.Timestamp
+import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.ui.model.Task
+import java.time.LocalDate
+import java.time.ZoneId
+
 object StatisticsRepository {
 
+        // OK
     fun getTaskCountsByStatus(
         uid: String,
         onResult: (ready: Int, ongoing: Int, completed: Int) -> Unit,
@@ -58,6 +67,56 @@ object StatisticsRepository {
             .addOnFailureListener { onError(it) }
     }
 
+    // TESTA
+    fun getAllDailyCompletedTaskByCaregiverUid(
+        uid: String,
+        onSuccess: (List<Task>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        val today = LocalDate.now() // "LocalDate.now()" data odierna (2025-04-04), mancano le ore che devo aggiungere
+        val dayStart = Timestamp(today.atStartOfDay(ZoneId.systemDefault()).toInstant()) // "today.atStartOfDay(ZoneId.systemDefault())" -> (2025-04-04T00:00:00), ".toInstant()"-> trasforma in un TimeStamp
+        val dayEnd = Timestamp(today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().minusMillis(1))
+
+        BaseRepository.db
+            .collection("tasks")
+            .whereEqualTo("caregiver", uid)
+            .whereEqualTo("status", "completed")
+            .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
+            .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
+                val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+                Log.d("DEBUG", "Trovati ${tasks.size} Daily Completed Tasks dato Caregiver: $uid")
+                onSuccess(tasks)
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEGUB", "Errore durante la query getAllDailyCompletedTaskByUid", e)
+                onError(e)
+            }
+    }
+
+    //TESTA
+    fun getGeneralCompletedTaskByCaregiverUid(
+    uid: String,
+    onSuccess: (List<Task>) -> Unit = {},
+    onError: (Exception) -> Unit = {}
+    ) {
+
+        BaseRepository.db
+            .collection("tasks")
+            .whereEqualTo("caregiver", uid)
+            .whereEqualTo("status", "completed")
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
+                val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+                Log.d("DEBUG", "Trovati ${tasks.size} Daily Completed Tasks dato Caregiver: $uid")
+                onSuccess(tasks)
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEGUB", "Errore durante la query getAllDailyCompletedTaskByUid", e)
+                onError(e)
+            }
+    }
 
 
 

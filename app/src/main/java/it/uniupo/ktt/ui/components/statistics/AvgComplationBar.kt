@@ -26,8 +26,6 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AvgComplationBar(
-    todayTime: Float,
-    generalTime: Float,
     ratio: Float
 ) {
     val backgroundBarColor = Color(0xFFF5DFFA)
@@ -85,5 +83,5 @@ fun AvgComplationBar(
 @Preview(showBackground = true)
 @Composable
 fun AvgCompletionBarPreview() {
-    AvgComplationBar(35.40.toFloat(), 40.12.toFloat(), (35.40/40.12).toFloat())
+    AvgComplationBar((35.40/40.12).toFloat())
 }
