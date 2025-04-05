@@ -1,5 +1,8 @@
 package it.uniupo.ktt.ui.pages
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -36,9 +41,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
@@ -51,10 +58,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.model.SubTask
+import it.uniupo.ktt.ui.subtaskstatus.SubtaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.lightGray
 import it.uniupo.ktt.ui.theme.primary
@@ -78,11 +88,22 @@ fun NewTaskScreen(navController: NavController) {
     var subtaskDescription by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
+    var visibleImage by remember { mutableStateOf(false) }
+    var showDescriptionError by remember { mutableStateOf(false) }
 
+    var subtasks by remember { mutableStateOf<List<SubTask>>(emptyList()) }
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
 
-    val subtasks = listOf(
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { selectedImageUri.value = it }
+    }
+
+    /*val subtasks = listOf(
         "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Mario Rossi",
-    )
+    )*/
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -257,7 +278,7 @@ fun NewTaskScreen(navController: NavController) {
                                     )
 
                                     Text(
-                                        text = description,
+                                        text = subtasks[index].description,
                                         fontWeight = FontWeight.Light,
                                         fontSize = 16.sp,
                                         color = titleColor,
@@ -267,13 +288,24 @@ fun NewTaskScreen(navController: NavController) {
                                         overflow = TextOverflow.Ellipsis
                                     )
 
-                                    Text(
-                                        text = "Photo:",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = titleColor,
-                                        textAlign = TextAlign.Start
-                                    )
+                                    Row {
+                                        Text(
+                                            text = "Photo: ",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = titleColor,
+                                            textAlign = TextAlign.Start
+                                        )
+
+                                        Icon(
+                                            if(subtasks[index].descriptionImgStorageLocation != "null") {Icons.Outlined.Check} else {
+                                                Icons.Outlined.Clear
+                                            },
+                                            "Large floating action button",
+                                            tint = Color.Black,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
 
                                     Image(
                                         painter = painterResource(id = R.drawable.edit_rewrite),
@@ -360,113 +392,8 @@ fun NewTaskScreen(navController: NavController) {
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceAround
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .shadow(
-                                                        4.dp,
-                                                        shape = MaterialTheme.shapes.extraLarge,
-                                                        clip = false
-                                                    )
-                                                    .background(
-                                                        color = Color.White,
-                                                        shape = MaterialTheme.shapes.extraLarge
-                                                    )
-                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Text(
-                                                        text = "See",
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = lightGray
-                                                    )
-
-                                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .shadow(
-                                                                4.dp,
-                                                                shape = CircleShape,
-                                                                clip = false
-                                                            )
-                                                            .background(
-                                                                color = tertiary,
-                                                                shape = CircleShape
-                                                            )
-                                                            .size(32.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Image(
-                                                            painter = painterResource(id = R.drawable.image_see),
-                                                            contentDescription = "Extend",
-                                                            modifier = Modifier.size(24.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-
-                                            Box(
-                                                modifier = Modifier
-                                                    .shadow(
-                                                        4.dp,
-                                                        shape = MaterialTheme.shapes.extraLarge,
-                                                        clip = false
-                                                    )
-                                                    .background(
-                                                        color = Color.White,
-                                                        shape = MaterialTheme.shapes.extraLarge
-                                                    )
-                                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.Center
-                                                ) {
-                                                    Text(
-                                                        text = "Add",
-                                                        fontSize = 16.sp,
-                                                        fontWeight = FontWeight.Medium,
-                                                        color = lightGray
-                                                    )
-
-                                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .shadow(
-                                                                4.dp,
-                                                                shape = CircleShape,
-                                                                clip = false
-                                                            )
-                                                            .background(
-                                                                color = tertiary,
-                                                                shape = CircleShape
-                                                            )
-                                                            .size(32.dp),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Image(
-                                                            painter = painterResource(id = R.drawable.image_upload),
-                                                            contentDescription = "Extend",
-                                                            modifier = Modifier.size(24.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .shadow(
-                                                        4.dp,
-                                                        shape = MaterialTheme.shapes.extraLarge,
-                                                        clip = false
-                                                    )
-                                                    .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
-                                                    .padding(6.dp)
-                                            ) {
+                                            // SEE IMAGE
+                                            if(selectedImageUri.value != null) {
                                                 Box(
                                                     modifier = Modifier
                                                         .shadow(
@@ -474,16 +401,181 @@ fun NewTaskScreen(navController: NavController) {
                                                             shape = MaterialTheme.shapes.extraLarge,
                                                             clip = false
                                                         )
-                                                        .background(color = tertiary, shape = MaterialTheme.shapes.extraLarge)
+                                                        .background(
+                                                            color = Color.White,
+                                                            shape = MaterialTheme.shapes.extraLarge
+                                                        )
+                                                        .clickable {
+                                                            visibleImage = !visibleImage
+                                                        }
+                                                        .padding(
+                                                            horizontal = 12.dp,
+                                                            vertical = 8.dp
+                                                        )
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(
+                                                            if(visibleImage) "Hide" else "See",
+                                                            fontSize = 16.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = lightGray
+                                                        )
+
+                                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .shadow(
+                                                                    4.dp,
+                                                                    shape = CircleShape,
+                                                                    clip = false
+                                                                )
+                                                                .background(
+                                                                    color = tertiary,
+                                                                    shape = CircleShape
+                                                                )
+                                                                .size(32.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Image(
+                                                                painter = painterResource(id = R.drawable.image_see),
+                                                                contentDescription = "Extend",
+                                                                modifier = Modifier.size(24.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // ADD IMAGE
+                                            if(selectedImageUri.value == null) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .shadow(
+                                                            4.dp,
+                                                            shape = MaterialTheme.shapes.extraLarge,
+                                                            clip = false
+                                                        )
+                                                        .background(
+                                                            color = Color.White,
+                                                            shape = MaterialTheme.shapes.extraLarge
+                                                        )
+                                                        .clickable {
+                                                            launcher.launch("image/*")
+                                                        }
+                                                        .padding(
+                                                            horizontal = 12.dp,
+                                                            vertical = 8.dp
+                                                        )
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.Center
+                                                    ) {
+                                                        Text(
+                                                            text = "Add",
+                                                            fontSize = 16.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = lightGray
+                                                        )
+
+                                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .shadow(
+                                                                    4.dp,
+                                                                    shape = CircleShape,
+                                                                    clip = false
+                                                                )
+                                                                .background(
+                                                                    color = tertiary,
+                                                                    shape = CircleShape
+                                                                )
+                                                                .size(32.dp),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Image(
+                                                                painter = painterResource(id = R.drawable.image_upload),
+                                                                contentDescription = "Extend",
+                                                                modifier = Modifier.size(24.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // REMOVE IMAGE
+                                            if(selectedImageUri.value != null) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .shadow(
+                                                            4.dp,
+                                                            shape = MaterialTheme.shapes.extraLarge,
+                                                            clip = false
+                                                        )
+                                                        .background(
+                                                            color = Color.White,
+                                                            shape = MaterialTheme.shapes.extraLarge
+                                                        )
+                                                        .clickable {
+                                                            selectedImageUri.value = null
+                                                        }
                                                         .padding(6.dp)
                                                 ) {
-                                                    Image(
-                                                        painter = painterResource(id = R.drawable.trashcan),
-                                                        contentDescription = "Extend",
-                                                        modifier = Modifier.size(24.dp)
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .shadow(
+                                                                4.dp,
+                                                                shape = MaterialTheme.shapes.extraLarge,
+                                                                clip = false
+                                                            )
+                                                            .background(
+                                                                color = tertiary,
+                                                                shape = MaterialTheme.shapes.extraLarge
+                                                            )
+                                                            .padding(6.dp)
+                                                    ) {
+                                                        Image(
+                                                            painter = painterResource(id = R.drawable.trashcan),
+                                                            contentDescription = "Extend",
+                                                            modifier = Modifier.size(24.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // IMAGE PREVIEW
+                                        if(visibleImage) {
+                                            Spacer(modifier = Modifier.size(20.dp))
+                                            Row(
+                                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                                            ) {
+                                                selectedImageUri.value?.let { uri ->
+                                                    AsyncImage(
+                                                        model = uri,
+                                                        contentDescription = "Anteprima immagine",
+                                                        modifier = Modifier
+                                                            .size(200.dp)
+                                                            .clip(RoundedCornerShape(16.dp))
                                                     )
                                                 }
                                             }
+                                        }
+
+                                        if (showDescriptionError) {
+                                            Spacer(modifier = Modifier.size(20.dp))
+
+                                            Text(
+                                                text = "La descrizione è obbligatoria",
+                                                color = Color.Red,
+                                                fontSize = 14.sp,
+                                                modifier = Modifier.padding(start = 20.dp, top = 4.dp)
+                                            )
                                         }
 
                                         Spacer(modifier = Modifier.size(50.dp))
@@ -509,6 +601,7 @@ fun NewTaskScreen(navController: NavController) {
                                                     )
                                                     .clickable {
                                                         subtaskDescription = ""
+                                                        selectedImageUri.value = null
                                                         showDialog = false
                                                     },
                                                 contentAlignment = Alignment.Center
@@ -533,7 +626,24 @@ fun NewTaskScreen(navController: NavController) {
                                                         color = tertiary,
                                                         shape = MaterialTheme.shapes.large
                                                     )
-                                                    .clickable { /* Crea task */ },
+                                                    .clickable {
+                                                        if (subtaskDescription.isBlank()) {
+                                                            showDescriptionError = true
+                                                            return@clickable
+                                                        }
+
+                                                        val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
+                                                        subtasks += SubTask(
+                                                            listNumber = nextNumber,
+                                                            description = subtaskDescription,
+                                                            descriptionImgStorageLocation = selectedImageUri.value.toString(),
+                                                            status = SubtaskStatus.AVAILABLE.toString()
+                                                        )
+
+                                                        subtaskDescription = ""
+                                                        selectedImageUri.value = null
+                                                        showDialog = false
+                                                    },
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
@@ -573,7 +683,9 @@ fun NewTaskScreen(navController: NavController) {
                         color = tertiary,
                         shape = MaterialTheme.shapes.large
                     )
-                    .clickable { /* Cancella */ },
+                    .clickable {
+                        navController.popBackStack()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
