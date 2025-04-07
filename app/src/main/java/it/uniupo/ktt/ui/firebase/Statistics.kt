@@ -1,9 +1,7 @@
 package it.uniupo.ktt.ui.firebase
 
-import android.icu.util.Calendar
 import android.util.Log
 import com.google.firebase.Timestamp
-import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.Task
 import java.time.LocalDate
 import java.time.ZoneId
@@ -67,7 +65,7 @@ object StatisticsRepository {
             .addOnFailureListener { onError(it) }
     }
 
-    // TESTA
+        // OK
     fun getAllDailyCompletedTaskByCaregiverUid(
         uid: String,
         onSuccess: (List<Task>) -> Unit = {},
@@ -90,12 +88,12 @@ object StatisticsRepository {
                 onSuccess(tasks)
             }
             .addOnFailureListener { e ->
-                Log.e("DEGUB", "Errore durante la query getAllDailyCompletedTaskByUid", e)
+                Log.e("DEGUB", "QUERY-Error in StatisticsRepo -> getAllDailyCompletedTaskByUid", e)
                 onError(e)
             }
     }
 
-    //TESTA
+        //OK
     fun getGeneralCompletedTaskByCaregiverUid(
     uid: String,
     onSuccess: (List<Task>) -> Unit = {},
@@ -109,14 +107,52 @@ object StatisticsRepository {
             .get()
             .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
                 val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
-                Log.d("DEBUG", "Trovati ${tasks.size} Daily Completed Tasks dato Caregiver: $uid")
+                Log.d("DEBUG", "Trovati ${tasks.size} General Completed Tasks dato Caregiver: $uid")
                 onSuccess(tasks)
             }
             .addOnFailureListener { e ->
-                Log.e("DEGUB", "Errore durante la query getAllDailyCompletedTaskByUid", e)
+                Log.e("DEGUB", "QUERY-Error in StatisticsRepo -> getAllDailyCompletedTaskByUid", e)
                 onError(e)
             }
     }
+
+    // DA TESTARE
+    fun getGenAndDailyTaskDoneByCaregiverUid(
+        uid: String,
+        onSuccess: (dailyTasks: List<Task>, generalTasks: List<Task>) -> Unit,
+        onError: (Exception) -> Unit = {}
+    ) {
+        var dailyTasks: List<Task> = emptyList()
+        var generalTasks: List<Task> = emptyList()
+        var completedCalls = 0
+
+        // counter di attesa della doppia query in parallelo
+        fun checkIfAllDone() {
+            completedCalls++
+            if (completedCalls == 2) {
+                onSuccess(dailyTasks, generalTasks)
+            }
+        }
+
+        getAllDailyCompletedTaskByCaregiverUid(
+            uid = uid,
+            onSuccess = { tasks ->
+                dailyTasks = tasks
+                checkIfAllDone()
+            },
+            onError = { e -> onError(e) }
+        )
+
+        getGeneralCompletedTaskByCaregiverUid(
+            uid = uid,
+            onSuccess = { tasks ->
+                generalTasks = tasks
+                checkIfAllDone()
+            },
+            onError = { e -> onError(e) }
+        )
+    }
+
 
 
 

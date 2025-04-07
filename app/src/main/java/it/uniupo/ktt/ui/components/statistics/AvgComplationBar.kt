@@ -21,12 +21,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun AvgComplationBar(
-    ratio: Float
+    ratio: Float,
+    badgeTop : @Composable () -> Unit,
+    textTop : @Composable () -> Unit,
+    badgeBottom : @Composable () -> Unit,
+    textBottom : @Composable () -> Unit
 ) {
     val backgroundBarColor = Color(0xFFF5DFFA)
     val fillBarColor = Color(0xFFA47BD4)
@@ -49,39 +52,42 @@ fun AvgComplationBar(
         animatedStart = true
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Box( // Barra 1
-            modifier = Modifier
-                .width(250.dp) // tutta piena
-                .height(42.dp)
-                .clip(RoundedCornerShape(50))
-                .background(backgroundBarColor)
-                .border(
-                    width = 1.dp,
-                    color = Color(0xFF6326A9).copy(alpha = 0.2f), // bordo
-                    shape = RoundedCornerShape(50)
-                )
+
+    Box{
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Box( // Barra 2
+            Box( // Barra 1
                 modifier = Modifier
-                    .fillMaxWidth(animatedRatio) // piena fino al valore "animatedRatio" (derivato da "ratio")
-                    .fillMaxHeight()
+                    .width(250.dp) // tutta piena
+                    .height(42.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(fillBarColor)
-            )
+                    .background(backgroundBarColor)
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFF6326A9).copy(alpha = 0.2f), // bordo
+                        shape = RoundedCornerShape(50)
+                    )
+            ) {
+                Box( // Barra 2
+                    modifier = Modifier
+                        .fillMaxWidth(animatedRatio) // piena fino al valore "animatedRatio" (derivato da "ratio")
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(50))
+                        .background(fillBarColor)
+                )
+            }
         }
+
+        badgeTop()
+        badgeBottom()
+        textTop()
+        textBottom()
     }
 
-
-
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun AvgCompletionBarPreview() {
-    AvgComplationBar((35.40/40.12).toFloat())
-}
+

@@ -23,11 +23,11 @@ data class Task(
 
     fun isValid(): Boolean {
         return caregiver.isNotBlank() &&
-                employee.isNotBlank() &&
+                //employee.isNotBlank() &&
 
-                title.isNotBlank() &&
-                description.isNotBlank() &&
-                completionTimeEstimate > 0 &&
+                //title.isNotBlank() &&
+                //description.isNotBlank() &&
+                //completionTimeEstimate > 0 &&
 
                 status.isNotBlank()
 
