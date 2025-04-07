@@ -45,6 +45,7 @@ fun CG_StatisticPage(navController: NavController) {
         }
     }
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -146,7 +147,7 @@ fun CG_StatisticPage(navController: NavController) {
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
                 Spacer(
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(40.dp)
                 )
 
 
@@ -158,131 +159,266 @@ fun CG_StatisticPage(navController: NavController) {
                         .height(100.dp)
                 ){
 
-                    // OTTIENI 2 MEDIE
-                    /*
-                    *  1) Media "completionTimeToday": ovvero la media della Duratio dei lavori "completed"
-                    *                                  svolti da tutti i tuoi dipendenti oggi
-                    *
-                    *  2) Media "completionTimeGeneral": ovvero la media della durata di tutti i lavori "completed"
-                    *                                    svolti in generale
-                    *
-                    * */
+                    // 1) Media "completionTimeToday": media della durata di tutti i lavori "completed"  svolti da tutti i tuoi dipendenti oggi
+                                        // 1.1) Lista completionTimeToday:
 
-                    // 1.1) Lista completionTimeToday: -------------------------------------------
-                    val dailyTasksCompletedList = remember { mutableStateOf<List<Task>>(emptyList()) }
+
+                    //  2) Media "completionTimeGeneral": media della durata di tutti i lavori "completed" svolti in generale dai tuoi dipendenti
+                                        // 2.1) Lista completionTimeGeneral:
+
+
+                    val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
+                    val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
+
+                    // Loading Booleand (per attendere arrivo res query async + calcolo medie)
+                    val isLoading = remember { mutableStateOf(true) }
+
 
                     LaunchedEffect(personalUid) {
                         if (personalUid != null) {
-                            StatisticsRepository.getAllDailyCompletedTaskByCaregiverUid(
+                            StatisticsRepository.getGenAndDailyTaskDoneByCaregiverUid(
 
                                 uid = personalUid,
-                                onSuccess = { dailyCompletedTasks ->
-                                    Log.d("DEBUG", "Lista tasks: ${dailyCompletedTasks.joinToString(separator = "\n")}")
-                                    dailyTasksCompletedList.value = dailyCompletedTasks.filter { it.isValid() }
+                                onSuccess = { dailyCompletedTasks, generalCompletedTasks ->
+
+                                    Log.d("DEBUG", "Lista DAILY tasks: ${dailyCompletedTasks.joinToString(separator = "\n")}")
+                                    Log.d("DEBUG", "Lista GENERAL tasks: ${generalCompletedTasks.joinToString(separator = "\n")}")
+
+                                    val filteredDailyCompletedTasks = dailyCompletedTasks.filter { it.isValid() } // crea nuova lista filtrata in memoria
+                                    val filteredGeneralCompletedTasks = generalCompletedTasks.filter { it.isValid() }
+
+
+                                    if(filteredDailyCompletedTasks.isNotEmpty()){
+                                        avgDailyCompletionTime.value = filteredDailyCompletedTasks
+                                            .map { it.completionTimeActual }   // seleziona campo
+                                            .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
+                                            .average()  // calcola media
+
+                                        //Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
+                                    }
+                                    if(filteredGeneralCompletedTasks.isNotEmpty()){
+                                        // 2.2) calcola la media GeneralcompletionTime:
+                                        avgGeneralCompletionTime.value = filteredGeneralCompletedTasks
+                                            .map { it.completionTimeActual }   // seleziona campo
+                                            .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
+                                            .average()  // calcola media
+
+                                        //Log.d("DEBUG", "Media General Tasks: ${avgGeneralCompletionTime.value}")
+                                    }
+
+                                    isLoading.value = false
                                 },
                                 onError = { e ->
-                                    Log.e("DEBUG", "Errore nella getAllDailyCompletedTaskByCaregiverUid query", e)
+                                    Log.e("DEBUG", "QUERY-Error in StaticPage -> getGEN&DAILYTaskByCaregiverUid", e)
+                                    isLoading.value = false
                                 }
                             )
                         }
                     }
 
-                    // 1.2) calcola la media TodayCompletionTime:
-                    val avgDailyCompletionTime = dailyTasksCompletedList.value
-                        .map { it.completionTimeActual }   // seleziona campo
-                        .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
-                        .average()  // calcola media
+                    if(isLoading.value != true){
+                        Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
+                        Log.d("DEBUG", "Media General Tasks: ${avgGeneralCompletionTime.value}")
 
-                    // 2.1) Lista completionTimeGeneral: -------------------------------------------
-                    val generalTasksCompletedList = remember { mutableStateOf<List<Task>>(emptyList()) }
 
-                    LaunchedEffect(personalUid) {
-                        if (personalUid != null) {
-                            StatisticsRepository.getGeneralCompletedTaskByCaregiverUid(
+                        // Liste Vuote -> OK
+                        if(avgDailyCompletionTime.value == 0.0 && avgGeneralCompletionTime.value == 0.0){
+                            AvgComplationBar(
+                                ratio = 0f,
+                                badgeTop = {},
+                                textTop = {},
+                                badgeBottom = {},
+                                textBottom = {
+                                    Text(
+                                        text = "not available yet",
+                                        style = MaterialTheme.typography.labelSmall, //Poppins
 
-                                uid = personalUid,
-                                onSuccess = { generalCompletedTasks ->
-                                    Log.d("DEBUG", "Lista tasks: ${generalCompletedTasks.joinToString(separator = "\n")}")
-                                    generalTasksCompletedList.value = generalCompletedTasks.filter { it.isValid() }
-                                },
-                                onError = { e ->
-                                    Log.e("DEBUG", "Errore nella getGeneralCompletedTaskByCaregiverUid query", e)
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight(400),
+
+                                        color = Color(0xFF827676),
+                                        modifier = Modifier
+                                            .offset(x = (105).dp, y = (11).dp)
+                                    )
                                 }
                             )
                         }
+                        // Lista Today Vuota -> OK ( NB: se ho "completionTimeToday" non Vuota esiste per forza "completionTimeGeneral", non viceversa)
+                        else if(avgDailyCompletionTime.value == 0.0){
+                            AvgComplationBar(
+                                ratio = 1f, // Full Bar
+
+                                badgeTop = {
+                                    StatStatusBadge(
+                                        statusColor = Color(0xFF6326A9),
+                                        statusText = String.format("%.2f min", avgGeneralCompletionTime.value),
+
+                                        //Modifier aggiuntivi utili passabili
+                                        modifier = Modifier
+                                            .scale(0.6f)
+                                            .offset(x = (-30).dp, y = (-30).dp)
+                                    )
+                                },
+                                textTop = {
+                                    Text(
+                                        text = "(general)",
+                                        style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight(400),
+
+                                        color = Color(0xFF827676),
+                                        modifier = Modifier
+                                            .offset(x = (30).dp, y = (-30).dp)
+                                            .height(18.dp)
+                                    )
+                                },
+
+                                badgeBottom = {
+                                    StatStatusBadge(
+                                        statusColor = Color(0xFFF5DFFA),
+                                        statusText = "unavailable",
+                                        //Modifier aggiuntivi utili passabili
+                                        modifier = Modifier
+                                            .scale(0.6f)
+                                            .offset(x = (+315).dp, y = (+37).dp)
+                                    )
+                                },
+                                textBottom = {
+                                    Text(
+                                        text = "(today)",
+                                        style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight(400),
+
+                                        color = Color(0xFF827676),
+                                        modifier = Modifier
+                                            .offset(x = (258).dp, y = (59).dp)
+                                    )
+                                }
+                            )
+
+
+                        }
+                        // Entrambe liste Non Vuote -> OK
+                        else{
+
+                            // scelgo sempre la media minore da passare per prima, così da vedere sempre una differenza nella bar (e non sovrapposizioni)
+                            if(avgDailyCompletionTime.value <= avgGeneralCompletionTime.value){
+                                AvgComplationBar(
+                                    ratio = (avgDailyCompletionTime.value/avgGeneralCompletionTime.value).toFloat(),
+
+                                    badgeTop = {
+                                        StatStatusBadge(
+                                            statusColor = Color(0xFF6326A9),
+                                            statusText = String.format("%.2f min", avgDailyCompletionTime.value),
+
+                                            //Modifier aggiuntivi utili passabili
+                                            modifier = Modifier
+                                                .scale(0.6f)
+                                                .offset(x = (-30).dp, y = (-30).dp)
+                                        )
+                                    },
+                                    textTop = {
+                                        Text(
+                                            text = "(today)",
+                                            style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight(400),
+
+                                            color = Color(0xFF827676),
+                                            modifier = Modifier
+                                                .offset(x = (30).dp, y = (-30).dp)
+                                                .height(18.dp)
+                                        )
+                                    },
+
+                                    badgeBottom = {
+                                        StatStatusBadge(
+                                            statusColor = Color(0xFFF5DFFA),
+                                            statusText = String.format("%.2f min", avgGeneralCompletionTime.value),
+                                            //Modifier aggiuntivi utili passabili
+                                            modifier = Modifier
+                                                .scale(0.6f)
+                                                .offset(x = (+342).dp, y = (+37).dp)
+                                            //.align(Alignment.TopStart)
+                                        )
+                                    },
+                                    textBottom = {
+                                        Text(
+                                            text = "(general)",
+                                            style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight(400),
+
+                                            color = Color(0xFF827676),
+                                            modifier = Modifier
+                                                .offset(x = (258).dp, y = (59).dp)
+                                        )
+                                    }
+                                )
+                            }
+                            else{
+                                AvgComplationBar(
+                                    ratio = (avgGeneralCompletionTime.value/avgDailyCompletionTime.value).toFloat(),
+
+                                    badgeTop = {
+                                        StatStatusBadge(
+                                            statusColor = Color(0xFF6326A9),
+                                            statusText = String.format("%.2f min", avgGeneralCompletionTime.value),
+
+                                            //Modifier aggiuntivi utili passabili
+                                            modifier = Modifier
+                                                .scale(0.6f)
+                                                .offset(x = (-30).dp, y = (-30).dp)
+                                        )
+                                    },
+                                    textTop = {
+                                        Text(
+                                            text = "(general)",
+                                            style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight(400),
+
+                                            color = Color(0xFF827676),
+                                            modifier = Modifier
+                                                .offset(x = (22).dp, y = (-30).dp)
+                                                .height(18.dp)
+                                        )
+                                    },
+
+                                    badgeBottom = {
+                                        StatStatusBadge(
+                                            statusColor = Color(0xFFF5DFFA),
+                                            statusText = String.format("%.2f min", avgDailyCompletionTime.value),
+                                            //Modifier aggiuntivi utili passabili
+                                            modifier = Modifier
+                                                .scale(0.6f)
+                                                .offset(x = (+342).dp, y = (+37).dp)
+                                        )
+                                    },
+                                    textBottom = {
+                                        Text(
+                                            text = "(today)",
+                                            style = MaterialTheme.typography.labelSmall, //Poppins
+
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight(400),
+
+                                            color = Color(0xFF827676),
+                                            modifier = Modifier
+                                                .offset(x = (262).dp, y = (59).dp)
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
-
-                    // 2.2) calcola la media GeneralcompletionTime:
-                    val avgGeneralCompletionTime = dailyTasksCompletedList.value
-                        .map { it.completionTimeActual }   // seleziona campo
-                        .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
-                        .average()  // calcola media
-
-
-                    // ho le 2 medie, stampale per controllare che tutto sia OK
-                    // se tutto ok ->
-
-                    // val ratioTime = avgDailyCompletionTime/avgGeneralCompletionTime
-
-
-
-
-
-                    // esempi valori(in futuro ottienili da DB e calcolali):
-                    val completionTimeToday = 16.41
-                    val completionTimeGeneral = 26.55
-                    val ratioTime = completionTimeToday/completionTimeGeneral
-
-                    //BAR
-                    AvgComplationBar(
-                        ratio = ratioTime.toFloat()
-                    )
-
-                    //TODAY'S BADGE
-                    StatStatusBadge(
-                        statusColor = Color(0xFF6326A9),
-                        statusText = "35.40 min",
-
-                        //Modifier aggiuntivi utili passabili
-                        modifier = Modifier
-                            .scale(0.6f)
-                            .offset(x = (-30).dp, y = (-30).dp)
-                    )
-                    Text(
-                        text = "(today)",
-                        style = MaterialTheme.typography.labelSmall, //Poppins
-
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight(400),
-
-                        color = Color(0xFF827676),
-                        modifier = Modifier
-                            .offset(x = (32).dp, y = (-30).dp)
-                            .height(18.dp)
-                    )
-
-                    //GENERAL BADGE
-                    StatStatusBadge(
-                        statusColor = Color(0xFFF5DFFA),
-                        statusText = "40.12 min",
-                        //Modifier aggiuntivi utili passabili
-                        modifier = Modifier
-                            .scale(0.6f)
-                            .offset(x = (+342).dp, y = (+37).dp)
-                        //.align(Alignment.TopStart)
-                    )
-                    Text(
-                        text = "(general)",
-                        style = MaterialTheme.typography.labelSmall, //Poppins
-
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight(400),
-
-                        color = Color(0xFF827676),
-                        modifier = Modifier
-                            .offset(x = (255).dp, y = (59).dp)
-                    )
-
+                    
                 }
 
             }
@@ -291,13 +427,6 @@ fun CG_StatisticPage(navController: NavController) {
 
     }
 
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun CG_StatisticPagePreview() {
-    CG_StatisticPage(navController = NavController(context = LocalContext.current))
 }
 
 
