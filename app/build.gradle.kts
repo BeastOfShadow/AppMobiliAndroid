@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.material3.lint)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose.v240)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -76,6 +77,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 
     implementation("androidx.compose.material3:material3:1.2.0")
 

@@ -18,21 +18,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.Blender
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RocketLaunch
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,9 +50,11 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
+import it.uniupo.ktt.ui.firebase.getTasksByStatusSuspend
+import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.primary
-import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
@@ -73,6 +71,15 @@ fun TaskManagerScreen(navController: NavController) {
 
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
+
+    LaunchedEffect(Unit) {
+        val uid = currentUid()
+        if (uid != null) {
+            val readyTasks = getTasksByStatusSuspend(uid, TaskStatus.READY.toString())
+        }
+    }
+
+
     val events = listOf(
         "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Anche il nome e cognome non sono da meno",
         "Evento 2" to "Luca Bianchi",
