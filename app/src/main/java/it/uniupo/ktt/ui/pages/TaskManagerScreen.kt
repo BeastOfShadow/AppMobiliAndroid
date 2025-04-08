@@ -52,6 +52,7 @@ import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.firebase.getTasksByStatusSuspend
+import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.primary
@@ -71,11 +72,16 @@ fun TaskManagerScreen(navController: NavController) {
 
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
+    var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
+    var ongoingTasks by remember { mutableStateOf(emptyList<Task>()) }
+    var completedTasks by remember { mutableStateOf(emptyList<Task>()) }
 
     LaunchedEffect(Unit) {
         val uid = currentUid()
         if (uid != null) {
-            val readyTasks = getTasksByStatusSuspend(uid, TaskStatus.READY.toString())
+            readyTasks = getTasksByStatusSuspend(uid, TaskStatus.READY.toString())
+            ongoingTasks = getTasksByStatusSuspend(uid, TaskStatus.ONGOING.toString())
+            completedTasks = getTasksByStatusSuspend(uid, TaskStatus.COMPLETED.toString())
         }
     }
 
@@ -168,7 +174,7 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            if(events.isEmpty())
+            if(readyTasks.isEmpty())
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = "There are no ready events.",
@@ -182,7 +188,7 @@ fun TaskManagerScreen(navController: NavController) {
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    events.forEach { (eventTitle, personName) ->
+                    readyTasks.forEach { (eventTitle, personName) ->
                         Box(
                             modifier = Modifier
                                 .padding(start = 10.dp)
