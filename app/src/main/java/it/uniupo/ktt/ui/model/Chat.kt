@@ -1,16 +1,17 @@
 package it.uniupo.ktt.ui.model
 
+import com.google.firebase.Timestamp
+
 data class Chat(
     val caregiver: String = "",
     val employee: String = "",
 
     val lastMsg: String = "",
     val uidLastSender: String = "",
-    val lastTimeStamp: String = "" //come devo passare un TimeStamp?
+    val lastTimeStamp: Timestamp = Timestamp.now()
     ){
-    init {
-        //validazione campi
-        require(caregiver.isNotBlank()) { "caregiver non inserito." }
-        require(employee.isNotBlank()) { "employee non inserito." }
+    fun isValid(): Boolean {
+        return caregiver.isNotBlank() &&
+                employee.isNotBlank()
     }
 }

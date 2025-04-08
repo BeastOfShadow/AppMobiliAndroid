@@ -46,8 +46,8 @@ fun AddContactButton(
                 contentDescription = "Add contact",
                 tint = Color.White,
                 modifier = Modifier
-                    .size(44.dp)
-                    .offset(x = 4.dp, y = 1.dp)
+                    .size(27.dp)
+                    .offset(x = 1.5.dp, y = 0.5.dp)
             )
         }
 

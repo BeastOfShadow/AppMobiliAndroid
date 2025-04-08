@@ -173,7 +173,6 @@ fun NewChatPage(navController: NavController) {
                 else { // LISTA CONTACT NOT EMPTY
 
                     // ordina la lista in base al nome in ordine alfabetico
-
                     val sortedContactList = contactList.value.sortedBy{ it.name }
 
                     Column(
@@ -204,8 +203,4 @@ fun NewChatPage(navController: NavController) {
     }
 }
 
-@Preview
-@Composable
-fun NewChatPagePreview() {
-    NewChatPage(navController = NavController(context = LocalContext.current))
-}
+

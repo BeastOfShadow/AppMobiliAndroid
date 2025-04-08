@@ -40,7 +40,17 @@ fun ChatContactLable(
 
     Box(
         modifier = modifier
-            .clickable { /* Naviga alla chat */ }
+            .clickable {
+            /*
+            * se la chat è già esistente nella "ChatPage" allora apre quella.
+            *
+            * se la chat non è presente nella "ChatPage" viene aperta una nuova schermata
+            * di ChatRealTimer vuota.
+            * NB: se non scrivo il primo msg allora non viene fatta la Post della nuova Chat
+            *     intrapresa, e quindi non sarà nemmeno vista nella "ChatPage" in caso di "undo"
+            *
+            * */
+            }
             .padding(8.dp)
             .background(Color(0xFFF5DFFA))
             .width(220.dp)

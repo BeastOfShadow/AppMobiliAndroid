@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.pages.caregiver.chat
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,9 @@ import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ChatSearchBar
 import it.uniupo.ktt.ui.components.chats.NewChatButton
 import androidx.compose.runtime.*
+import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.firebase.ChatRepository
+import it.uniupo.ktt.ui.model.Chat
 
 
 @Composable
@@ -49,9 +53,24 @@ fun ChatPage(navController: NavController) {
     }
 
     // CALL DB (prendi lista Chat dell'utente)
-    // ... ...
+    val chatsList = remember { mutableStateOf<List<Chat>>(emptyList())}
+    val currentUid = BaseRepository.currentUid()
 
-
+    LaunchedEffect(currentUid){
+        if(currentUid != null){
+            ChatRepository.getAllChatsByUid(
+                uid = currentUid,
+                onSuccess = { chats ->
+                    Log.d("DEBUG", "Lista Chats: ${chats.joinToString(separator = "\n")}")
+                    Log.d("DEBUG", "numero Chats: ${chats.size}")
+                    chatsList.value = chats.filter { it.isValid() }
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore ChatPage -> getAllConntactsByUid query", e)
+                }
+            )
+        }
+    }
 
     //creazione
     Box(
@@ -78,9 +97,9 @@ fun ChatPage(navController: NavController) {
                     .fillMaxSize()
             ){
 
-                //IF (//non ho chat già esistenti)
-                Text(
-                    text = buildAnnotatedString {
+                if(chatsList.value.isEmpty()){
+                    Text(
+                        text = buildAnnotatedString {
                             append("Press ")
 
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -89,71 +108,68 @@ fun ChatPage(navController: NavController) {
 
                             append(" to start a conversation!")
                         },
-                    style = MaterialTheme.typography.bodyLarge, //Poppins
+                        style = MaterialTheme.typography.bodyMedium, //Poppins
 
 
-                    //letterSpacing = 1.sp,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight(400),
-                    lineHeight = 34.sp,
+                        //letterSpacing = 1.sp,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight(400),
+                        lineHeight = 34.sp,
 
 
 
-                    color = Color(0xFF423C3C),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        //.align(Alignment.Center)
-                        .offset(x= 0.dp, y= 260.dp)
-                        .padding(horizontal = 55.dp)
-                )
-
-
-                //ELSE {} // addTEXT + call DB prendendo tutte le chats esistenti per l'utente + le carico nel box
-
-                var searchQuery by remember { mutableStateOf("") }
-
-                ChatSearchBar(
-                    //CICLO REATTIVO
-                    //Compose per ogni aggiornamento fa il ReCompose passando come "query" il nuovo valore immesso nella searchBar dall'utente
-
-                    query = searchQuery, //testo attuale ("value" in TextField)
-                    onQueryChanged = { searchQuery = it }, //ogni volta che l’utente digita qualcosa, questa funzione viene chiamata con il nuovo testo (it), che viene usato per aggiornare searchQuery.
-                    modifier = Modifier
-                            //.scale(1.3f)
-                )
-
-                //in base alla "searchQuery" aggiornerò la lista di chat già esistenti
-
-
-                Column(
-                    modifier = Modifier
-                        .offset(x = 50.dp, y = 110.dp)
-                ){
-                    ChatContactLable(
-                        "Maria Teresa",
-                        lastMessage = "tutto a posto?",
+                        color = Color(0xFF423C3C),
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
-                            .scale(1.3f),
-                        imgId = R.drawable.profile_female_default
+                            //.align(Alignment.Center)
+                            .offset(x = 0.dp, y = 280.dp)
+                            .padding(horizontal = 55.dp)
                     )
-                    Spacer(
+                }
+                else{ // Add SearchBar + Popolazione Lista 
+                    var searchQuery by remember { mutableStateOf("") }
+
+                    ChatSearchBar(
+                        //CICLO REATTIVO
+                        //Compose per ogni aggiornamento fa il ReCompose passando come "query" il nuovo valore immesso nella searchBar dall'utente
+
+                        query = searchQuery, //testo attuale ("value" in TextField)
+                        onQueryChanged = { searchQuery = it }, //ogni volta che l’utente digita qualcosa, questa funzione viene chiamata con il nuovo testo (it), che viene usato per aggiornare searchQuery.
                         modifier = Modifier
-                            .height(5.dp)
+                        //.scale(1.3f)
                     )
 
-                    ChatContactLable(
-                        "Andrea Diprè",
-                        lastMessage = "Dipreismo e Piedi a volontà",
-                        modifier = Modifier
-                            .scale(1.3f),
-                        imgId = R.drawable.profile_male_default
-                    )
+                    // ordina la lista in base alla data dell'ultimo messaggio
+                    val sortedChatList = chatsList.value.sortedBy{ it.lastTimeStamp }
 
+                    Column(
+                        modifier = Modifier
+                            .offset(x = 50.dp, y = 110.dp)
+                    ){
+                        // itera lista e crea Lable contatti
+                        sortedChatList.forEach { chat ->
+                            ChatContactLable(
+                                nome = "${chat.employee} ${chat.employee}",
+                                lastMessage = chat.lastMsg,
+                                modifier = Modifier
+                                    .scale(1.3f),
+                                imgId = R.drawable.profile_female_default
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .height(5.dp)
+                            )
+                        }
+
+                    }
 
 
                 }
 
 
+
+
+                // BUTTON new Chat
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

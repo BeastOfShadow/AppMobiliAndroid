@@ -6,6 +6,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
+import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
@@ -72,6 +73,27 @@ object ChatRepository {
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Errore durante la query getAllConntactsByUid", e)
+                onError(e)
+            }
+    }
+
+        // OK
+    fun getAllChatsByUid(
+        uid: String,
+        onSuccess: (List<Chat>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("chats")
+            .whereEqualTo("caregiver", uid)
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Chats
+                val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                Log.d("Firestore", "Trovate ${chats.size} chats dato uid: $uid")
+                onSuccess(chats)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Errore durante la query getAllChatsByUid", e)
                 onError(e)
             }
     }
