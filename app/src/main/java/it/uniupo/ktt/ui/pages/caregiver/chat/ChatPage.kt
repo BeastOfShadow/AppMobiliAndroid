@@ -40,12 +40,11 @@ import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ChatSearchBar
 import it.uniupo.ktt.ui.components.chats.NewChatButton
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.viewmodel.ChatViewModel
-
 
 @Composable
 fun ChatPage(navController: NavController) {
@@ -59,18 +58,18 @@ fun ChatPage(navController: NavController) {
     }
 
     // collegamento con ChatViewModel
-    val viewModelRef : ChatViewModel = viewModel()
+    val chatViewModelRefHilt = hiltViewModel<ChatViewModel>()
     // proprietà osservabili del ChatViewModel (Only Read)
-    val chatsRef by viewModelRef.chatList.collectAsState()
-    val isLoadingRef by viewModelRef.isLoading.collectAsState()
-    val errorRef by viewModelRef.errorMessage.collectAsState()
+    val chatsRef by chatViewModelRefHilt.chatList.collectAsState()
+    val isLoadingRef by chatViewModelRefHilt.isLoading.collectAsState()
+    val errorRef by chatViewModelRefHilt.errorMessage.collectAsState()
 
     val currentUid = BaseRepository.currentUid()
 
     // ogni volta che entro nella page viene lanciato per update
     LaunchedEffect (currentUid){
         if(currentUid!= null){
-            viewModelRef.loadChats(currentUid)
+            chatViewModelRefHilt.loadChats(currentUid)
         }
     }
 

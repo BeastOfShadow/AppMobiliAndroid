@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class NewChatViewModel : ViewModel(){
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class NewChatViewModel @Inject constructor() : ViewModel(){
     private val _contactList = MutableStateFlow<List<Contact>>(emptyList())
     val contactList: StateFlow<List<Contact>> = _contactList.asStateFlow() // Osservabile dai @Composalbe
 
@@ -19,6 +23,7 @@ class NewChatViewModel : ViewModel(){
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+        // OK
     fun loadContacts(uid: String) {
         _isLoading.value = true
         ChatRepository.getAllContactsByUid(
@@ -36,7 +41,7 @@ class NewChatViewModel : ViewModel(){
             }
         )
     }
-
+        // OK
     fun postContact(newContact: Contact) {
         ChatRepository.postNewContact(
             newContact = newContact,

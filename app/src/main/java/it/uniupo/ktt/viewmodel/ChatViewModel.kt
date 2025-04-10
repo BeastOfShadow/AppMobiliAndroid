@@ -1,7 +1,6 @@
 package it.uniupo.ktt.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
@@ -11,7 +10,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class ChatViewModel : ViewModel(){
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class ChatViewModel @Inject constructor() : ViewModel(){
     /*
     *   "MutableStateFlow" è l'equivalente di "MutableStateOf" ma nativo
     */
@@ -127,14 +130,21 @@ class ChatViewModel : ViewModel(){
             }
     }
 
-
-
+    // DA TESTARE DOPO INSERIMENTO "HILT"
     fun searchChatByUidEmployee(uid: String): Chat? {
         return _chatList.value.firstOrNull { chat ->
-            Log.d("DEBUG", "Chat trovata $chat")
+            Log.d("DEBUG", "Chat trovata ${chat.chatId}")
             chat.employee == uid
         }
     }
+
+//    fun searchChatByUidEmployee(uid: String){
+//        Log.d("DEBUG", "Uid contatto per ricerca $uid")
+//        Log.d("DEBUG", "Chat in _chatList trovate ${_chatList.value.size}")
+//        _chatList.value.forEach { chat ->
+//            Log.d("DEBUG", "Lista Chats: ${chat}")
+//        }
+//    }
 
 
 

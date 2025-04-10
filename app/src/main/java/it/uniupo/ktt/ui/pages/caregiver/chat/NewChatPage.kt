@@ -36,6 +36,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.uniupo.ktt.R
@@ -61,17 +62,27 @@ fun NewChatPage(navController: NavController) {
 
     val currentUid = BaseRepository.currentUid()
 
-    // collegamento ai ViewModel
-    val viewModelRef : NewChatViewModel = viewModel()
-    val ChatViewModelRef : ChatViewModel = viewModel()
+
+
+    // collegamento ad un "new" NewChatViewModel (con Hilt)
+    val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>()
+    // collegamento al ChatViewModel "old" della pagina padre (ChatPage)
+    val parentEntry = remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry("chat")
+    }
+    val chatViewModelRefHilt = hiltViewModel<ChatViewModel>(parentEntry)
+
+
+
+
     // properties observable
-    val contactsRef by viewModelRef.contactList.collectAsState()
-    val isLoadingRef by viewModelRef.isLoading.collectAsState()
-    val errorRef by viewModelRef.errorMessage.collectAsState()
+    val contactsRef by newChatViewModelRefHilt.contactList.collectAsState()
+    val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
+    val errorRef by newChatViewModelRefHilt.errorMessage.collectAsState()
     // lancio metodo per Init OR Update
     LaunchedEffect (currentUid){
         if(currentUid != null){
-            viewModelRef.loadContacts(currentUid)
+            newChatViewModelRefHilt.loadContacts(currentUid)
         }
     }
 
@@ -207,7 +218,7 @@ fun NewChatPage(navController: NavController) {
                                                     - ELSE: naviga to "ChatOpen" passando "null/ uidContact"
                                              */
 
-                                            val chatFound = ChatViewModelRef.searchChatByUidEmployee(contact.uidContact)
+                                            val chatFound = chatViewModelRefHilt.searchChatByUidEmployee(contact.uidContact)
 
                                             // CHAT già esistente
                                             if(chatFound != null){

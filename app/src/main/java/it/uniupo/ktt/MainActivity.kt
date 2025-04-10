@@ -33,7 +33,9 @@ import it.uniupo.ktt.ui.theme.KTTTheme
 
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
