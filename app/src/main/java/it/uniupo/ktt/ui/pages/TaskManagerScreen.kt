@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,12 +47,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
-import it.uniupo.ktt.ui.firebase.getTasksByStatusSuspend
 import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
@@ -59,6 +60,8 @@ import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.TaskViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -70,6 +73,8 @@ fun TaskManagerScreen(navController: NavController) {
         }
     }
 
+    val taskViewModel : TaskViewModel = viewModel()
+    val coroutineScope = rememberCoroutineScope()
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
     var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
@@ -79,9 +84,9 @@ fun TaskManagerScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         val uid = currentUid()
         if (uid != null) {
-            readyTasks = getTasksByStatusSuspend(uid, TaskStatus.READY.toString())
-            ongoingTasks = getTasksByStatusSuspend(uid, TaskStatus.ONGOING.toString())
-            completedTasks = getTasksByStatusSuspend(uid, TaskStatus.COMPLETED.toString())
+            readyTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.READY.toString())
+            ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString())
+            completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
         }
     }
 
@@ -188,7 +193,7 @@ fun TaskManagerScreen(navController: NavController) {
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    readyTasks.forEach { (eventTitle, personName) ->
+                    readyTasks.forEach { task ->
                         Box(
                             modifier = Modifier
                                 .padding(start = 10.dp)
@@ -205,7 +210,7 @@ fun TaskManagerScreen(navController: NavController) {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = eventTitle,
+                                    text = task.title,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = titleColor,
@@ -215,7 +220,7 @@ fun TaskManagerScreen(navController: NavController) {
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = personName,
+                                    text = task.employee,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 14.sp,
                                     color = subtitleColor,
@@ -229,6 +234,27 @@ fun TaskManagerScreen(navController: NavController) {
                                     modifier = Modifier
                                         .size(44.dp)
                                         .shadow(4.dp, shape = CircleShape, clip = false)
+                                        .clickable{
+                                            taskViewModel.startTask(task.id)
+
+                                            val uid = currentUid()
+                                            if (uid != null) {
+                                                coroutineScope.launch {
+                                                    readyTasks = taskViewModel.getTasksByStatus(
+                                                        uid,
+                                                        TaskStatus.READY.toString()
+                                                    )
+                                                    ongoingTasks = taskViewModel.getTasksByStatus(
+                                                        uid,
+                                                        TaskStatus.ONGOING.toString()
+                                                    )
+                                                    completedTasks = taskViewModel.getTasksByStatus(
+                                                        uid,
+                                                        TaskStatus.COMPLETED.toString()
+                                                    )
+                                                }
+                                            }
+                                        }
                                         .background(
                                             color = tertiary,
                                             shape = CircleShape
@@ -237,7 +263,7 @@ fun TaskManagerScreen(navController: NavController) {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.RocketLaunch, // Sostituisci con l'icona desiderata
+                                        imageVector = Icons.Default.RocketLaunch,
                                         contentDescription = "Start",
                                         tint = buttonTextColor,
                                         modifier = Modifier.size(24.dp)
@@ -261,7 +287,7 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            if(events.isEmpty())
+            if(ongoingTasks.isEmpty())
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = "There are no ongoing events.",
@@ -275,7 +301,7 @@ fun TaskManagerScreen(navController: NavController) {
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    events.forEach { (eventTitle, personName) ->
+                    ongoingTasks.forEach { task ->
                         Box(
                             modifier = Modifier
                                 .padding(start = 10.dp)
@@ -292,7 +318,7 @@ fun TaskManagerScreen(navController: NavController) {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = eventTitle,
+                                    text = task.title,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = titleColor,
@@ -302,7 +328,7 @@ fun TaskManagerScreen(navController: NavController) {
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = personName,
+                                    text = task.employee,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 14.sp,
                                     color = subtitleColor,
@@ -370,7 +396,7 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            if(events.isEmpty())
+            if(completedTasks.isEmpty())
                 Text(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     text = "There are no ready events.",
@@ -384,7 +410,7 @@ fun TaskManagerScreen(navController: NavController) {
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    events.forEach { (eventTitle, personName) ->
+                    completedTasks.forEach { task ->
                         Box(
                             modifier = Modifier
                                 .padding(start = 10.dp)
@@ -401,7 +427,7 @@ fun TaskManagerScreen(navController: NavController) {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = eventTitle,
+                                    text = task.title,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = titleColor,
@@ -411,7 +437,7 @@ fun TaskManagerScreen(navController: NavController) {
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = personName,
+                                    text = task.employee,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 14.sp,
                                     color = subtitleColor,
