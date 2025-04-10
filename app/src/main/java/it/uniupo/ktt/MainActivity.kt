@@ -28,7 +28,11 @@ import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
 import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
+import it.uniupo.ktt.ui.pages.caregiver.chat.ChatOpen
 import it.uniupo.ktt.ui.theme.KTTTheme
+
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,6 +67,16 @@ class MainActivity : ComponentActivity() {
                         //Chats
                         composable("chat") { ChatPage(navController) }
                         composable("new chat") { NewChatPage(navController) }
+                        composable(
+                            "chat open/{chatId}/{uidContact}", // Route che accetta il PARAM "chatId"
+                            arguments = listOf(
+                                navArgument("chatId") { type = NavType.StringType }, // Def PARAM1 type
+                                navArgument("uidContact") {type = NavType.StringType}) // Def PARAM2 type
+                        ) { backStackEntry ->
+                            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                            val uidContact = backStackEntry.arguments?.getString("uidContact") ?: ""
+                            ChatOpen(navController, chatId, uidContact) // Passaggio dei 2 PARAM
+                        }
                     }
                 }
             }

@@ -34,23 +34,14 @@ fun ChatContactLable(
     nome: String,
     lastMessage: String,
     imgId: Int,   //R.drawable?
-    modifier: Modifier
+    modifier: Modifier,
+    onClick: () -> Unit
 ) {
 
 
     Box(
         modifier = modifier
-            .clickable {
-            /*
-            * se la chat è già esistente nella "ChatPage" allora apre quella.
-            *
-            * se la chat non è presente nella "ChatPage" viene aperta una nuova schermata
-            * di ChatRealTimer vuota.
-            * NB: se non scrivo il primo msg allora non viene fatta la Post della nuova Chat
-            *     intrapresa, e quindi non sarà nemmeno vista nella "ChatPage" in caso di "undo"
-            *
-            * */
-            }
+            .clickable { onClick() }
             .padding(8.dp)
             .background(Color(0xFFF5DFFA))
             .width(220.dp)
@@ -98,17 +89,4 @@ fun ChatContactLable(
         }
     }
 
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ChatContactLablePreview() {
-    ChatContactLable(
-        "Maria Teresa",
-        lastMessage = "Dipreismo e Piedi a volontà",
-        modifier = Modifier
-            .scale(1f),
-        imgId = R.drawable.profile_female_default
-    )
 }

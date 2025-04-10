@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
+//import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.CustomTextField
@@ -569,13 +569,13 @@ fun NewTaskScreen(navController: NavController) {
                                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                                             ) {
                                                 selectedImageUri.value?.let { uri ->
-                                                    AsyncImage(
-                                                        model = uri,
-                                                        contentDescription = "Anteprima immagine",
-                                                        modifier = Modifier
-                                                            .size(200.dp)
-                                                            .clip(RoundedCornerShape(16.dp))
-                                                    )
+//                                                    AsyncImage(
+//                                                        model = uri,
+//                                                        contentDescription = "Anteprima immagine",
+//                                                        modifier = Modifier
+//                                                            .size(200.dp)
+//                                                            .clip(RoundedCornerShape(16.dp))
+//                                                    )
                                                 }
                                             }
                                         }

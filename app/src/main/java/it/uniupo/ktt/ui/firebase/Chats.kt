@@ -16,9 +16,7 @@ object ChatRepository {
 
         //OK
     // blocca il thread e necessito di coroutine per poterla richiamare ("scope" nei Button & "LaunchedEffect" nei composable)
-    suspend fun getUserByEmail(
-        email: String,
-    ): User?{
+    suspend fun getUserByEmail(email: String): User?{
         return try {
             val snapshot = BaseRepository.db
                 .collection("users")
@@ -33,7 +31,6 @@ object ChatRepository {
             null
         }
     }
-
 
         //OK
     // non blocca il Thread -> usa firestore async, quindi non necessito di coroutine per usarla ma solo di un "LaunchedEffect(){}"
@@ -57,7 +54,7 @@ object ChatRepository {
 
 
         // OK
-    fun getAllConntactsByUid(
+    fun getAllContactsByUid(
         uid: String,
         onSuccess: (List<Contact>) -> Unit = {},
         onError: (Exception) -> Unit = {}

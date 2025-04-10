@@ -7,31 +7,36 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
@@ -39,8 +44,8 @@ import it.uniupo.ktt.ui.components.chats.AddContactButton
 import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ModalAddContact
 import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.firebase.ChatRepository.getAllConntactsByUid
-import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.viewmodel.ChatViewModel
+import it.uniupo.ktt.viewmodel.NewChatViewModel
 
 @Composable
 fun NewChatPage(navController: NavController) {
@@ -51,29 +56,25 @@ fun NewChatPage(navController: NavController) {
         }
     }
 
-    //Get lista Contatti
-    val contactList = remember { mutableStateOf<List<Contact>>(emptyList()) }
+    //Stato Dialog (visibilità del del ModalAddContact (ON/OFF))
+    var showDialog by remember { mutableStateOf(false) }
+
     val currentUid = BaseRepository.currentUid()
 
-    LaunchedEffect(currentUid) {
-        if (currentUid != null) {
-            getAllConntactsByUid(
-
-                uid = currentUid,
-                onSuccess = { contacts ->
-                    Log.d("DEBUG", "Lista Contatti: ${contacts.joinToString(separator = "\n")}")
-                    contactList.value = contacts.filter { it.isValid() }
-                },
-                onError = { e ->
-                    Log.e("DEBUG", "Errore nella getAllConntactsByUid query", e)
-                }
-            )
+    // collegamento ai ViewModel
+    val viewModelRef : NewChatViewModel = viewModel()
+    val ChatViewModelRef : ChatViewModel = viewModel()
+    // properties observable
+    val contactsRef by viewModelRef.contactList.collectAsState()
+    val isLoadingRef by viewModelRef.isLoading.collectAsState()
+    val errorRef by viewModelRef.errorMessage.collectAsState()
+    // lancio metodo per Init OR Update
+    LaunchedEffect (currentUid){
+        if(currentUid != null){
+            viewModelRef.loadContacts(currentUid)
         }
     }
 
-
-    //Stato Dialog (visibilità del del ModalAddContact (ON/OFF))
-    var showDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -117,15 +118,61 @@ fun NewChatPage(navController: NavController) {
                             Dialog(onDismissRequest = { showDialog = false }) {
                                 ModalAddContact(
                                     onDismiss = { showDialog = false },
-                                    contactList
                                 )
                             }
                         }
                     }
 
-                    if(contactList.value.isNotEmpty()){
+                }
+
+                // UI-> ModelView Behaviour
+                when {
+                    // wait to build PageUI (DB data not delivered yet)
+                    isLoadingRef -> {
+                        CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    }
+                    // query error
+                    errorRef != null -> {
+                        Log.e("DEBUG-ModelView", "Errore delivery Lista Contacts")
+                    }
+                    // lista Chat recieved vuota (0 Chat al momento)
+                    contactsRef.isEmpty() ->{
                         Text(
-                            text = "Contact on Keep The Time",
+                            text = buildAnnotatedString {
+                                append("Press ")
+
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                    append("add contact")
+                                }
+
+                                append(" to extend your contacts book!")
+                            },
+                            style = MaterialTheme.typography.bodyMedium, //Poppins
+
+
+                            //letterSpacing = 1.sp,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight(400),
+                            lineHeight = 34.sp,
+
+
+
+                            color = Color(0xFF423C3C),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                //.align(Alignment.Center)
+                                .offset(x= 0.dp, y= 260.dp)
+                                .padding(horizontal = 55.dp)
+                        )
+                    }
+                    // lista Chat recieved non vuota (1+ Chat al momento)
+                    else -> {
+
+                        // ordina la lista in ordine alfabetico in base al "name"
+                        val sortedContactsList = contactsRef.sortedBy { it.name }
+
+                        Text(
+                            text = "Contacts on Keep The Time",
 
                             fontSize = 17.sp,
                             fontWeight = FontWeight(400),
@@ -135,64 +182,52 @@ fun NewChatPage(navController: NavController) {
                             style = MaterialTheme.typography.bodyMedium,
 
                             modifier = Modifier
-                                .offset(x = -(17).dp, y = 24.dp)
+                                .offset(x = 40.dp, y = 110.dp)
                         )
-                    }
-                }
 
-                // LOWER PART (popolazione lista OR msg)
-                if(contactList.value.isEmpty()){ // LISTA CONTACT EMPTY
-                    Text(
-                        text = buildAnnotatedString {
-                            append("Press ")
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 50.dp, y = 140.dp)
+                                .heightIn(max = 555.dp)
+                                .verticalScroll(rememberScrollState())
+                        ){
+                            Column(){
+                                // scotti lista e crea ChatLable contatti
+                                sortedContactsList.forEach { contact ->
+                                    ChatContactLable(
+                                        nome = "${contact.name} ${contact.surname}",
+                                        lastMessage = "send a message",
+                                        modifier = Modifier
+                                            .scale(1.3f),
+                                        imgId = R.drawable.profile_female_default,
+                                        onClick = {
+                                            /*
+                                                L' "uidContact" della persona con cui voglio creare una chat è gia nelle chat di cui faccio parte?
+                                                    - IF(true): Get Locale del "chatId" della chat esistente e naviga to "ChatOpen" passando "chatId/ uidContact"
+                                                    - ELSE: naviga to "ChatOpen" passando "null/ uidContact"
+                                             */
 
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append("add contact")
+                                            val chatFound = ChatViewModelRef.searchChatByUidEmployee(contact.uidContact)
+
+                                            // CHAT già esistente
+                                            if(chatFound != null){
+                                                navController.navigate("chat open/${chatFound.chatId}/${contact.uidContact}")
+                                            }
+                                            // CHAT non esistente
+                                            else{
+                                                navController.navigate("chat open/notFound/${contact.uidContact}")
+                                            }
+                                        }
+                                    )
+                                    Spacer(
+                                        modifier = Modifier
+                                            .height(5.dp)
+                                    )
+                                }
                             }
-
-                            append(" to extend your contacts book!")
-                        },
-                        style = MaterialTheme.typography.bodyMedium, //Poppins
-
-
-                        //letterSpacing = 1.sp,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight(400),
-                        lineHeight = 34.sp,
-
-
-
-                        color = Color(0xFF423C3C),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            //.align(Alignment.Center)
-                            .offset(x= 0.dp, y= 260.dp)
-                            .padding(horizontal = 55.dp)
-                    )
-                }
-                else { // LISTA CONTACT NOT EMPTY
-
-                    // ordina la lista in base al nome in ordine alfabetico
-                    val sortedContactList = contactList.value.sortedBy{ it.name }
-
-                    Column(
-                        modifier = Modifier
-                            .offset(x = 50.dp, y = 140.dp)
-                    ){
-                        // itera lista e crea Lable contatti
-                        sortedContactList.forEach { contact ->
-                            ChatContactLable(
-                                nome = "${contact.name} ${contact.surname}",
-                                lastMessage = "send a message",
-                                modifier = Modifier
-                                    .scale(1.3f),
-                                imgId = R.drawable.profile_female_default
-                            )
-                            Spacer(
-                                modifier = Modifier
-                                    .height(5.dp)
-                            )
                         }
+
+
                     }
                 }
 
