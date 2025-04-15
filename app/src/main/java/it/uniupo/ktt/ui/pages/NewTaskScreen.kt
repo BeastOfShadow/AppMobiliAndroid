@@ -79,6 +79,7 @@ import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import it.uniupo.ktt.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -740,6 +741,7 @@ fun NewTaskScreen(navController: NavController) {
 
                                 taskViewModel.addTaskAndSubtasks(
                                     task = Task(
+                                        id = UUID.randomUUID().toString(),
                                         caregiver = caregiverUid,
                                         title = taskName,
                                         employee = uid,

@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
 
 data class Task(
+    val id : String = "",
     val caregiver: String = "",
     val employee: String = "",
 
