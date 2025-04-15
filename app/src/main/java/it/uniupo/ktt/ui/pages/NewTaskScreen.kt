@@ -648,6 +648,7 @@ fun NewTaskScreen(navController: NavController) {
 
                                                         val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
                                                         subtasks += SubTask(
+                                                            id = UUID.randomUUID().toString(),
                                                             listNumber = nextNumber,
                                                             description = subtaskDescription,
                                                             descriptionImgStorageLocation = selectedImageUri.value.toString(),
@@ -748,7 +749,7 @@ fun NewTaskScreen(navController: NavController) {
                                         completionTimeEstimate = time,
                                         status = TaskStatus.READY.toString()
                                     ),
-                                    // subtasks = TODO()
+                                    subtasks = subtasks
                                 )
                             } else {
                                 Log.d("Db", "Nessun utente trovato con quell'email.")
