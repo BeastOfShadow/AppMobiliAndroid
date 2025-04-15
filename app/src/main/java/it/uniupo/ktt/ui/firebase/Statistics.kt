@@ -116,7 +116,7 @@ object StatisticsRepository {
             }
     }
 
-    // DA TESTARE
+        // OK
     fun getGenAndDailyTaskDoneByCaregiverUid(
         uid: String,
         onSuccess: (dailyTasks: List<Task>, generalTasks: List<Task>) -> Unit,

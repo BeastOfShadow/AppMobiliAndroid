@@ -1,6 +1,8 @@
 package it.uniupo.ktt.ui.firebase
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 
 object BaseRepository {
@@ -9,11 +11,12 @@ object BaseRepository {
     // "SINGLETON" FireBase Auth
     val auth: FirebaseAuth = FirebaseAuth.getInstance() //update automatico al LogOut
 
-    // "SINGLETON" FireBase Db
+    // "SINGLETON" FireBase FireStore Db
     @Suppress("StaticFieldLeak") //"FirebaseFirestore.getInstance()" è un singleton ufficiale gestito internamente da Firebase, non crea memory leak
     val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-
+    // "SINGLETON" Firebase Realtime Database
+    val dbRealTime: DatabaseReference = FirebaseDatabase.getInstance().reference
 
     // return UID del CurrentUser(se si è loggati), OR null
     fun currentUid(): String? = auth.currentUser?.uid

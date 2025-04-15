@@ -28,8 +28,14 @@ import it.uniupo.ktt.ui.pages.RegisterScreen
 import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
 import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
+import it.uniupo.ktt.ui.pages.caregiver.chat.ChatOpen
 import it.uniupo.ktt.ui.theme.KTTTheme
 
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +69,18 @@ class MainActivity : ComponentActivity() {
                         //Chats
                         composable("chat") { ChatPage(navController) }
                         composable("new chat") { NewChatPage(navController) }
+                        composable(
+                            "chat open/{chatId}/{uidContact}/{contactName}", // Route che accetta 3 PARAM
+                            arguments = listOf(
+                                navArgument("chatId") { type = NavType.StringType }, // Def PARAM1 type
+                                navArgument("uidContact") {type = NavType.StringType}, // Def PARAM2 type
+                                navArgument("contactName") {type = NavType.StringType}), // Def PARAM3 type
+                        ) { backStackEntry ->
+                            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                            val uidContact = backStackEntry.arguments?.getString("uidContact") ?: ""
+                            val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
+                            ChatOpen(navController, chatId, uidContact, contactName) // Passaggio dei 3 PARAM
+                        }
                     }
                 }
             }

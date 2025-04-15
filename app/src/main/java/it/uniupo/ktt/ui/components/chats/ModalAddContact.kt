@@ -35,9 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.IntOffset
+import androidx.lifecycle.viewmodel.compose.viewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.viewmodel.NewChatViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -46,8 +48,10 @@ import kotlin.math.roundToInt
 @Composable
 fun ModalAddContact(
     onDismiss: () -> Unit,
-    contactList: MutableState<List<Contact>>
     ) {
+
+    // Link al ChatViewModel
+    val viewModelRef : NewChatViewModel = viewModel()
 
     //snackBar (modale info)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -152,17 +156,6 @@ fun ModalAddContact(
                             // Coroutine Space
                             scope.launch{
 
-                                //Il contatto che voglio aggiungere è già tra i miei contatti??
-                                // in NewChatPage ricevo la lista dei miei contatti per poterla popolare quindi potrei
-                                // passarla al modale per un confronto
-
-                                /*
-                                *
-                                *           CONFRONTO MAIL CHE VOGLIO INSERIRE CON LA LISTA RICEVUTA IN INPUT
-                                *
-                                *
-                                * */
-
                                 // POST CONTACT on DB
                                 val emailLowerCase = email.lowercase() //trasforma in Lowercase
                                 val myUid = BaseRepository.currentUid().toString()
@@ -179,19 +172,13 @@ fun ModalAddContact(
                                         )
                                         //Log.d("DEBUG", "Contatto: $newContact")
 
-                                        //POST NEW CONTACT
-                                        ChatRepository.postNewContact(
-                                            newContact = newContact,
-                                            onSuccess = {
-                                                Log.d("DEBUG", "Contatto creato con successo")
+                                        //POST NEW CONTACT (con ViewModel)
+                                        viewModelRef.postContact(newContact)
 
-                                                contactList.value = contactList.value + newContact // aggiorna la variabile reattiva "contactList"
-                                                onDismiss() //callback visibilità modale OFF (chiudi modale)
-                                            },
-                                            onError = { e ->
-                                                Log.e("DEBUG", "Errore nel salvataggio del contatto", e)
-                                                // Mostra errore in UI se vuoi (es. Snackbar, Toast)
-                                            }
+                                        onDismiss() //callback visibilità modale OFF (chiudi modale)
+                                        
+                                        snackbarHostState.showSnackbar(
+                                            message = "Contact successfully added!"
                                         )
                                     }
                                     catch (e: IllegalArgumentException){

@@ -1,17 +1,17 @@
 package it.uniupo.ktt.ui.model
 
+import com.google.firebase.Timestamp
+
+
 data class Message(
-    val uidSender: String = "",
+    val sender: String = "",
     val text: String = "",
 
-    val seen: String = "", // come devo passare un Boolean?
-    val timeStamp: String = "" //come devo passare un TimeStamp?
+    val seen: Boolean = false,
+    val timeStamp: Long = System.currentTimeMillis() // RealTimeDB non supporta "timeStamp"
 ){
-    init {
-        //validazione campi
-        require(uidSender.isNotBlank()) { "mandante non inserito." }
-        require(text.isNotBlank()) { "testo non inserito." }
-        require(uidSender.isNotBlank()) { "attributo lettura non inserito." }
-        require(timeStamp.isNotBlank()) { "tempo di invio non inserito." }
+    fun isValid(): Boolean {
+        return sender.isNotBlank() &&
+                text.isNotBlank()
     }
 }

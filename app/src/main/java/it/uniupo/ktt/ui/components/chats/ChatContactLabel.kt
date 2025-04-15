@@ -30,17 +30,17 @@ import it.uniupo.ktt.R
 
 @Composable
 fun ChatContactLable(
-    //navController: NavController,
     nome: String,
     lastMessage: String,
     imgId: Int,   //R.drawable?
-    modifier: Modifier
+    modifier: Modifier,
+    onClick: () -> Unit
 ) {
 
 
     Box(
         modifier = modifier
-            .clickable { /* Naviga alla chat */ }
+            .clickable { onClick() }
             .padding(8.dp)
             .background(Color(0xFFF5DFFA))
             .width(220.dp)
@@ -88,17 +88,4 @@ fun ChatContactLable(
         }
     }
 
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ChatContactLablePreview() {
-    ChatContactLable(
-        "Maria Teresa",
-        lastMessage = "Dipreismo e Piedi a volontà",
-        modifier = Modifier
-            .scale(1f),
-        imgId = R.drawable.profile_female_default
-    )
 }

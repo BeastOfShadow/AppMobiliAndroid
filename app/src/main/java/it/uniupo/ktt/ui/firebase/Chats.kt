@@ -1,23 +1,28 @@
 package it.uniupo.ktt.ui.firebase
 
-import android.provider.ContactsContract.CommonDataKinds.Email
 import android.util.Log
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QueryDocumentSnapshot
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.ui.model.Message
 import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
 
+//realTime-DB needs
+import com.google.firebase.database.*
+import java.util.Date
 
 object ChatRepository {
 
+    // REF al RealTime DB (SINGLETON del BaseRepository)
+    private val realtimeDb = BaseRepository.dbRealTime
+
         //OK
     // blocca il thread e necessito di coroutine per poterla richiamare ("scope" nei Button & "LaunchedEffect" nei composable)
-    suspend fun getUserByEmail(
-        email: String,
-    ): User?{
+    suspend fun getUserByEmail(email: String): User?{
         return try {
             val snapshot = BaseRepository.db
                 .collection("users")
@@ -32,7 +37,6 @@ object ChatRepository {
             null
         }
     }
-
 
         //OK
     // non blocca il Thread -> usa firestore async, quindi non necessito di coroutine per usarla ma solo di un "LaunchedEffect(){}"
@@ -54,9 +58,8 @@ object ChatRepository {
             }
     }
 
-
         // OK
-    fun getAllConntactsByUid(
+    fun getAllContactsByUid(
         uid: String,
         onSuccess: (List<Contact>) -> Unit = {},
         onError: (Exception) -> Unit = {}
@@ -76,147 +79,106 @@ object ChatRepository {
             }
     }
 
-
-
-
-
-//    suspend fun getAllContactsByUid(
-//        uid: String,
-//    ): User?{
-//        return try {
-//            val snapshot = BaseRepository.db
-//                .collection("contacts")
-//                .whereEqualTo("uidPersonal", uid)
-//                .get()
-//                .await()
-//
-//            snapshot.documents.firstOrNull()?.toObject(User::class.java)
-//        }
-//        catch (e: Exception){
-//            null
-//        }
-//    }
-
-                                // GET ALL CHATS by uid
-//    fun fetchChatsForUser(
-//        userPath: String,
-//        onResult: (List<QueryDocumentSnapshot>) -> Unit,
-//        onFailure: (Exception) -> Unit = {}
-//    ) {
-//        db.collection("chats")
-//            .whereEqualTo("caregiver", userPath)
-//            .get()
-//            .addOnSuccessListener { caregiverChats ->
-//                db.collection("chats")
-//                    .whereEqualTo("employee", userPath)
-//                    .get()
-//                    .addOnSuccessListener { employeeChats ->
-//                        val combined = caregiverChats.documents + employeeChats.documents
-//                        onResult(combined)
-//                    }
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("Firestore", "Errore recupero chat", e)
-//                onFailure(e)
-//            }
-//    }
-
-
-                                    //POST NEW CHAT
-//    fun createChat(
-//        caregiverPath: String,
-//        employeePath: String,
-//        onSuccess: () -> Unit = {},
-//        onFailure: (Exception) -> Unit = {}
-//    ) {
-//        val uid = BaseRepository.currentUid()
-//        val db = BaseRepository.db
-//
-//        val chatData = hashMapOf(
-//            "caregiver" to caregiverPath,
-//            "employee" to employeePath,
-////            "lastMsg" to "",
-////            "lastSender" to "",
-////            "lastTimeStamp" to Timestamp.now()
-//        )
-//
-//        db.collection("chats").document(chatId)
-//            .set(chatData)
-//            .addOnSuccessListener {
-//                Log.d("Firestore", "Chat $chatId creata")
-//                onSuccess()
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("Firestore", "Errore creazione chat", e)
-//                onFailure(e)
-//            }
-//    }
-
-
-
-
-                     //GET ALL MSG by chatId (Whole chat by Id)
-//    fun fetchMessages(
-//        chatId: String,
-//        onResult: (List<QueryDocumentSnapshot>) -> Unit,
-//        onFailure: (Exception) -> Unit = {}
-//    ) {
-//        db.collection("chats").document(chatId)
-//            .collection("messages")
-//            .orderBy("timeStamp")
-//            .get()
-//            .addOnSuccessListener { result ->
-//                onResult(result.documents)
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("Firestore", "Errore recupero messaggi", e)
-//                onFailure(e)
-//            }
-//    }
-
-
-                                    //POST NEW MSG
-    fun sendMessage(
-        chatId: String,
-        msgId: String,
-        senderPath: String,
-        text: String,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
+        // OK
+    fun getAllChatsByUid(
+        uid: String,
+        onSuccess: (List<Chat>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
     ) {
-        val uid = BaseRepository.currentUid()
-        val db = BaseRepository.db
-
-        val msgData = hashMapOf(
-            "msgId" to msgId,
-            "sender" to senderPath,
-            "text" to text,
-            "timeStamp" to Timestamp.now(),
-            "seen" to false
-        )
-
-        db.collection("chats").document(chatId)
-            .collection("messages")
-            .document(msgId)
-            .set(msgData)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Messaggio inviato in $chatId")
-                onSuccess()
+        BaseRepository.db
+            .collection("chats")
+            .whereEqualTo("caregiver", uid)
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di Chats
+                val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                Log.d("Firestore", "Trovate ${chats.size} chats dato uid: $uid")
+                onSuccess(chats)
             }
             .addOnFailureListener { e ->
-                Log.w("Firestore", "Errore invio messaggio", e)
-                onFailure(e)
+                Log.e("Firestore", "Errore durante la query getAllChatsByUid", e)
+                onError(e)
             }
+    }
 
-        // ✅ opzionale: aggiorna metadati della chat
-        db.collection("chats").document(chatId)
-            .update(
-                mapOf(
-                    "lastMsg" to text,
-                    "lastSender" to senderPath,
-                    "lastTimeStamp" to Timestamp.now()
-                )
-            )
+
+        // OK
+    fun getAllMessagesByChatId(
+        chatId: String,
+        onSuccess: (List<Message>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("chats")
+            .document(chatId)
+            .collection("messages")
+            .get()
+            .addOnSuccessListener { snapshot -> //ritorna una lista di messaggi della chat
+                val messages = snapshot.documents.mapNotNull { it.toObject(Message::class.java) }
+                Log.d("Firestore", "Trovati ${messages.size} messaggi dato chatId: $chatId")
+                onSuccess(messages)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Errore durante la query getAllMessagesByChatId", e)
+                onError(e)
+            }
+    }
+
+
+
+
+
+
+
+    // DA TESTARE
+    fun postNewChat(
+        newChat: Chat,
+        onSuccess: (String) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ){
+        BaseRepository.db
+            .collection("chats")
+            .add(newChat)
+            .addOnSuccessListener { documentReference ->
+                val newChatId = documentReference.id
+
+                // UPDATE chatID by DOCReference.id
+                documentReference
+                    .update("chatId", newChatId)
+                    .addOnSuccessListener {
+                        Log.d("DEBUG", "chatId updated, newChatId: $newChatId")
+                        onSuccess(newChatId)
+                    }
+                    .addOnFailureListener { updateException ->
+                        Log.e("DEBUG", "chatId errore nel suo Update", updateException)
+                        onError(updateException)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore nell'aggiunta della Chat", e)
+                onError(e)
+            }
+    }
+
+    // DA TESTARE
+    fun updateChatByChatId(
+        chatId: String,
+        message: Message,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        val updates = mapOf(
+            "lastMsg" to message.text,
+            "uidLastSender" to message.sender,
+            "lastTimeStamp" to Timestamp(Date(message.timeStamp))
+
+        )
+
+        BaseRepository.db
+            .collection("chats")
+            .document(chatId)
+            .update(updates)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onError(e) }
     }
 
 
@@ -226,5 +188,25 @@ object ChatRepository {
 
 
 
+    // REAL-TIME-DB FUNCTION
+        // OK
+    fun sendMessageRealtime(chatId: String, message: Message, onSuccess: () -> Unit = {}, onError: (DatabaseError) -> Unit = {}) {
+        val messageId = realtimeDb.child("messages").child(chatId).push().key
+
+        if (messageId != null) {
+            realtimeDb.child("messages")
+                .child(chatId)
+                .child(messageId)
+                .setValue(message)
+                .addOnSuccessListener { onSuccess() }
+                .addOnFailureListener { e ->
+                    if (e is DatabaseError) {
+                        onError(e)
+                    }
+                }
+        } else {
+            onError(DatabaseError.fromException(Exception("Failed to generate message ID")))
+        }
+    }
 
 }
