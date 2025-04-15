@@ -3,7 +3,6 @@ package it.uniupo.ktt.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import it.uniupo.ktt.ui.firebase.ChatRepository
-import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

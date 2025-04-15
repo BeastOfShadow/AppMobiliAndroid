@@ -91,7 +91,8 @@ dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.51")
     kapt("com.google.dagger:hilt-compiler:2.51")
-
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // Integrazione HiltViewModel in Composable e Navigation graph
 
+    // REALTIME DB
+    implementation("com.google.firebase:firebase-database-ktx")
 }

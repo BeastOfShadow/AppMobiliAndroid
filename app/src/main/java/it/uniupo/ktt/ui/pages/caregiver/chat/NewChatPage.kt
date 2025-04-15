@@ -63,9 +63,6 @@ fun NewChatPage(navController: NavController) {
     val currentUid = BaseRepository.currentUid()
 
 
-
-    // collegamento ad un "new" NewChatViewModel (con Hilt)
-    val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>()
     // collegamento al ChatViewModel "old" della pagina padre (ChatPage)
     val parentEntry = remember(navController.currentBackStackEntry) {
         navController.getBackStackEntry("chat")
@@ -73,8 +70,8 @@ fun NewChatPage(navController: NavController) {
     val chatViewModelRefHilt = hiltViewModel<ChatViewModel>(parentEntry)
 
 
-
-
+    // collegamento ad un "new" NewChatViewModel (con Hilt)
+    val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>()
     // properties observable
     val contactsRef by newChatViewModelRefHilt.contactList.collectAsState()
     val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
@@ -217,16 +214,16 @@ fun NewChatPage(navController: NavController) {
                                                     - IF(true): Get Locale del "chatId" della chat esistente e naviga to "ChatOpen" passando "chatId/ uidContact"
                                                     - ELSE: naviga to "ChatOpen" passando "null/ uidContact"
                                              */
-
+                                            val contactName = "${contact.name} ${contact.surname}"
                                             val chatFound = chatViewModelRefHilt.searchChatByUidEmployee(contact.uidContact)
 
                                             // CHAT già esistente
                                             if(chatFound != null){
-                                                navController.navigate("chat open/${chatFound.chatId}/${contact.uidContact}")
+                                                navController.navigate("chat open/${chatFound.chatId}/${contact.uidContact}/${contactName}")
                                             }
                                             // CHAT non esistente
                                             else{
-                                                navController.navigate("chat open/notFound/${contact.uidContact}")
+                                                navController.navigate("chat open/notFound/${contact.uidContact}/${contactName}")
                                             }
                                         }
                                     )

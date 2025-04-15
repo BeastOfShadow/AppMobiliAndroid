@@ -30,7 +30,6 @@ import it.uniupo.ktt.R
 
 @Composable
 fun ChatContactLable(
-    //navController: NavController,
     nome: String,
     lastMessage: String,
     imgId: Int,   //R.drawable?

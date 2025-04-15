@@ -130,24 +130,12 @@ class ChatViewModel @Inject constructor() : ViewModel(){
             }
     }
 
-    // DA TESTARE DOPO INSERIMENTO "HILT"
+        // OK
     fun searchChatByUidEmployee(uid: String): Chat? {
         return _chatList.value.firstOrNull { chat ->
             Log.d("DEBUG", "Chat trovata ${chat.chatId}")
             chat.employee == uid
         }
     }
-
-//    fun searchChatByUidEmployee(uid: String){
-//        Log.d("DEBUG", "Uid contatto per ricerca $uid")
-//        Log.d("DEBUG", "Chat in _chatList trovate ${_chatList.value.size}")
-//        _chatList.value.forEach { chat ->
-//            Log.d("DEBUG", "Lista Chats: ${chat}")
-//        }
-//    }
-
-
-
-
 
 }

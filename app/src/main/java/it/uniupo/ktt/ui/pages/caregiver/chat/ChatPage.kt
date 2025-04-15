@@ -169,8 +169,9 @@ fun ChatPage(navController: NavController) {
                                             .scale(1.3f),
                                         imgId = R.drawable.profile_female_default,
                                         onClick = {
-                                            // goto ChatOpen passing "chatId, employee"
-                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}")
+                                            // goto ChatOpen passing "chatId, uidEmployee, employeeName"
+                                            val contactName = "${chat.name} ${chat.surname}"
+                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}/${contactName}")
                                         }
                                     )
                                     Spacer(
