@@ -59,6 +59,14 @@ class ChatViewModel @Inject constructor() : ViewModel(){
 
         //OK
     fun addNamesToChats(chats: List<Chat>){
+        // caso emptyList -> set "_isLoading" & return
+        if (chats.isEmpty()) {
+            _chatList.value = emptyList()
+            _isLoading.value = false
+            return
+        }
+
+
         // Lista Chats con aggiunta di "name" e "Surname"
         val chatsListEnriched = mutableListOf<Chat>()
 

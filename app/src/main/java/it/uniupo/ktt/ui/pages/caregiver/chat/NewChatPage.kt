@@ -76,6 +76,7 @@ fun NewChatPage(navController: NavController) {
     val contactsRef by newChatViewModelRefHilt.contactList.collectAsState()
     val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by newChatViewModelRefHilt.errorMessage.collectAsState()
+
     // lancio metodo per Init OR Update
     LaunchedEffect (currentUid){
         if(currentUid != null){
@@ -125,7 +126,7 @@ fun NewChatPage(navController: NavController) {
                         if (showDialog) {
                             Dialog(onDismissRequest = { showDialog = false }) {
                                 ModalAddContact(
-                                    onDismiss = { showDialog = false },
+                                    onDismiss = { showDialog = false }
                                 )
                             }
                         }

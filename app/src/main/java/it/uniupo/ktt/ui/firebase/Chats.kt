@@ -2,17 +2,14 @@ package it.uniupo.ktt.ui.firebase
 
 import android.util.Log
 import com.google.firebase.Timestamp
-import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.Message
 import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
 
-//realTime-DB needs
-import com.google.firebase.database.*
+//realTime-DB (RealTime-DB works with "Long" mentre FireStore-DB works with "timeStamp", we need to convert with Date)
 import java.util.Date
 
 object ChatRepository {
@@ -100,36 +97,7 @@ object ChatRepository {
             }
     }
 
-
         // OK
-    fun getAllMessagesByChatId(
-        chatId: String,
-        onSuccess: (List<Message>) -> Unit = {},
-        onError: (Exception) -> Unit = {}
-    ) {
-        BaseRepository.db
-            .collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .get()
-            .addOnSuccessListener { snapshot -> //ritorna una lista di messaggi della chat
-                val messages = snapshot.documents.mapNotNull { it.toObject(Message::class.java) }
-                Log.d("Firestore", "Trovati ${messages.size} messaggi dato chatId: $chatId")
-                onSuccess(messages)
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Errore durante la query getAllMessagesByChatId", e)
-                onError(e)
-            }
-    }
-
-
-
-
-
-
-
-    // DA TESTARE
     fun postNewChat(
         newChat: Chat,
         onSuccess: (String) -> Unit = {},
@@ -159,7 +127,7 @@ object ChatRepository {
             }
     }
 
-    // DA TESTARE
+        // OK
     fun updateChatByChatId(
         chatId: String,
         message: Message,
@@ -182,13 +150,7 @@ object ChatRepository {
     }
 
 
-
-
-
-
-
-
-    // REAL-TIME-DB FUNCTION
+                                            // REAL-TIME-DB FUNCTION
         // OK
     fun sendMessageRealtime(chatId: String, message: Message, onSuccess: () -> Unit = {}, onError: (DatabaseError) -> Unit = {}) {
         val messageId = realtimeDb.child("messages").child(chatId).push().key

@@ -47,11 +47,18 @@ import kotlin.math.roundToInt
 
 @Composable
 fun ModalAddContact(
-    onDismiss: () -> Unit,
+    onDismiss: () -> Unit
     ) {
 
     // Link al ChatViewModel
+    /*
+        Dato che il mio Progetto è configurato con HILT quando istanzio un
+        "viewModel" classico, verrà automaticame convertito in un "HiltViewModel"
+        dalla Factory di Hilt integrata.
+        Per questo funziona correttamente anceh così
+    */
     val viewModelRef : NewChatViewModel = viewModel()
+    val contactList by viewModelRef.contactList.collectAsState()
 
     //snackBar (modale info)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -149,6 +156,16 @@ fun ModalAddContact(
                             if (name.isBlank() || surname.isBlank() || email.isBlank()) {
                                 scope.launch {
                                     snackbarHostState.showSnackbar("Tutti i campi sono obbligatori")
+                                }
+                                return@Button
+                            }
+
+                            // Controllo contatto già presente nella tua Lista contatti
+                            val contactExists = contactList.any { it.email == email.lowercase() }
+
+                            if (contactExists) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Impossibile aggiungere il contatto:\n Contatto già Esistente")
                                 }
                                 return@Button
                             }
