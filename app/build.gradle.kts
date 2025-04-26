@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.material3.lint)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.coil.compose.v240)
+    implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -95,4 +96,7 @@ dependencies {
 
     // REALTIME DB
     implementation("com.google.firebase:firebase-database-ktx")
+
+    // COIL (per le immagini)
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }

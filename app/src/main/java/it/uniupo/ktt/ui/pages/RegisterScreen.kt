@@ -283,7 +283,8 @@ fun RegisterScreen(navController: NavController) {
                                         email = email.lowercase(),
                                         role = UserRole.EMPLOYEE.toString(),
                                         name = name.lowercase().replaceFirstChar { it.uppercase() },
-                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() }
+                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                                        avatar = "avatar/TucanoCaffe.png"
                                     )
 
                                     //post on DB
@@ -294,10 +295,16 @@ fun RegisterScreen(navController: NavController) {
                                             .document(uid)
                                             .set(user)
                                             .addOnSuccessListener {
-                                                Log.d("Firestore", "Utente aggiunto con successo")
+                                                Log.d("DEBUG", "Utente aggiunto con successo")
+
+                                                // se aggiungo l'utente con successo allora vado alla home
+                                                navController.navigate("home") {
+                                                    popUpTo("landing") { inclusive = true }
+                                                    launchSingleTop = true
+                                                }
                                             }
                                             .addOnFailureListener { e ->
-                                                Log.w("Firestore", "Errore nell'aggiunta utente", e)
+                                                Log.w("DEBUG", "Errore nell'aggiunta utente", e)
                                             }
                                     }
                                     else{
@@ -307,10 +314,7 @@ fun RegisterScreen(navController: NavController) {
 
 
 
-                                    navController.navigate("home") {
-                                        popUpTo("landing") { inclusive = true }
-                                        launchSingleTop = true
-                                    }
+
                                 } else {
                                     message = task.exception?.message ?: "Unknown error occurred"
                                 }

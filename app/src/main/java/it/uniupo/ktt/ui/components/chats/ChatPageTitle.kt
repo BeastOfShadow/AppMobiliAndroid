@@ -61,7 +61,7 @@ fun ChatPageTitle(
         ) {
             FilledIconButton(
                 onClick = {
-                    navController.popBackStack() //return
+                    navController.popBackStack("chat", inclusive = false) //return
                 },
                 modifier = Modifier.size(34.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(
