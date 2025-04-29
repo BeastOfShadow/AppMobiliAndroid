@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.StorageReference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.firebase.UserRepository
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,22 +15,34 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.net.URLDecoder
 import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor() : ViewModel() {
+                                    // USER
+    // User
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow() // Osservabile dai @Composable
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _isLoadingUser = MutableStateFlow(false)
+    val isLoadingUser: StateFlow<Boolean> = _isLoadingUser.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    // Avatar
+    // UserAvatar
     private val _avatarUrl = MutableStateFlow<String?>(null)
     val avatarUrl: StateFlow<String?> = _avatarUrl.asStateFlow()
+
+                                 // AVATAR-LIST
+    // AvatarList
+    private val _avatarUrlsList = MutableStateFlow<List<String>>(emptyList())
+    val avatarUrlsList: StateFlow<List<String>> = _avatarUrlsList.asStateFlow()
+
+    private val _isLoadingAvatars = MutableStateFlow(false)
+    val isLoadingAvatar: StateFlow<Boolean> = _isLoadingAvatars.asStateFlow()
+
 
 
     suspend fun getUidByEmail(email: String): String? {
@@ -47,12 +60,10 @@ class UserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-
-
         // OK
-    // (ottieni l'avatar attuale : downloadUrl + Coil )
+    // (ottieni User + UserAvatar(downloadUrl + Coil) )
     fun loadUserByUid(uid: String) {
-        _isLoading.value = true
+        _isLoadingUser.value = true
 
         BaseRepository.db.collection("users")
             .whereEqualTo("uid", uid)
@@ -79,16 +90,17 @@ class UserViewModel @Inject constructor() : ViewModel() {
                         .addOnSuccessListener { uri ->
                             Log.d("DEBUG-AVATAR", "Url Avatar non trovato: $uri")
                             _avatarUrl.value = uri.toString()
-                            _isLoading.value = false
+                            _isLoadingUser.value = false
                         }
                         .addOnFailureListener {
                             Log.e("DEBUG-AVATAR", "Url Avatar non trovato")
                             _avatarUrl.value = null
-                            _isLoading.value = false
+                            _isLoadingUser.value = false
                         }
-                    } else {
+                    }
+                    else {
                         _avatarUrl.value = null
-                        _isLoading.value = false
+                        _isLoadingUser.value = false
                     }
 
                 }
@@ -96,19 +108,46 @@ class UserViewModel @Inject constructor() : ViewModel() {
                 else {
                     Log.e("DEBUG", "Errore recupero utente")
                     _errorMessage.value = "User not found"
-                    _isLoading.value = false
+                    _isLoadingUser.value = false
                 }
             }
             .addOnFailureListener { e ->
                 Log.e("DEBUG", "Errore recupero utente", e)
                 _errorMessage.value = "Errore recupero utente"
-                _isLoading.value = false
+                _isLoadingUser.value = false
             }
     }
 
-//    fun loadAllAvatar(){
-//
-//    }
+        // OK
+    fun loadAllAvatars() {
+        _isLoadingAvatars.value = true
+
+        UserRepository.getAllAvatar(
+            onSuccess = { listAvatarUrls ->
+                _avatarUrlsList.value = listAvatarUrls
+                _isLoadingAvatars.value = false
+            },
+            onError = {
+                _isLoadingAvatars.value = false
+            }
+        )
+    }
+
+
+        // OK
+    fun updateAvatar(newAvatarUrl: String) {
+        // Update Locale
+        _avatarUrl.value = newAvatarUrl
+
+        // Update FireStoreDB (decodifica Url per ottenere il Name del percorso)
+        val decodedUrl = URLDecoder.decode(newAvatarUrl, "UTF-8")
+        val fileName = decodedUrl.substringAfterLast("/").substringBefore("?")
+        val path = "avatar/$fileName"
+        //Log.d("DEBUG", "Nome del PATH: $path")
+
+        UserRepository.updateUserAvatar(path)
+    }
+
 
 
 }

@@ -51,8 +51,14 @@ import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.UserViewModel
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.Dialog
 import it.uniupo.ktt.R
+import it.uniupo.ktt.ui.components.chats.ModalAddContact
 import it.uniupo.ktt.ui.components.homePage.AvatarSticker
+import it.uniupo.ktt.ui.components.homePage.ModalShowAvatars
 import it.uniupo.ktt.ui.firebase.BaseRepository
 
 
@@ -68,11 +74,14 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    //Stato Dialog (visibilità del del ModalAddContact (ON/OFF)) reattiva ai cambiamenti
+    var showDialog by remember { mutableStateOf(false) }
+
     // istanza + collegamento
     val userViewModelRef = hiltViewModel<UserViewModel>()
     // osservabili
     val userRef by userViewModelRef.user.collectAsState()
-    val isLoadingRef by userViewModelRef.isLoading.collectAsState()
+    val isLoadingUserRef by userViewModelRef.isLoadingUser.collectAsState()
     val errorRef by userViewModelRef.errorMessage.collectAsState()
     val avatarRef by userViewModelRef.avatarUrl.collectAsState()
 
@@ -91,7 +100,7 @@ fun HomeScreen(navController: NavController) {
     ){
         when {
             // wait to build PageUI ... (DB data not delivered yet)
-            isLoadingRef -> {
+            isLoadingUserRef -> {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
             // query error
@@ -162,9 +171,21 @@ fun HomeScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(80.dp))
 
-                        // IMG PROFILO (AVATAR)
+
+                                            // AVATAR
                         Log.e("DEBUG-HOME-AVATAR", "avatarUrl: $avatarRef")
-                        AvatarSticker(avatarRef.toString())
+                        AvatarSticker(
+                            avatarRef.toString(),
+                            onClick = { showDialog = true}
+                        )
+
+                        if (showDialog) {
+                            Dialog(onDismissRequest = { showDialog = false }) {
+                                ModalShowAvatars(
+                                    onDismiss = { showDialog = false }
+                                )
+                            }
+                        }
 
 
                         Spacer(modifier = Modifier.height(20.dp))

@@ -31,6 +31,6 @@ object BaseRepository {
     // return TRUE se l'utente è loggato, OR FALSE
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
-    // return OBJ User (per intero, posso accedere a tutti i suoi campi)
+    // return auth OBJ User
     fun currentUser() = auth.currentUser
 }

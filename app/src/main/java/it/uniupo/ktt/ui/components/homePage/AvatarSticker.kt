@@ -27,7 +27,8 @@ import it.uniupo.ktt.ui.theme.primary
 
 @Composable
 fun AvatarSticker(
-    avatarUrl: String
+    avatarUrl: String,
+    onClick: () -> Unit = {}
 )
 {
     // AVATAR Icon BOX
@@ -46,11 +47,7 @@ fun AvatarSticker(
                 }
                 .background(primary, CircleShape)
                 .padding(10.dp)
-                .clickable{
-                    // Open Modal -> scelta avatar lista head->tail collegata
-
-
-                }
+                .clickable(onClick = onClick) // Open Modal -> scelta avatar lista head->tail collegata
                 .align(Alignment.Center),
             contentAlignment = Alignment.Center
         ) {
