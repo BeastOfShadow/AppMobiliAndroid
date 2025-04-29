@@ -129,7 +129,12 @@ fun ModalShowAvatars(
                             Box(
                                 modifier = Modifier
                                     .size(120.dp)
-                                    .background(Color.White, CircleShape),
+                                    .background(Color.White, CircleShape)
+                                    .border(
+                                        width = if (pagerState.currentPage == index) 4.dp else 0.dp,
+                                        color = if (pagerState.currentPage == index) Color(0xFF9C46FF) else Color.Transparent,
+                                        shape = CircleShape
+                                    ),
                                 contentAlignment = Alignment.Center
 
                             ){
@@ -140,11 +145,7 @@ fun ModalShowAvatars(
                                     modifier = Modifier
                                         .size(105.dp)
                                         .clip(CircleShape)
-                                        .border(
-                                            width = if (pagerState.currentPage == index) 4.dp else 0.dp,
-                                            color = Color.Transparent,
-                                            shape = CircleShape
-                                        )
+
                                 )
                             }
                         }
