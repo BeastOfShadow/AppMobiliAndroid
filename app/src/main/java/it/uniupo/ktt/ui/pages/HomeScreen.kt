@@ -69,7 +69,7 @@ fun HomeScreen(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing")
         {
-            popUpTo("chat") { inclusive = true } // clear Stack
+            popUpTo("landing") { inclusive = false }
             launchSingleTop = true //precaricamento
         }
     }
@@ -123,146 +123,273 @@ fun HomeScreen(navController: NavController) {
                  */
                 val userVal = userRef
 
-
-                // controllo redirect iniziale
-                if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn())  {
-                    navController.navigate("landing") {
-                        popUpTo("home") { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
+                // CAREGIVER HOME-SCREEN
+                if(userVal?.role == "CAREGIVER"){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(20.dp)
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                        Column(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            FilledIconButton(
-                                onClick = {
-                                    // navController.popBackStack()
-                                    FirebaseAuth.getInstance().signOut()
-                                    navController.navigate("landing") {
-                                        popUpTo("home") { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                },
-                                modifier = Modifier.size(34.dp),
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.ArrowBackIosNew,
-                                    contentDescription = "Back",
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                FilledIconButton(
+                                    onClick = {
+                                        // navController.popBackStack()
+                                        FirebaseAuth.getInstance().signOut()
+                                        navController.navigate("landing") {
+                                            popUpTo("home") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    modifier = Modifier.size(34.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowBackIosNew,
+                                        contentDescription = "Back",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(80.dp))
-
-
-                                            // AVATAR
-                        Log.e("DEBUG-HOME-AVATAR", "avatarUrl: $avatarRef")
-                        AvatarSticker(
-                            avatarRef.toString(),
-                            onClick = { showDialog = true}
-                        )
-
-                        if (showDialog) {
-                            Dialog(onDismissRequest = { showDialog = false }) {
-                                ModalShowAvatars(
-                                    onDismiss = { showDialog = false }
-                                )
-                            }
-                        }
+                            Spacer(modifier = Modifier.height(80.dp))
 
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // Title
-                        Text(
-                            text = " ${userVal?.name} ${userVal?.surname}",
-                            style = MaterialTheme.typography.titleLarge, // This will use Poppins
-
-                            color = titleColor,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.caregiver),
-                                contentDescription = "Endline",
-                                modifier = Modifier.size(20.dp)
+                            // AVATAR
+                            Log.e("DEBUG-HOME-AVATAR", "avatarUrl: $avatarRef")
+                            AvatarSticker(
+                                avatarRef.toString(),
+                                onClick = { showDialog = true}
                             )
+
+                            if (showDialog) {
+                                Dialog(onDismissRequest = { showDialog = false }) {
+                                    ModalShowAvatars(
+                                        onDismiss = { showDialog = false }
+                                    )
+                                }
+                            }
+
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Title
                             Text(
-                                text = " ${userVal?.role?.lowercase()}",
-                                fontWeight = FontWeight.ExtraLight,
+                                text = " ${userVal.name} ${userVal.surname}",
+                                style = MaterialTheme.typography.titleLarge, // This will use Poppins
+
+                                color = titleColor,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.caregiver),
+                                    contentDescription = "Endline",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = " ${userVal.role.lowercase()}",
+                                    fontWeight = FontWeight.ExtraLight,
+                                    fontSize = 16.sp,
+                                    color = subtitleColor
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(65.dp))
+
+                            Text(
+                                text = "Main menu",
+                                fontWeight = FontWeight.Normal,
                                 fontSize = 16.sp,
                                 color = subtitleColor
                             )
+
+                            // CG_TASKMANAGER
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "task manager",
+                                title = "Task Manager",
+                                description = "Create, update, delete tasks and subtasks",
+                                image = R.drawable.menu_task_new,
+                                imageDescription = "Profile Icon"
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // CG_CHATS
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "chat",
+                                title = "Chat",
+                                description = "Direct messages to your employees",
+                                image = R.drawable.menu_chat,
+                                imageDescription = "Chat Icon"
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // CG_STATISTICS
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "CareGiver Statistic",
+                                title = "Statistics",
+                                description = "Check the work done by each employee",
+                                image = R.drawable.menu_stats_a,
+                                imageDescription = "Statistics Icon"
+                            )
+
                         }
-
-                        Spacer(modifier = Modifier.height(65.dp))
-
-                        Text(
-                            text = "Main menu",
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 16.sp,
-                            color = subtitleColor
-                        )
-
-                        MenuLabel(
-                            navController = navController,
-                            navPage = "task manager",
-                            title = "Task Manager",
-                            description = "Create, update, delete tasks and subtasks",
-                            image = R.drawable.menu_task_new,
-                            imageDescription = "Profile Icon"
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        MenuLabel(
-                            navController = navController,
-                            navPage = "chat",
-                            title = "Chat",
-                            description = "Direct messages to your employees",
-                            image = R.drawable.menu_chat,
-                            imageDescription = "Chat Icon"
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        MenuLabel(
-                            navController = navController,
-                            navPage = "CareGiver Statistic",
-                            title = "Statistics",
-                            description = "Check the work done by each employee",
-                            image = R.drawable.menu_stats_a,
-                            imageDescription = "Statistics Icon"
-                        )
-
                     }
                 }
+                // EMPLOYEE HOME-SCREEN
+                else{
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(20.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                FilledIconButton(
+                                    onClick = {
+                                        // navController.popBackStack()
+                                        FirebaseAuth.getInstance().signOut()
+                                        navController.navigate("landing") {
+                                            popUpTo("home") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    modifier = Modifier.size(34.dp),
+                                    colors = IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowBackIosNew,
+                                        contentDescription = "Back",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(80.dp))
 
 
+                            // AVATAR
+                            Log.e("DEBUG-HOME-AVATAR", "avatarUrl: $avatarRef")
+                            AvatarSticker(
+                                avatarRef.toString(),
+                                onClick = { showDialog = true}
+                            )
+
+                            if (showDialog) {
+                                Dialog(onDismissRequest = { showDialog = false }) {
+                                    ModalShowAvatars(
+                                        onDismiss = { showDialog = false }
+                                    )
+                                }
+                            }
 
 
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            // Title
+                            Text(
+                                text = " ${userVal?.name} ${userVal?.surname}",
+                                style = MaterialTheme.typography.titleLarge, // This will use Poppins
+
+                                color = titleColor,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.caregiver),
+                                    contentDescription = "Endline",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    text = " ${userVal?.role?.lowercase()}",
+                                    fontWeight = FontWeight.ExtraLight,
+                                    fontSize = 16.sp,
+                                    color = subtitleColor
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(65.dp))
+
+                            Text(
+                                text = "Main menu",
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 16.sp,
+                                color = subtitleColor
+                            )
+
+
+                            // EP_DAILYTASKS
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "task manager",
+                                title = "Daily Tasks",
+                                description = "Today's activities in a smart list",
+                                image = R.drawable.menu_task_list,
+                                imageDescription = "Profile Icon"
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // EP_CHAT
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "chat",
+                                title = "Chat",
+                                description = "Direct messages to your Supervisors",
+                                image = R.drawable.menu_chat,
+                                imageDescription = "Chat Icon"
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // EP_STATISTICS
+                            MenuLabel(
+                                navController = navController,
+                                navPage = "Employee Statistic",
+                                title = "Statistics",
+                                description = "Check all your work done and the next goals!",
+                                image = R.drawable.menu_stats_b,
+                                imageDescription = "Statistics Icon"
+                            )
+
+                        }
+                    }
+                }
 
             }
         }

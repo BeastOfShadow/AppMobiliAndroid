@@ -49,7 +49,7 @@ fun ChatOpen(
 ) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing") {
-            popUpTo("chat") { inclusive = true }
+            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }

@@ -52,7 +52,7 @@ import it.uniupo.ktt.viewmodel.NewChatViewModel
 fun NewChatPage(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing") {
-            popUpTo("new chat") { inclusive = true }
+            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }

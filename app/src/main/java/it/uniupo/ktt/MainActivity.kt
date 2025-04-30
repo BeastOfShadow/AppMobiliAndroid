@@ -34,6 +34,7 @@ import it.uniupo.ktt.ui.theme.KTTTheme
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -66,6 +67,7 @@ class MainActivity : ComponentActivity() {
                         composable("comment subtask") { CommentSubtaskScreen(navController) }
                         //Statistics
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
+                        composable("Employee Statistic") { EP_StatisticPage(navController) }
                         //Chats
                         composable("chat") { ChatPage(navController) }
                         composable("new chat") { NewChatPage(navController) }

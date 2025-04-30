@@ -133,7 +133,6 @@ class UserViewModel @Inject constructor() : ViewModel() {
         )
     }
 
-
         // OK
     fun updateAvatar(newAvatarUrl: String) {
         // Update Locale

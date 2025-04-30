@@ -52,7 +52,7 @@ fun ChatPage(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing")
         {
-            popUpTo("chat") { inclusive = true } //animazione
+            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true //precaricamento
         }
     }
