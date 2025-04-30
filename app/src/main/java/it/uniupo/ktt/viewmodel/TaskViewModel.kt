@@ -30,7 +30,7 @@ class TaskViewModel : ViewModel() {
                     val subtaskRef = db.collection("tasks").document(taskId)
                         .collection("subtasks").document(subtask.id)
 
-                    // 3. Upload immagini su Firebase Storage (se ci sono)
+                    // Upload immagini su Firebase Storage (se ci sono)
                     val updatedSubtask = subtask.copy(
                         descriptionImgStorageLocation = subtask.descriptionImgStorageLocation.takeIf { it.isNotBlank() }
                             ?.let { uploadImageToStorage(it, "${ImageLocationFolders.DESCRIPTION}/${subtask.id}") } ?: "",
@@ -40,7 +40,7 @@ class TaskViewModel : ViewModel() {
                             ?.let { uploadImageToStorage(it, "${ImageLocationFolders.CAREGIVER}/${subtask.id}") } ?: ""
                     )
 
-                    // 4. Salva il subtask aggiornato (con path immagini)
+                    // Salva il subtask aggiornato (con path immagini)
                     subtaskRef.set(updatedSubtask).await()
                 }
             } catch (e: Exception) {
