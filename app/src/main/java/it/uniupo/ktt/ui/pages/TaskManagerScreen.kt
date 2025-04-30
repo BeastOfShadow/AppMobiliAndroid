@@ -52,6 +52,9 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.components.task.taskmanager.ChipsFilter
+import it.uniupo.ktt.ui.components.task.taskmanager.NullMessage
+import it.uniupo.ktt.ui.components.task.taskmanager.TextSection
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
@@ -78,8 +81,6 @@ fun TaskManagerScreen(navController: NavController) {
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Ready", "Ongoing", "Completed")
 
-    var filterTask by remember { mutableStateOf(emptyList<Task>()) }
-
     var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
     var ongoingTasks by remember { mutableStateOf(emptyList<Task>()) }
     var completedTasks by remember { mutableStateOf(emptyList<Task>()) }
@@ -91,8 +92,6 @@ fun TaskManagerScreen(navController: NavController) {
             ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString())
             completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
         }
-
-        filterTask = readyTasks + ongoingTasks + completedTasks
     }
 
     Box(
@@ -113,78 +112,39 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(20.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                filters.forEach { filter ->
-                    Box(
-                        modifier = Modifier
-                            .border(width = 1.dp, color = Color(0xFF403E3E), shape = MaterialTheme.shapes.extraLarge)
-                            .clickable {
-                                selectedFilter = filter
-                                    filterTask = when (filter) {
-                                        "All" -> readyTasks + ongoingTasks + completedTasks
-                                        "Ready" -> readyTasks
-                                        "Ongoing" -> ongoingTasks
-                                        "Completed" -> completedTasks
-                                        else -> emptyList()
-                                    }
-                                       },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(if (selectedFilter == filter) Color(0xFF6200EE) else Color.White, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = filter,
-                                fontWeight = if (selectedFilter == filter) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 14.sp,
-                                color = if (selectedFilter == filter) Color.White else subtitleColor
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "Filter: $selectedFilter",
-                fontWeight = FontWeight.Normal,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onBackground
+            ChipsFilter(
+                filters = filters,
+                selectedFilter = selectedFilter,
+                onFilterSelected = { selectedFilter = it }
             )
 
-            Spacer(modifier = Modifier.size(10.dp))
+            Spacer(modifier = Modifier.size(30.dp))
 
-            if(filterTask.isEmpty()) {
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "There are no ...",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 15.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    filterTask.forEach { task ->
-                        if(task.status == TaskStatus.READY.toString()) {
+            if (selectedFilter == "All" || selectedFilter == "Ready") {
+                TextSection("Ready")
+
+                Spacer(modifier = Modifier.size(10.dp))
+
+                if (readyTasks.isEmpty())
+                    NullMessage("ready")
+                else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        readyTasks.forEach { task ->
                             Box(
                                 modifier = Modifier
                                     .padding(start = 10.dp)
                                     .width(180.dp)
                                     .height(180.dp)
-                                    .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
                                     .background(primary, shape = MaterialTheme.shapes.extraLarge)
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
@@ -219,7 +179,7 @@ fun TaskManagerScreen(navController: NavController) {
                                         modifier = Modifier
                                             .size(44.dp)
                                             .shadow(4.dp, shape = CircleShape, clip = false)
-                                            .clickable{
+                                            .clickable {
                                                 taskViewModel.startTask(task.id)
 
                                                 val uid = currentUid()
@@ -229,14 +189,16 @@ fun TaskManagerScreen(navController: NavController) {
                                                             uid,
                                                             TaskStatus.READY.toString()
                                                         )
-                                                        ongoingTasks = taskViewModel.getTasksByStatus(
-                                                            uid,
-                                                            TaskStatus.ONGOING.toString()
-                                                        )
-                                                        completedTasks = taskViewModel.getTasksByStatus(
-                                                            uid,
-                                                            TaskStatus.COMPLETED.toString()
-                                                        )
+                                                        ongoingTasks =
+                                                            taskViewModel.getTasksByStatus(
+                                                                uid,
+                                                                TaskStatus.ONGOING.toString()
+                                                            )
+                                                        completedTasks =
+                                                            taskViewModel.getTasksByStatus(
+                                                                uid,
+                                                                TaskStatus.COMPLETED.toString()
+                                                            )
                                                     }
                                                 }
                                             }
@@ -257,13 +219,36 @@ fun TaskManagerScreen(navController: NavController) {
                                 }
                             }
                         }
-                        if(task.status == TaskStatus.ONGOING.toString()) {
+                    }
+                }
+                Spacer(modifier = Modifier.size(30.dp))
+            }
+
+            if (selectedFilter == "All" || selectedFilter == "Ongoing") {
+                TextSection("Ongoing")
+
+                Spacer(modifier = Modifier.size(10.dp))
+
+                if (ongoingTasks.isEmpty())
+                    NullMessage("ongoing")
+                else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        ongoingTasks.forEach { task ->
                             Box(
                                 modifier = Modifier
                                     .padding(start = 10.dp)
                                     .width(180.dp)
                                     .height(180.dp)
-                                    .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
                                     .background(primary, shape = MaterialTheme.shapes.extraLarge)
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
@@ -337,13 +322,36 @@ fun TaskManagerScreen(navController: NavController) {
                                 }
                             }
                         }
-                        if (task.status == TaskStatus.COMPLETED.toString()) {
+                    }
+                }
+                Spacer(modifier = Modifier.size(30.dp))
+            }
+
+            if (selectedFilter == "All" || selectedFilter == "Completed") {
+                TextSection("Completed")
+
+                Spacer(modifier = Modifier.size(10.dp))
+
+                if (completedTasks.isEmpty())
+                    NullMessage("completed")
+                else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        completedTasks.forEach { task ->
                             Box(
                                 modifier = Modifier
                                     .padding(start = 10.dp)
                                     .width(180.dp)
                                     .height(180.dp)
-                                    .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
                                     .background(primary, shape = MaterialTheme.shapes.extraLarge)
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
@@ -419,335 +427,8 @@ fun TaskManagerScreen(navController: NavController) {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.size(10.dp))
             }
-
-            Spacer(modifier = Modifier.size(30.dp))
-
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "Ready",
-                fontWeight = FontWeight.Normal,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            if(readyTasks.isEmpty())
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "There are no ready events.",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 15.sp,
-                )
-            else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    readyTasks.forEach { task ->
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 10.dp)
-                                .width(180.dp)
-                                .height(180.dp)
-                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.SpaceBetween,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = task.title,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = titleColor,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = task.employee,
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 14.sp,
-                                    color = subtitleColor,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                Spacer(modifier = Modifier.size(10.dp))
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .shadow(4.dp, shape = CircleShape, clip = false)
-                                        .clickable{
-                                            taskViewModel.startTask(task.id)
-
-                                            val uid = currentUid()
-                                            if (uid != null) {
-                                                coroutineScope.launch {
-                                                    readyTasks = taskViewModel.getTasksByStatus(
-                                                        uid,
-                                                        TaskStatus.READY.toString()
-                                                    )
-                                                    ongoingTasks = taskViewModel.getTasksByStatus(
-                                                        uid,
-                                                        TaskStatus.ONGOING.toString()
-                                                    )
-                                                    completedTasks = taskViewModel.getTasksByStatus(
-                                                        uid,
-                                                        TaskStatus.COMPLETED.toString()
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        .background(
-                                            color = tertiary,
-                                            shape = CircleShape
-                                        )
-                                        .padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.RocketLaunch,
-                                        contentDescription = "Start",
-                                        tint = buttonTextColor,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.size(30.dp))
-
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "Ongoing",
-                fontWeight = FontWeight.Normal,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            if(ongoingTasks.isEmpty())
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "There are no ongoing events.",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 15.sp,
-                )
-            else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    ongoingTasks.forEach { task ->
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 10.dp)
-                                .width(180.dp)
-                                .height(180.dp)
-                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.SpaceBetween,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = task.title,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = titleColor,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = task.employee,
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 14.sp,
-                                    color = subtitleColor,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                Spacer(modifier = Modifier.size(15.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceAround,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.task_sun),
-                                            contentDescription = "Clock",
-                                            modifier = Modifier.size(55.dp)
-                                        )
-                                    }
-
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .border(
-                                                    width = 3.dp,
-                                                    color = Color(0xFFEED547),
-                                                    shape = CircleShape
-                                                )
-                                                .padding(6.dp)
-                                                .height(38.dp)
-                                                .width(38.dp)
-                                        ) {
-                                            Text(
-                                                text = "12:47",
-                                                fontSize = 14.sp,
-                                                color = subtitleColor,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.size(30.dp))
-
-            Text(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                text = "Completed",
-                fontWeight = FontWeight.Normal,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            if(completedTasks.isEmpty())
-                Text(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    text = "There are no ready events.",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 15.sp,
-                )
-            else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    completedTasks.forEach { task ->
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 10.dp)
-                                .width(180.dp)
-                                .height(180.dp)
-                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.SpaceBetween,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = task.title,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = titleColor,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = task.employee,
-                                    fontWeight = FontWeight.Light,
-                                    fontSize = 14.sp,
-                                    color = subtitleColor,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                Spacer(modifier = Modifier.size(15.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceAround,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.task_finished),
-                                            contentDescription = "Endline",
-                                            modifier = Modifier.size(50.dp)
-                                        )
-                                    }
-
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .border(
-                                                    width = 3.dp,
-                                                    color = Color(0xFFEED547),
-                                                    shape = CircleShape
-                                                )
-                                                .padding(6.dp)
-                                                .height(38.dp)
-                                                .width(38.dp)
-                                        ) {
-                                            Text(
-                                                text = "12:47",
-                                                fontSize = 14.sp,
-                                                color = subtitleColor,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.size(10.dp))
         }
 
         SmallFloatingActionButton(

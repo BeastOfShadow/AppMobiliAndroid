@@ -28,11 +28,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -60,11 +62,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 //import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
+import it.uniupo.ktt.time.parseDurationToSeconds
 import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.components.task.newtask.ActionTaskButton
+import it.uniupo.ktt.ui.components.task.newtask.DurationInputField
+import it.uniupo.ktt.ui.components.task.newtask.SharePositionSwitch
+import it.uniupo.ktt.ui.components.task.newtask.SubtaskImage
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.model.SubTask
 import it.uniupo.ktt.ui.model.Task
@@ -98,12 +106,25 @@ fun NewTaskScreen(navController: NavController) {
 
     var taskName by remember { mutableStateOf("") }
     var employee by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
     var duration by remember { mutableStateOf("") }
     var subtaskDescription by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
     var visibleImage by remember { mutableStateOf(false) }
     var showDescriptionError by remember { mutableStateOf(false) }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleteIndex by remember { mutableStateOf(-1) }
+
+    // Edit subtask related state variables
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editSubtaskIndex by remember { mutableStateOf(-1) }
+    var editSubtaskDescription by remember { mutableStateOf("") }
+    var editDescriptionError by remember { mutableStateOf(false) }
+    var editVisibleImage by remember { mutableStateOf(false) }
+    val editSelectedImageUri = remember { mutableStateOf<Uri?>(null) }
 
     var subtasks by remember { mutableStateOf<List<SubTask>>(emptyList()) }
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
@@ -114,9 +135,11 @@ fun NewTaskScreen(navController: NavController) {
         uri?.let { selectedImageUri.value = it }
     }
 
-    /*val subtasks = listOf(
-        "Evento prova del testo davvero molto lungo, ma davvero tanto" to "Mario Rossi",
-    )*/
+    val editLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { editSelectedImageUri.value = it }
+    }
 
     Box(
         modifier = Modifier
@@ -151,79 +174,29 @@ fun NewTaskScreen(navController: NavController) {
                 onValueChange = { employee = it }
             )
 
+            Spacer(modifier = Modifier.size(20.dp))
+
+            CustomTextField(
+                label = "Description:",
+                textfieldValue = description,
+                onValueChange = { description = it }
+            )
+
             Row(
                 modifier = Modifier.padding(top = 15.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // "Share position" e il Switch
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Share position: ",
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight(500),
-                                color = Color(0xFF403E3E),
-                            ),
-                        )
-                        Switch(
-                            checked = isChecked,
-                            onCheckedChange = { isChecked = it },
-                            modifier = Modifier.scale(0.7f),
-                            colors = SwitchDefaults.colors(
-                                // checkedThumbColor = Color.Green,   // Colore del pallino quando il switch è acceso
-                                // uncheckedThumbColor = Color.Gray,  // Colore del pallino quando il switch è spento
-                                checkedTrackColor = secondary,    // Colore del tracciato quando il switch è acceso
-                                // uncheckedTrackColor = Color.LightGray  // Colore del tracciato quando il switch è spento
-                            )
-                        )
-                    }
-                }
+                SharePositionSwitch(
+                    isChecked = isChecked,
+                    onCheckedChange = { isChecked = it }
+                )
 
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Duration: ",
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight(500),
-                                color = Color(0xFF403E3E),
-                            ),
-                        )
-                        TextField(
-                            value = duration,
-                            onValueChange = { newText ->
-                                if (newText.length <= 5) {
-                                    duration = newText
-                                }
-                            },
-                            label = { Text("HH:MM") },
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color(0xFFF5DFFA),
-                                unfocusedContainerColor = Color(0xFFF5DFFA),
-                                cursorColor = Color.Black,
-                                disabledLabelColor = Color.Red,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            ),
-                            modifier = Modifier.width(90.dp)
-                        )
-                    }
-                }
+                DurationInputField(
+                    duration = duration,
+                    onDurationChange = { duration = it }
+                )
             }
-
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -247,7 +220,7 @@ fun NewTaskScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     if (subtasks.isNotEmpty()) {
-                        subtasks.forEachIndexed { index, (description) ->
+                        subtasks.forEachIndexed { index, subtask ->
                             Box(
                                 modifier = Modifier
                                     .padding(start = 10.dp)
@@ -321,15 +294,59 @@ fun NewTaskScreen(navController: NavController) {
                                         )
                                     }
 
-                                    Image(
-                                        painter = painterResource(id = R.drawable.edit_rewrite),
-                                        contentDescription = "Extend",
-                                        modifier = Modifier.size(24.dp)
-                                            .align(Alignment.End)
-                                            .clickable {
-                                                navController.navigate("update subtask")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.chat_delete),
+                                            contentDescription = "Edit",
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clickable {
+                                                    deleteIndex = index
+                                                    showDeleteDialog = true
+                                                },
+                                        )
+                                        Image(
+                                            painter = painterResource(id = R.drawable.edit_rewrite),
+                                            contentDescription = "Edit",
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clickable {
+                                                    // Set up the edit dialog with the current subtask data
+                                                    editSubtaskIndex = index
+                                                    editSubtaskDescription = subtasks[index].description
+                                                    if (subtasks[index].descriptionImgStorageLocation != "null") {
+                                                        editSelectedImageUri.value = Uri.parse(subtasks[index].descriptionImgStorageLocation)
+                                                    } else {
+                                                        editSelectedImageUri.value = null
+                                                    }
+                                                    showEditDialog = true
+                                                },
+                                        )
+                                    }
+
+                                    if (showDeleteDialog) {
+                                        AlertDialog(
+                                            onDismissRequest = { showDeleteDialog = false },
+                                            title = { Text("Delete Subtask") },
+                                            text = { Text("Are you sure you want to delete this subtask?") },
+                                            confirmButton = {
+                                                TextButton(onClick = {
+                                                    subtasks = subtasks.toMutableList().also { it.removeAt(deleteIndex) }
+                                                    showDeleteDialog = false
+                                                }) {
+                                                    Text("Delete")
+                                                }
                                             },
-                                    )
+                                            dismissButton = {
+                                                TextButton(onClick = { showDeleteDialog = false }) {
+                                                    Text("Cancel")
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -368,404 +385,112 @@ fun NewTaskScreen(navController: NavController) {
                                     .align(Alignment.Center)
                             )
                         }
+
+                        // Add Subtask Dialog
                         if (showDialog) {
-                            Dialog(onDismissRequest = { showDialog = false }) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(Color(0xFFC5B5D8), shape = RoundedCornerShape(16.dp)) // lilla scuro
-                                        .padding(24.dp)
-                                        .fillMaxWidth(),
-                                )
-                                {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                    ) {
-                                        CustomTextField(
-                                            label = "Subtask Description:",
-                                            textfieldValue = subtaskDescription,
-                                            onValueChange = { subtaskDescription = it }
+                            var showAddDialog by remember { mutableStateOf(true) }
+                                SubtaskImage(
+                                    title = "Add Subtask",
+                                    initialDescription = subtaskDescription,
+                                    initialImageUri = selectedImageUri.value,
+                                    showDialog = showAddDialog,
+                                    onDismiss = {
+                                        showAddDialog = false
+                                        showDialog = false
+                                        subtaskDescription = ""
+                                        selectedImageUri.value = null
+                                    },
+                                    onSave = { description, imageUri ->
+                                        val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
+                                        subtasks += SubTask(
+                                            id = UUID.randomUUID().toString(),
+                                            listNumber = nextNumber,
+                                            description = description,
+                                            descriptionImgStorageLocation = imageUri.toString(),
+                                            status = SubtaskStatus.AVAILABLE.toString()
                                         )
-
-                                        Spacer(modifier = Modifier.size(20.dp))
-
-                                        Text(
-                                            text = "Photo:",
-                                            style = TextStyle(
-                                                fontSize = 18.sp,
-                                                fontWeight = FontWeight(500),
-                                                color = Color(0xFF403E3E),
-                                            ),
-                                            modifier = Modifier.padding(start = 20.dp)
-                                        )
-
-                                        Spacer(modifier = Modifier.size(10.dp))
-
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceAround
-                                        ) {
-                                            // SEE IMAGE
-                                            if(selectedImageUri.value != null) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .shadow(
-                                                            4.dp,
-                                                            shape = MaterialTheme.shapes.extraLarge,
-                                                            clip = false
-                                                        )
-                                                        .background(
-                                                            color = Color.White,
-                                                            shape = MaterialTheme.shapes.extraLarge
-                                                        )
-                                                        .clickable {
-                                                            visibleImage = !visibleImage
-                                                        }
-                                                        .padding(
-                                                            horizontal = 12.dp,
-                                                            vertical = 8.dp
-                                                        )
-                                                ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        Text(
-                                                            if(visibleImage) "Hide" else "See",
-                                                            fontSize = 16.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = lightGray
-                                                        )
-
-                                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .shadow(
-                                                                    4.dp,
-                                                                    shape = CircleShape,
-                                                                    clip = false
-                                                                )
-                                                                .background(
-                                                                    color = tertiary,
-                                                                    shape = CircleShape
-                                                                )
-                                                                .size(32.dp),
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            Image(
-                                                                painter = painterResource(id = R.drawable.image_see),
-                                                                contentDescription = "Extend",
-                                                                modifier = Modifier.size(24.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            // ADD IMAGE
-                                            if(selectedImageUri.value == null) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .shadow(
-                                                            4.dp,
-                                                            shape = MaterialTheme.shapes.extraLarge,
-                                                            clip = false
-                                                        )
-                                                        .background(
-                                                            color = Color.White,
-                                                            shape = MaterialTheme.shapes.extraLarge
-                                                        )
-                                                        .clickable {
-                                                            launcher.launch("image/*")
-                                                        }
-                                                        .padding(
-                                                            horizontal = 12.dp,
-                                                            vertical = 8.dp
-                                                        )
-                                                ) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center
-                                                    ) {
-                                                        Text(
-                                                            text = "Add",
-                                                            fontSize = 16.sp,
-                                                            fontWeight = FontWeight.Medium,
-                                                            color = lightGray
-                                                        )
-
-                                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .shadow(
-                                                                    4.dp,
-                                                                    shape = CircleShape,
-                                                                    clip = false
-                                                                )
-                                                                .background(
-                                                                    color = tertiary,
-                                                                    shape = CircleShape
-                                                                )
-                                                                .size(32.dp),
-                                                            contentAlignment = Alignment.Center
-                                                        ) {
-                                                            Image(
-                                                                painter = painterResource(id = R.drawable.image_upload),
-                                                                contentDescription = "Extend",
-                                                                modifier = Modifier.size(24.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            // REMOVE IMAGE
-                                            if(selectedImageUri.value != null) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .shadow(
-                                                            4.dp,
-                                                            shape = MaterialTheme.shapes.extraLarge,
-                                                            clip = false
-                                                        )
-                                                        .background(
-                                                            color = Color.White,
-                                                            shape = MaterialTheme.shapes.extraLarge
-                                                        )
-                                                        .clickable {
-                                                            selectedImageUri.value = null
-                                                        }
-                                                        .padding(6.dp)
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .shadow(
-                                                                4.dp,
-                                                                shape = MaterialTheme.shapes.extraLarge,
-                                                                clip = false
-                                                            )
-                                                            .background(
-                                                                color = tertiary,
-                                                                shape = MaterialTheme.shapes.extraLarge
-                                                            )
-                                                            .padding(6.dp)
-                                                    ) {
-                                                        Image(
-                                                            painter = painterResource(id = R.drawable.trashcan),
-                                                            contentDescription = "Extend",
-                                                            modifier = Modifier.size(24.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        // IMAGE PREVIEW
-                                        if(visibleImage) {
-                                            Spacer(modifier = Modifier.size(20.dp))
-                                            Row(
-                                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                                            ) {
-                                                selectedImageUri.value?.let { uri ->
-//                                                    AsyncImage(
-//                                                        model = uri,
-//                                                        contentDescription = "Anteprima immagine",
-//                                                        modifier = Modifier
-//                                                            .size(200.dp)
-//                                                            .clip(RoundedCornerShape(16.dp))
-//                                                    )
-                                                }
-                                            }
-                                        }
-
-                                        if (showDescriptionError) {
-                                            Spacer(modifier = Modifier.size(20.dp))
-
-                                            Text(
-                                                text = "La descrizione è obbligatoria",
-                                                color = Color.Red,
-                                                fontSize = 14.sp,
-                                                modifier = Modifier.padding(start = 20.dp, top = 4.dp)
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.size(50.dp))
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(bottom = 10.dp),
-                                            horizontalArrangement = Arrangement.SpaceEvenly
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .width(120.dp)
-                                                    .height(45.dp)
-                                                    .shadow(
-                                                        4.dp,
-                                                        shape = MaterialTheme.shapes.large,
-                                                        clip = false
-                                                    )
-                                                    .background(
-                                                        color = tertiary,
-                                                        shape = MaterialTheme.shapes.large
-                                                    )
-                                                    .clickable {
-                                                        subtaskDescription = ""
-                                                        selectedImageUri.value = null
-                                                        showDialog = false
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    "Cancel",
-                                                    color = Color.White,
-                                                    fontSize = 16.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                            Box(
-                                                modifier = Modifier
-                                                    .width(120.dp)
-                                                    .height(45.dp)
-                                                    .shadow(
-                                                        4.dp,
-                                                        shape = MaterialTheme.shapes.large,
-                                                        clip = false
-                                                    )
-                                                    .background(
-                                                        color = tertiary,
-                                                        shape = MaterialTheme.shapes.large
-                                                    )
-                                                    .clickable {
-                                                        if (subtaskDescription.isBlank()) {
-                                                            showDescriptionError = true
-                                                            return@clickable
-                                                        }
-
-                                                        val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
-                                                        subtasks += SubTask(
-                                                            id = UUID.randomUUID().toString(),
-                                                            listNumber = nextNumber,
-                                                            description = subtaskDescription,
-                                                            descriptionImgStorageLocation = selectedImageUri.value.toString(),
-                                                            status = SubtaskStatus.AVAILABLE.toString()
-                                                        )
-
-                                                        subtaskDescription = ""
-                                                        selectedImageUri.value = null
-                                                        showDialog = false
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    "Create",
-                                                    color = Color.White,
-                                                    fontSize = 16.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                        }
+                                        showAddDialog = false
+                                        showDialog = false
+                                        subtaskDescription = ""
+                                        selectedImageUri.value = null
                                     }
+                                )
+                        }
+
+                        if (showEditDialog && editSubtaskIndex >= 0) {
+                            var showEditDialogState by remember { mutableStateOf(true) }
+
+                            SubtaskImage(
+                                title = "Edit Subtask",
+                                initialDescription = editSubtaskDescription,
+                                initialImageUri = editSelectedImageUri.value,
+                                showDialog = showEditDialogState,
+                                onDismiss = {
+                                    showEditDialogState = false
+                                    showEditDialog = false
+                                    editSubtaskDescription = ""
+                                    editSelectedImageUri.value = null
+                                },
+                                onSave = { description, imageUri ->
+                                    // Create updated subtask with edited values
+                                    val updatedSubtask = subtasks[editSubtaskIndex].copy(
+                                        description = description,
+                                        descriptionImgStorageLocation = imageUri.toString()
+                                    )
+
+                                    // Replace the old subtask with the updated one
+                                    subtasks = subtasks.toMutableList().also {
+                                        it[editSubtaskIndex] = updatedSubtask
+                                    }
+
+                                    showEditDialogState = false
+                                    showEditDialog = false
+                                    editSubtaskDescription = ""
+                                    editSelectedImageUri.value = null
                                 }
-                            }
+                            )
                         }
                     }
                 }
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(45.dp)
-                    .shadow(
-                        4.dp,
-                        shape = MaterialTheme.shapes.large,
-                        clip = false
-                    )
-                    .background(
-                        color = tertiary,
-                        shape = MaterialTheme.shapes.large
-                    )
-                    .clickable {
+        ActionTaskButton(
+            onCancel = { navController.popBackStack() },
+            onConfirm = {
+                coroutineScope.launch {
+                    val caregiverUid = currentUid()
+
+                    if (caregiverUid == null) {
+                        Log.d("Db", "Caregiver non loggato.")
+                        return@launch
+                    }
+
+                    val uid = userViewModel.getUidByEmail(employee)
+
+                    if (uid != null) {
+                        val time = parseDurationToSeconds(duration)
+
+                        taskViewModel.addTaskAndSubtasks(
+                            task = Task(
+                                id = UUID.randomUUID().toString(),
+                                caregiver = caregiverUid,
+                                title = taskName,
+                                employee = uid,
+                                description = description,
+                                completionTimeEstimate = time,
+                                status = TaskStatus.READY.toString()
+                            ),
+                            subtasks = subtasks
+                        )
                         navController.popBackStack()
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Cancel",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(45.dp)
-                    .shadow(
-                        4.dp,
-                        shape = MaterialTheme.shapes.large,
-                        clip = false
-                    )
-                    .background(
-                        color = tertiary,
-                        shape = MaterialTheme.shapes.large
-                    )
-                    .clickable {
-                        coroutineScope.launch {
-                            val caregiverUid = currentUid()
-
-                            if (caregiverUid == null) {
-                                Log.d("Db", "Caregiver non loggato.")
-                                return@launch
-                            }
-
-                            val uid = userViewModel.getUidByEmail(employee)
-
-                            if (uid != null) {
-                                val parts = duration.split(":")
-                                val hours = parts[0].toIntOrNull() ?: 0
-                                val minutes = parts[1].toIntOrNull() ?: 0
-                                val time = (hours * 3600) + (minutes * 60)
-
-                                taskViewModel.addTaskAndSubtasks(
-                                    task = Task(
-                                        id = UUID.randomUUID().toString(),
-                                        caregiver = caregiverUid,
-                                        title = taskName,
-                                        employee = uid,
-                                        completionTimeEstimate = time,
-                                        status = TaskStatus.READY.toString()
-                                    ),
-                                    subtasks = subtasks
-                                )
-                            } else {
-                                Log.d("Db", "Nessun utente trovato con quell'email.")
-                            }
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Create",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+                    } else {
+                        Log.d("Db", "Nessun utente trovato con quell'email.")
+                    }
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
