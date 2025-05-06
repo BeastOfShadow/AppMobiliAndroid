@@ -44,7 +44,7 @@ class UserViewModel @Inject constructor() : ViewModel() {
     val isLoadingAvatar: StateFlow<Boolean> = _isLoadingAvatars.asStateFlow()
 
 
-
+        // OK
     suspend fun getUidByEmail(email: String): String? {
         val db = FirebaseFirestore.getInstance()
         return try {
@@ -146,7 +146,5 @@ class UserViewModel @Inject constructor() : ViewModel() {
 
         UserRepository.updateUserAvatar(path)
     }
-
-
 
 }

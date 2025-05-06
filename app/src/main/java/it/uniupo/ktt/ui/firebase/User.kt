@@ -128,5 +128,29 @@ object UserRepository {
 
     }
 
+        // OK
+    fun getUserPointsByUid(
+        uid: String,
+        onSuccess: (Int) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        BaseRepository.db.collection("users")
+            .whereEqualTo("uid", uid)
+            .get()
+            .addOnSuccessListener { result ->
+                val document = result.documents.firstOrNull()
+                if (document != null) {
+                    val userPoints = document.getLong("userPoint")?.toInt() ?: 0
+                    onSuccess(userPoints)
+                } else {
+                    onError(Exception("Utente non trovato"))
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore recupero punti utente", e)
+                onError(e)
+            }
+    }
+
 
 }

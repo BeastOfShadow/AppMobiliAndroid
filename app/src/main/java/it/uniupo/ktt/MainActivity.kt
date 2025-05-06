@@ -34,6 +34,7 @@ import it.uniupo.ktt.ui.theme.KTTTheme
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 
 @AndroidEntryPoint
@@ -65,6 +66,11 @@ class MainActivity : ComponentActivity() {
                                                         //new ROUTE
                         composable("update subtask") { UpdateSubtaskScreen(navController) }
                         composable("comment subtask") { CommentSubtaskScreen(navController) }
+
+
+                        //CurrentSubtask (Target)
+                        composable("current subtask") { CurrentSubtaskPage(navController) }
+
                         //Statistics
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
                         composable("Employee Statistic") { EP_StatisticPage(navController) }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -24,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import it.uniupo.ktt.ui.theme.primary
 
-
 @Composable
 fun AvatarSticker(
     avatarUrl: String,
@@ -33,7 +33,9 @@ fun AvatarSticker(
 {
     // AVATAR Icon BOX
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .scale(1.2f)
     ){
 
         Box(

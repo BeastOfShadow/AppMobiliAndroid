@@ -274,7 +274,6 @@ fun RegisterScreen(navController: NavController) {
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
 
-
                                     // ++ Creazione User DataBase ++
                                     val uid= BaseRepository.currentUid()
 
@@ -284,7 +283,8 @@ fun RegisterScreen(navController: NavController) {
                                         role = UserRole.EMPLOYEE.toString(),
                                         name = name.lowercase().replaceFirstChar { it.uppercase() },
                                         surname = surname.lowercase().replaceFirstChar { it.uppercase() },
-                                        avatar = "avatar/TucanoCaffe.png"
+                                        avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                                        userPoint = 0
                                     )
 
                                     //post on DB

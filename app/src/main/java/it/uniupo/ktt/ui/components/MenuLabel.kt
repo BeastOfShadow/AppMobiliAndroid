@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.annotations.concurrent.Background
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.lighterSubtitle
 import it.uniupo.ktt.ui.theme.lighterTitle
@@ -64,12 +66,12 @@ fun MenuLabel(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(60.dp)
                         .background(
-                            secondary,
+                            Color(0xFFA47BD4),
                             shape = CircleShape
                         )
-                        .padding(5.dp),
+                        .padding(7.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -85,16 +87,19 @@ fun MenuLabel(
                 ) {
                     Text(
                         text = title,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 20.sp,
-                        color = lighterTitle
+                        color = Color.Black
                     )
 
                     Text(
                         text = description,
-                        fontWeight = FontWeight.Light,
-                        fontSize = 12.sp,
-                        color = lighterSubtitle
+
+                        style = MaterialTheme.typography.bodySmall, //Poppins
+                        fontSize = 16.sp,
+
+                        color = lighterSubtitle,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
                 Icon(
