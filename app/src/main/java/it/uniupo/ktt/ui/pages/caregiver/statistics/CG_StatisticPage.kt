@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import it.uniupo.ktt.ui.components.statistics.AvgComplationBar
 import it.uniupo.ktt.ui.components.statistics.DailyTasksBubbleChart
@@ -33,6 +35,7 @@ import it.uniupo.ktt.ui.components.statistics.WrapBox
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.StatisticsRepository
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.StatisticsViewModel
 
 @Composable
 fun CG_StatisticPage(navController: NavController) {
@@ -43,6 +46,7 @@ fun CG_StatisticPage(navController: NavController) {
         }
     }
 
+    val statisticsViewModelRef: StatisticsViewModel = hiltViewModel()
 
     Box(
         modifier = Modifier
@@ -142,64 +146,38 @@ fun CG_StatisticPage(navController: NavController) {
                         .height(100.dp)
                 ){
 
-                    // 1) Media "completionTimeToday": media della durata di tutti i lavori "completed"  svolti da tutti i tuoi dipendenti oggi
-                                        // 1.1) Lista completionTimeToday:
-
-
-                    //  2) Media "completionTimeGeneral": media della durata di tutti i lavori "completed" svolti in generale dai tuoi dipendenti
-                                        // 2.1) Lista completionTimeGeneral:
-
-
                     val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
                     val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
 
-                    // Loading Booleand (per attendere arrivo res query async + calcolo medie)
-                    val isLoading = remember { mutableStateOf(true) }
+                    // Loading Booleand (per attendere le medie)
+                    val isLoading = remember { mutableStateOf(false) }
 
-                    // CALCOLO MEDIE DAILY&GENERAL dei task completati (solo quelli finiti dove "completionTimeActual" > 0)
+                    // INFO medie per AvgBar
                     LaunchedEffect(personalUid) {
+                        isLoading.value= true
+
                         if (personalUid != null) {
-                            StatisticsRepository.getGenAndDailyTaskDoneByCaregiverUid(
-
-                                uid = personalUid,
-                                onSuccess = { dailyCompletedTasks, generalCompletedTasks ->
-
-                                    Log.d("DEBUG", "Lista DAILY tasks: ${dailyCompletedTasks.joinToString(separator = "\n")}")
-                                    Log.d("DEBUG", "Lista GENERAL tasks: ${generalCompletedTasks.joinToString(separator = "\n")}")
-
-                                    val filteredDailyCompletedTasks = dailyCompletedTasks.filter { it.isValid() } // crea nuova lista filtrata in memoria
-                                    val filteredGeneralCompletedTasks = generalCompletedTasks.filter { it.isValid() }
-
-
-                                    if(filteredDailyCompletedTasks.isNotEmpty()){
-                                        avgDailyCompletionTime.value = filteredDailyCompletedTasks
-                                            .map { it.completionTimeActual }   // seleziona campo
-                                            .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
-                                            .average()  // calcola media
-
-                                        //Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
-                                    }
-                                    if(filteredGeneralCompletedTasks.isNotEmpty()){
-                                        // 2.2) calcola la media GeneralcompletionTime:
-                                        avgGeneralCompletionTime.value = filteredGeneralCompletedTasks
-                                            .map { it.completionTimeActual }   // seleziona campo
-                                            .filter { it > 0 }  // considera solo i valori > 0 (escludi quelli invalidi)
-                                            .average()  // calcola media
-
-                                        //Log.d("DEBUG", "Media General Tasks: ${avgGeneralCompletionTime.value}")
-                                    }
+                            statisticsViewModelRef.avgCompletionBarInfo(
+                                role = "caregiver",
+                                onSuccess = { avgDaily, avgGeneral ->
+                                    avgDailyCompletionTime.value = avgDaily
+                                    avgGeneralCompletionTime.value = avgGeneral
 
                                     isLoading.value = false
                                 },
                                 onError = { e ->
-                                    Log.e("DEBUG", "QUERY-Error in StaticPage -> getGEN&DAILYTaskByCaregiverUid", e)
+                                    Log.e("DEBUG", "Errore avgCompletionBarInfo", e)
+
                                     isLoading.value = false
                                 }
                             )
                         }
                     }
 
-                    if(isLoading.value != true){
+                    if(isLoading.value == true){
+                        CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    }
+                    else{
                         Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
                         Log.d("DEBUG", "Media General Tasks: ${avgGeneralCompletionTime.value}")
 

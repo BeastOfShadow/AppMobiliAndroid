@@ -66,10 +66,11 @@ object StatisticsRepository {
     }
 
         // OK
-    fun getAllDailyCompletedTaskByCaregiverUid(
-        uid: String,
-        onSuccess: (List<Task>) -> Unit = {},
-        onError: (Exception) -> Unit = {}
+    fun getAllDailyCompletedTaskByUid(
+            role: String,
+            uid: String,
+            onSuccess: (List<Task>) -> Unit = {},
+            onError: (Exception) -> Unit = {}
     ) {
         val today = LocalDate.now() // "LocalDate.now()" data odierna (2025-04-04), mancano le ore che devo aggiungere
         val dayStart = Timestamp(today.atStartOfDay(ZoneId.systemDefault()).toInstant()) // "today.atStartOfDay(ZoneId.systemDefault())" -> (2025-04-04T00:00:00), ".toInstant()"-> trasforma in un TimeStamp
@@ -77,7 +78,7 @@ object StatisticsRepository {
 
         BaseRepository.db
             .collection("tasks")
-            .whereEqualTo("caregiver", uid)
+            .whereEqualTo(role, uid)
             .whereEqualTo("status", "completed")
             .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
             .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
@@ -94,15 +95,16 @@ object StatisticsRepository {
     }
 
         //OK
-    fun getGeneralCompletedTaskByCaregiverUid(
-    uid: String,
-    onSuccess: (List<Task>) -> Unit = {},
-    onError: (Exception) -> Unit = {}
+    fun getGeneralCompletedTaskByUid(
+            role: String,
+            uid: String,
+            onSuccess: (List<Task>) -> Unit = {},
+            onError: (Exception) -> Unit = {}
     ) {
 
         BaseRepository.db
             .collection("tasks")
-            .whereEqualTo("caregiver", uid)
+            .whereEqualTo(role, uid)
             .whereEqualTo("status", "completed")
             .get()
             .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
@@ -116,42 +118,7 @@ object StatisticsRepository {
             }
     }
 
-        // OK
-    fun getGenAndDailyTaskDoneByCaregiverUid(
-        uid: String,
-        onSuccess: (dailyTasks: List<Task>, generalTasks: List<Task>) -> Unit,
-        onError: (Exception) -> Unit = {}
-    ) {
-        var dailyTasks: List<Task> = emptyList()
-        var generalTasks: List<Task> = emptyList()
-        var completedCalls = 0
 
-        // counter di attesa della doppia query in parallelo
-        fun checkIfAllDone() {
-            completedCalls++
-            if (completedCalls == 2) {
-                onSuccess(dailyTasks, generalTasks)
-            }
-        }
-
-        getAllDailyCompletedTaskByCaregiverUid(
-            uid = uid,
-            onSuccess = { tasks ->
-                dailyTasks = tasks
-                checkIfAllDone()
-            },
-            onError = { e -> onError(e) }
-        )
-
-        getGeneralCompletedTaskByCaregiverUid(
-            uid = uid,
-            onSuccess = { tasks ->
-                generalTasks = tasks
-                checkIfAllDone()
-            },
-            onError = { e -> onError(e) }
-        )
-    }
 
 
 
