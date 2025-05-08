@@ -57,4 +57,23 @@ object UserRepository {
 
         return userName
     }
+
+    @Composable
+    fun getEmployeeName(uid: String): String {
+        var employeeName by remember(uid) { mutableStateOf("Loading...") }
+        val db = FirebaseFirestore.getInstance()
+
+        LaunchedEffect(uid) {
+            try {
+                val document = db.collection("users").document(uid).get().await()
+                val name = document.getString("name")?.replaceFirstChar { it.uppercase() } ?: "Unknown"
+                val surname = document.getString("surname")?.replaceFirstChar { it.uppercase() } ?: "User"
+                employeeName = "$name $surname"
+            } catch (e: Exception) {
+                employeeName = "Error loading name"
+            }
+        }
+
+        return employeeName
+    }
 }
