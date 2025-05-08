@@ -330,7 +330,7 @@ fun NewTaskScreen(navController: NavController) {
                                     if (showDeleteDialog) {
                                         AlertDialog(
                                             onDismissRequest = { showDeleteDialog = false },
-                                            title = { Text("Delete Subtask") },
+                                            title = { Text("Delete " + subtasks[deleteIndex].description) },
                                             text = { Text("Are you sure you want to delete this subtask?") },
                                             confirmButton = {
                                                 TextButton(onClick = {
