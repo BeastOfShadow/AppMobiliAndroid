@@ -56,6 +56,7 @@ import it.uniupo.ktt.ui.components.task.taskmanager.ChipsFilter
 import it.uniupo.ktt.ui.components.task.taskmanager.NullMessage
 import it.uniupo.ktt.ui.components.task.taskmanager.TextSection
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
+import it.uniupo.ktt.ui.firebase.UserRepository.getEmployeeName
 import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
@@ -125,8 +126,7 @@ fun TaskManagerScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.size(10.dp))
 
-                if (readyTasks.isEmpty())
-                    NullMessage("ready")
+                if (readyTasks.isEmpty()) NullMessage("ready")
                 else {
                     Row(
                         modifier = Modifier
@@ -165,7 +165,7 @@ fun TaskManagerScreen(navController: NavController) {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = task.employee,
+                                        text = getEmployeeName(task.employee),
                                         fontWeight = FontWeight.Light,
                                         fontSize = 14.sp,
                                         color = subtitleColor,
@@ -269,7 +269,7 @@ fun TaskManagerScreen(navController: NavController) {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = task.employee,
+                                        text = getEmployeeName(task.employee),
                                         fontWeight = FontWeight.Light,
                                         fontSize = 14.sp,
                                         color = subtitleColor,
@@ -372,7 +372,7 @@ fun TaskManagerScreen(navController: NavController) {
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     Text(
-                                        text = task.employee,
+                                        text = getEmployeeName(task.employee),
                                         fontWeight = FontWeight.Light,
                                         fontSize = 14.sp,
                                         color = subtitleColor,
