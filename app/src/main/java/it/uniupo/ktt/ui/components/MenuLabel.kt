@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,18 +89,21 @@ fun MenuLabel(
                 ) {
                     Text(
                         text = title,
-                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily(Font(R.font.poppins_regular)),
                         fontSize = 20.sp,
+                        fontWeight = FontWeight(400),
                         color = Color.Black
                     )
 
                     Text(
                         text = description,
 
+                        fontFamily = FontFamily(Font(R.font.poppins_light)),
                         style = MaterialTheme.typography.bodySmall, //Poppins
                         fontSize = 16.sp,
+                        fontWeight = FontWeight(400),
 
-                        color = lighterSubtitle,
+                        color = Color(0xFF746767),
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }

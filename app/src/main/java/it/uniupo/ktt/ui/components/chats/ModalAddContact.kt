@@ -34,8 +34,14 @@ import androidx.compose.ui.unit.dp
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Contact
@@ -111,19 +117,19 @@ fun ModalAddContact(
                                         // CAMPI
                 CustomChatTextField(
                     label = "Name:",
-                    textfieldValue = name,
+                    textFieldValue = name,
                     onValueChange = { name = it }
                 )
 
                 CustomChatTextField(
                     label = "Surname:",
-                    textfieldValue = surname,
+                    textFieldValue = surname,
                     onValueChange = { surname = it }
                 )
 
                 CustomChatTextField(
                     label = "Email:",
-                    textfieldValue = email,
+                    textFieldValue = email,
                     onValueChange = { email = it },
 
                     modifier = Modifier.offset { IntOffset(offsetX.roundToInt(), 0) }
@@ -143,7 +149,15 @@ fun ModalAddContact(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBBA5E1)) // viola chiaro
                     ) {
-                        Text("Cancel")
+                        Text(
+                            "Cancel",
+                            style = TextStyle(
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold)),
+                                fontWeight = FontWeight(400),
+                                fontSize = 18.sp
+                            )
+                        )
+
                     }
 
                     // coroutine riferimento (corutine dato che uso .await)
@@ -217,7 +231,14 @@ fun ModalAddContact(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C46FF)) // viola più scuro
                     ) {
-                        Text("Add")
+                        Text(
+                            "Add",
+                            style = TextStyle(
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold)),
+                                fontWeight = FontWeight(400),
+                                fontSize = 18.sp
+                            )
+                        )
                     }
                 }
             }

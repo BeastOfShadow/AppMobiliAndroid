@@ -40,6 +40,8 @@ import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ChatSearchBar
 import it.uniupo.ktt.ui.components.chats.NewChatButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.navigation.compose.hiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
@@ -118,7 +120,7 @@ fun ChatPage(navController: NavController) {
 
                                 append(" to start a conversation!")
                             },
-                            style = MaterialTheme.typography.bodyMedium, //Poppins
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
 
 
                             //letterSpacing = 1.sp,

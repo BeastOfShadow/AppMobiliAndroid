@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -156,15 +158,11 @@ fun NewChatPage(navController: NavController) {
 
                                 append(" to extend your contacts book!")
                             },
-                            style = MaterialTheme.typography.bodyMedium, //Poppins
-
-
-                            //letterSpacing = 1.sp,
-                            fontSize = 22.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
                             fontWeight = FontWeight(400),
+
+                            fontSize = 22.sp,
                             lineHeight = 34.sp,
-
-
 
                             color = Color(0xFF423C3C),
                             textAlign = TextAlign.Center,
@@ -184,6 +182,7 @@ fun NewChatPage(navController: NavController) {
                             text = "Contacts on Keep The Time",
 
                             fontSize = 17.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
                             fontWeight = FontWeight(400),
                             color = Color(0xFF757070),
 

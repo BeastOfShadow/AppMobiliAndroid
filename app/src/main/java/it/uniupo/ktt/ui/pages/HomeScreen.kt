@@ -51,6 +51,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.Dialog
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.homePage.AvatarSticker
@@ -124,7 +126,7 @@ fun HomeScreen(navController: NavController) {
                  */
                 val userVal = userRef
 
-                // partr comune
+                // parte comune
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -189,7 +191,7 @@ fun HomeScreen(navController: NavController) {
                             Text(
                                 text = " ${userVal.name} ${userVal.surname}",
 
-                                style = MaterialTheme.typography.bodyLarge, // This will use Poppins
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold)),
                                 fontSize = 25.sp,
                                 fontWeight = FontWeight(600),
 
@@ -210,9 +212,9 @@ fun HomeScreen(navController: NavController) {
                                 Text(
                                     text = " ${userVal.role.lowercase()}",
 
-                                    style = MaterialTheme.typography.bodySmall, //Poppins
+                                    fontFamily = FontFamily(Font(R.font.poppins_extralight)),
                                     fontSize = 23.sp,
-                                    fontWeight = FontWeight(300),
+                                    fontWeight = FontWeight(275),
 
 
                                     color = subtitleColor
@@ -276,7 +278,7 @@ fun HomeScreen(navController: NavController) {
                             Text(
                                 text = " ${userVal?.name} ${userVal?.surname}",
 
-                                style = MaterialTheme.typography.bodyLarge, // This will use Poppins
+                                fontFamily = FontFamily(Font(R.font.poppins_semibold)),
                                 fontSize = 25.sp,
                                 fontWeight = FontWeight(600),
 
@@ -287,9 +289,9 @@ fun HomeScreen(navController: NavController) {
                             Text(
                                 text = " ${userVal?.role?.lowercase()}",
 
-                                style = MaterialTheme.typography.bodySmall, //Poppins
+                                fontFamily = FontFamily(Font(R.font.poppins_extralight)),
                                 fontSize = 23.sp,
-                                fontWeight = FontWeight(300),
+                                fontWeight = FontWeight(275),
 
                                 color = subtitleColor,
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -304,9 +306,9 @@ fun HomeScreen(navController: NavController) {
                             Text(
                                 text = "Main menu",
 
-                                style = MaterialTheme.typography.bodyLarge, //Poppins
+                                fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                 fontSize = 22.sp,
-                                fontWeight = FontWeight(500),
+                                fontWeight = FontWeight(400),
 
                                 color = subtitleColor,
                                 modifier = Modifier.offset(x = 20.dp, y = 0.dp)

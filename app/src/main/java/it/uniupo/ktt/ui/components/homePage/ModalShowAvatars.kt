@@ -35,9 +35,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.titleColor
 
 
@@ -97,13 +101,11 @@ fun ModalShowAvatars(
                 ) {
                     Text(
                         text = "Choose new avatar",
-                        style = MaterialTheme.typography.bodyLarge, //Poppins
-
-                        fontSize = 22.sp,
+                        fontFamily = FontFamily(Font(R.font.poppins_medium)),
                         fontWeight = FontWeight(500),
+                        fontSize = 22.sp,
 
-
-                        color = titleColor,
+                        color = Color.White,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
@@ -170,7 +172,14 @@ fun ModalShowAvatars(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBBA5E1)) // viola chiaro
                         ) {
-                            Text("Cancel")
+                            Text(
+                                "Cancel",
+                                style = TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.poppins_semibold)),
+                                    fontWeight = FontWeight(400),
+                                    fontSize = 18.sp
+                                )
+                            )
                         }
 
 
@@ -183,7 +192,14 @@ fun ModalShowAvatars(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C46FF)) // viola più scuro
                         ) {
-                            Text("Select")
+                            Text(
+                                "Select",
+                                style = TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.poppins_semibold)),
+                                    fontWeight = FontWeight(400),
+                                    fontSize = 18.sp
+                                )
+                            )
                         }
                     }
                 }

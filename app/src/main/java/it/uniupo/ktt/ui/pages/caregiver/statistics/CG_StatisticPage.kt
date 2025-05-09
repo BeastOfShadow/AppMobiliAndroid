@@ -22,11 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.statistics.AvgComplationBar
 import it.uniupo.ktt.ui.components.statistics.DailyTasksBubbleChart
 import it.uniupo.ktt.ui.components.PageTitle
@@ -46,7 +49,8 @@ fun CG_StatisticPage(navController: NavController) {
         }
     }
 
-    val statisticsViewModelRef: StatisticsViewModel = hiltViewModel()
+    // istanza + collegamento
+    val statisticsViewModelRef = hiltViewModel<StatisticsViewModel>()
 
     Box(
         modifier = Modifier
@@ -68,13 +72,13 @@ fun CG_StatisticPage(navController: NavController) {
 
             Text(
                 text = "Daily Tasks",
-                style = MaterialTheme.typography.bodyLarge, //Poppins
+                fontFamily = FontFamily(Font(R.font.poppins_medium)),
 
                 fontSize = 22.sp,
                 fontWeight = FontWeight(500),
 
 
-                color = titleColor,
+                color = Color(0xFF2A2525),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
@@ -92,9 +96,8 @@ fun CG_StatisticPage(navController: NavController) {
 
                 LaunchedEffect(personalUid) {
                     if(personalUid!= null){
-                        StatisticsRepository.getTaskCountsByStatus(
+                        statisticsViewModelRef.bubbleChartInfo(
                             uid = personalUid,
-                            // classica Logica Val Mutable in Lambda expression -> che verrà modificato
                             onResult = { ready, ongoing, completed ->
                                 readyTasks.value = ready
                                 ongoingTasks.value = ongoing
