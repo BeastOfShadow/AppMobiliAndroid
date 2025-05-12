@@ -8,6 +8,7 @@ import java.time.ZoneId
 
 object StatisticsRepository {
 
+                                    // BUBBLE DIAGRAM
         // OK
     fun getTaskCountsByStatus(
         uid: String,
@@ -65,11 +66,19 @@ object StatisticsRepository {
             .addOnFailureListener { onError(it) }
     }
 
-        // OK
-    fun getAllDailyCompletedTaskByCaregiverUid(
-        uid: String,
-        onSuccess: (List<Task>) -> Unit = {},
-        onError: (Exception) -> Unit = {}
+
+
+
+
+
+
+                                    // AVG BAR
+        // OK -> AVG BAR
+    fun getAllDailyCompletedTaskByUid(
+            role: String,
+            uid: String,
+            onSuccess: (List<Task>) -> Unit = {},
+            onError: (Exception) -> Unit = {}
     ) {
         val today = LocalDate.now() // "LocalDate.now()" data odierna (2025-04-04), mancano le ore che devo aggiungere
         val dayStart = Timestamp(today.atStartOfDay(ZoneId.systemDefault()).toInstant()) // "today.atStartOfDay(ZoneId.systemDefault())" -> (2025-04-04T00:00:00), ".toInstant()"-> trasforma in un TimeStamp
@@ -77,7 +86,7 @@ object StatisticsRepository {
 
         BaseRepository.db
             .collection("tasks")
-            .whereEqualTo("caregiver", uid)
+            .whereEqualTo(role, uid)
             .whereEqualTo("status", "completed")
             .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
             .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
@@ -93,16 +102,17 @@ object StatisticsRepository {
             }
     }
 
-        //OK
-    fun getGeneralCompletedTaskByCaregiverUid(
-    uid: String,
-    onSuccess: (List<Task>) -> Unit = {},
-    onError: (Exception) -> Unit = {}
+        // OK -> AVG BAR
+    fun getGeneralCompletedTaskByUid(
+            role: String,
+            uid: String,
+            onSuccess: (List<Task>) -> Unit = {},
+            onError: (Exception) -> Unit = {}
     ) {
 
         BaseRepository.db
             .collection("tasks")
-            .whereEqualTo("caregiver", uid)
+            .whereEqualTo(role, uid)
             .whereEqualTo("status", "completed")
             .get()
             .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
@@ -116,43 +126,70 @@ object StatisticsRepository {
             }
     }
 
-        // OK
-    fun getGenAndDailyTaskDoneByCaregiverUid(
+
+                                    // TODAY BAR  &  BUBBLE CHART
+
+    // DA TESTARE -> all Daily Tasks By: Role, Uid
+    fun getAllDailyTaskByUid(
+        role: String,
         uid: String,
-        onSuccess: (dailyTasks: List<Task>, generalTasks: List<Task>) -> Unit,
+        onSuccess: (List<Task>) -> Unit = {},
         onError: (Exception) -> Unit = {}
     ) {
-        var dailyTasks: List<Task> = emptyList()
-        var generalTasks: List<Task> = emptyList()
-        var completedCalls = 0
+        val today = LocalDate.now()
+        val dayStart = Timestamp(today.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        val dayEnd = Timestamp(today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().minusMillis(1))
 
-        // counter di attesa della doppia query in parallelo
-        fun checkIfAllDone() {
-            completedCalls++
-            if (completedCalls == 2) {
-                onSuccess(dailyTasks, generalTasks)
+        BaseRepository.db
+            .collection("tasks")
+            .whereEqualTo(role, uid)
+            .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
+            .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+                Log.d("DEBUG", "Totale task oggi: ${tasks.size}")
+                onSuccess(tasks)
             }
-        }
-
-        getAllDailyCompletedTaskByCaregiverUid(
-            uid = uid,
-            onSuccess = { tasks ->
-                dailyTasks = tasks
-                checkIfAllDone()
-            },
-            onError = { e -> onError(e) }
-        )
-
-        getGeneralCompletedTaskByCaregiverUid(
-            uid = uid,
-            onSuccess = { tasks ->
-                generalTasks = tasks
-                checkIfAllDone()
-            },
-            onError = { e -> onError(e) }
-        )
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore getTodayTotalTaskCountByUid", e)
+                onError(e)
+            }
     }
 
+
+                                    // CIRCLE DIAGRAM
+
+    // DA TESTARE -> CIRCLE DIAGRAM
+    fun getAllYearlyTasksCompletedByUid(
+        uid: String,
+        onSuccess: (List<Task>) -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        val now = LocalDate.now()
+        val yearStart = now.withDayOfYear(1)
+        val yearEnd = yearStart.plusYears(1).minusDays(1)
+
+        val tsStart = Timestamp(yearStart.atStartOfDay(ZoneId.systemDefault()).toInstant())
+        val tsEnd = Timestamp(yearEnd.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant())
+
+        BaseRepository.db
+            .collection("tasks")
+            .whereEqualTo("employee", uid)
+            .whereEqualTo("status", "completed")
+            .whereGreaterThanOrEqualTo("timeStampEnd", tsStart)
+            .whereLessThanOrEqualTo("timeStampEnd", tsEnd)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+                Log.d("DEBUG", "Totale task COMPLETED this YEAR: ${tasks.size}")
+                onSuccess(tasks)
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore getAllYearlyTasksCompletedByUid", e)
+                onError(e)
+            }
+    }
 
 
 

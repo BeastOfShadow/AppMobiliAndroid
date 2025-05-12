@@ -96,4 +96,7 @@ dependencies {
 
     // REALTIME DB
     implementation("com.google.firebase:firebase-database-ktx")
+
+    // COIL (per le immagini)
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }

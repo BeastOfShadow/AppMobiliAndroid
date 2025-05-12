@@ -274,7 +274,6 @@ fun RegisterScreen(navController: NavController) {
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
 
-
                                     // ++ Creazione User DataBase ++
                                     val uid= BaseRepository.currentUid()
 
@@ -283,7 +282,9 @@ fun RegisterScreen(navController: NavController) {
                                         email = email.lowercase(),
                                         role = UserRole.EMPLOYEE.toString(),
                                         name = name.lowercase().replaceFirstChar { it.uppercase() },
-                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() }
+                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                                        avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                                        userPoint = 0
                                     )
 
                                     //post on DB
@@ -294,10 +295,16 @@ fun RegisterScreen(navController: NavController) {
                                             .document(uid)
                                             .set(user)
                                             .addOnSuccessListener {
-                                                Log.d("Firestore", "Utente aggiunto con successo")
+                                                Log.d("DEBUG", "Utente aggiunto con successo")
+
+                                                // se aggiungo l'utente con successo allora vado alla home
+                                                navController.navigate("home") {
+                                                    popUpTo("landing") { inclusive = true }
+                                                    launchSingleTop = true
+                                                }
                                             }
                                             .addOnFailureListener { e ->
-                                                Log.w("Firestore", "Errore nell'aggiunta utente", e)
+                                                Log.w("DEBUG", "Errore nell'aggiunta utente", e)
                                             }
                                     }
                                     else{
@@ -307,10 +314,7 @@ fun RegisterScreen(navController: NavController) {
 
 
 
-                                    navController.navigate("home") {
-                                        popUpTo("landing") { inclusive = true }
-                                        launchSingleTop = true
-                                    }
+
                                 } else {
                                     message = task.exception?.message ?: "Unknown error occurred"
                                 }

@@ -6,7 +6,10 @@ data class User(
 
     val email: String = "",
     val name: String = "",
-    val surname: String = ""
+    val surname: String = "",
+
+    val avatar: String = "",
+    val userPoint: Int = 0
 ){
 
     /* Non metto controlli "require" dato che per la creazione è otttimo, ma per
@@ -17,6 +20,8 @@ data class User(
         return role.isNotBlank() &&
                 email.isNotBlank() &&
                 name.isNotBlank() &&
-                surname.isNotBlank()
+                surname.isNotBlank() &&
+                avatar.isNotBlank() &&
+                userPoint >= 0
     }
 }

@@ -17,22 +17,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import it.uniupo.ktt.R
 
 @Composable
 fun CustomChatTextField(
     label: String,
-    textfieldValue: String,
+    textFieldValue: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily(Font(R.font.poppins_regular)),
+            fontWeight = FontWeight(400),
             fontSize = 20.sp,
             color = Color.Black,
             modifier = Modifier
@@ -41,7 +45,7 @@ fun CustomChatTextField(
         )
 
         TextField(
-            value = textfieldValue,
+            value = textFieldValue,
             onValueChange = onValueChange,
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color(0xFFFFFFFF),
@@ -64,7 +68,7 @@ fun CustomChatTextField(
                 .background(Color(0xFFF5DFFA)),
 
             trailingIcon = @Composable {
-                if (textfieldValue.isNotEmpty()) {
+                if (textFieldValue.isNotEmpty()) {
                     IconButton(onClick = { onValueChange("") }) {
                         Icon(
                             imageVector = Icons.Outlined.Close,

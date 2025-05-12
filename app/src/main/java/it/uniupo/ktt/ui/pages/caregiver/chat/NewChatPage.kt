@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -52,7 +54,7 @@ import it.uniupo.ktt.viewmodel.NewChatViewModel
 fun NewChatPage(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("landing") {
-            popUpTo("new chat") { inclusive = true }
+            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }
@@ -76,6 +78,7 @@ fun NewChatPage(navController: NavController) {
     val contactsRef by newChatViewModelRefHilt.contactList.collectAsState()
     val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by newChatViewModelRefHilt.errorMessage.collectAsState()
+
     // lancio metodo per Init OR Update
     LaunchedEffect (currentUid){
         if(currentUid != null){
@@ -125,7 +128,7 @@ fun NewChatPage(navController: NavController) {
                         if (showDialog) {
                             Dialog(onDismissRequest = { showDialog = false }) {
                                 ModalAddContact(
-                                    onDismiss = { showDialog = false },
+                                    onDismiss = { showDialog = false }
                                 )
                             }
                         }
@@ -155,15 +158,11 @@ fun NewChatPage(navController: NavController) {
 
                                 append(" to extend your contacts book!")
                             },
-                            style = MaterialTheme.typography.bodyMedium, //Poppins
-
-
-                            //letterSpacing = 1.sp,
-                            fontSize = 22.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
                             fontWeight = FontWeight(400),
+
+                            fontSize = 22.sp,
                             lineHeight = 34.sp,
-
-
 
                             color = Color(0xFF423C3C),
                             textAlign = TextAlign.Center,
@@ -183,6 +182,7 @@ fun NewChatPage(navController: NavController) {
                             text = "Contacts on Keep The Time",
 
                             fontSize = 17.sp,
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
                             fontWeight = FontWeight(400),
                             color = Color(0xFF757070),
 

@@ -105,7 +105,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         dbRef.addValueEventListener(messageListener as ValueEventListener)
     }
 
-    // DA TESTARE
+        // OK
     fun sendMessage(chatId: String, text: String) {
         val senderUid = BaseRepository.currentUid() ?: return
 
@@ -235,7 +235,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
     }
 
-    // DA TESTARE
+        // OK
     override fun onCleared() {
         super.onCleared()
         // Distruzione del Listener in seguito all'uscita dalla pagina
@@ -246,6 +246,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+        // OK
     fun setUidContact(uid: String){
         uidContact = uid
         Log.d("DEBUG", "UIDContact SET ricevuto: $uid")

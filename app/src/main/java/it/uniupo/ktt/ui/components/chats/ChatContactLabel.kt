@@ -22,6 +22,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,14 +52,13 @@ fun ChatContactLable(
             modifier = Modifier
 
         ) {
-            IconButton(onClick = { /* opzionale: zoom foto */ },
+            IconButton(onClick = { /* zoom foto */ },
                 modifier = Modifier
                     .shadow(4.dp, shape = CircleShape, clip = false)
                     .size(48.dp)
                     .background(Color.White, shape = CircleShape)
             ) {
                 Image(
-                    //painter = painterResource(imgId),
                     painter = painterResource(imgId),
                     contentDescription = "Avatar",
                     modifier = Modifier
@@ -76,13 +77,14 @@ fun ChatContactLable(
 
                 Text(
                     text = nome,
-                    style = MaterialTheme.typography.bodyLarge ,
-                    fontWeight = FontWeight.Bold
+                    fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                    fontWeight = FontWeight(500)
                 )
                 Text(
                     text = msgPreview,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                    fontWeight = FontWeight(500),
+                    color = Color(0xFF615252)
                 )
             }
         }
