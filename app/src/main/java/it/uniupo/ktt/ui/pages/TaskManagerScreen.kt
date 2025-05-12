@@ -311,6 +311,7 @@ fun TaskManagerScreen(navController: NavController) {
                                                     .width(38.dp)
                                             ) {
                                                 Text(
+
                                                     text = "12:47",
                                                     fontSize = 14.sp,
                                                     color = subtitleColor,
@@ -353,7 +354,13 @@ fun TaskManagerScreen(navController: NavController) {
                                         clip = false
                                     )
                                     .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(16.dp),
+                                    .padding(16.dp)
+                                    .clickable(
+                                        onClick = {
+                                            navController.navigate("task_rating/${task.id}")
+
+                                        }
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
@@ -406,7 +413,7 @@ fun TaskManagerScreen(navController: NavController) {
                                                 modifier = Modifier
                                                     .border(
                                                         width = 3.dp,
-                                                        color = Color(0xFFEED547),
+                                                        color = Color(0xFFEA4242),
                                                         shape = CircleShape
                                                     )
                                                     .padding(6.dp)
