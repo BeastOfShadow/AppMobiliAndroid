@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -34,6 +35,8 @@ import it.uniupo.ktt.ui.theme.KTTTheme
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import it.uniupo.ktt.ui.pages.TaskRatingScreen
+import it.uniupo.ktt.viewmodel.TaskViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -60,8 +63,17 @@ class MainActivity : ComponentActivity() {
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("statistics") { StatisticsScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
+                        composable(
+                            route = "task_rating/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
-                                                        //new ROUTE
+                            TaskRatingScreen(navController = navController, taskId = taskId)
+                        }
+
+
+                        //new ROUTE
                         composable("update subtask") { UpdateSubtaskScreen(navController) }
                         composable("comment subtask") { CommentSubtaskScreen(navController) }
                         //Statistics
