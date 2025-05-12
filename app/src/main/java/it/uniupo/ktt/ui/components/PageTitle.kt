@@ -20,12 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.titleColor
@@ -73,7 +76,7 @@ fun PageTitle(
                 .padding(end = 34.dp)
                 .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
                 .background(
-                    color = secondary,
+                    color = Color(0xFFA47BD4),
                     shape = MaterialTheme.shapes.extraExtraLarge
                 )
                 // possibile cambiare a 15.dp
@@ -81,12 +84,12 @@ fun PageTitle(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge, //Poppins
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
 
                 fontSize = 23.sp,
                 fontWeight = FontWeight(400),
 
-                color = titleColor,
+                color = Color(0xFF000000),
                 modifier = Modifier.align(Alignment.Center)
             )
         }

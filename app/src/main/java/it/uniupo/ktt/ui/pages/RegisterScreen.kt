@@ -45,12 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.model.User
 import it.uniupo.ktt.ui.roles.UserRole
 
 @Composable
 fun RegisterScreen(navController: NavController) {
-    if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser != null) {
+    if (!LocalInspectionMode.current && BaseRepository.isUserLoggedIn()) {
         navController.navigate("home") {
             popUpTo("register") { inclusive = true }
             launchSingleTop = true
@@ -273,29 +274,37 @@ fun RegisterScreen(navController: NavController) {
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
 
-
                                     // ++ Creazione User DataBase ++
-                                    val uid= FirebaseAuth.getInstance().currentUser?.uid
-                                    val db = FirebaseFirestore.getInstance()
+                                    val uid= BaseRepository.currentUid()
 
-                                    val user = hashMapOf(
-                                        "email" to email.lowercase(),
-                                        "role" to UserRole.EMPLOYEE,
-                                        "name" to name.lowercase().replaceFirstChar { it.uppercase() },
-                                        "surname" to surname.lowercase().replaceFirstChar { it.uppercase() }
+                                    val user = User(
+                                        uid = uid.toString(),
+                                        email = email.lowercase(),
+                                        role = UserRole.EMPLOYEE.toString(),
+                                        name = name.lowercase().replaceFirstChar { it.uppercase() },
+                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                                        avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                                        userPoint = 0
                                     )
 
                                     //post on DB
                                     if (uid != null) {
-                                        Log.d("UID", uid ?: "UID nullo")
 
-                                        db.collection("users").document(uid)
+                                        BaseRepository.db
+                                            .collection("users")
+                                            .document(uid)
                                             .set(user)
                                             .addOnSuccessListener {
-                                                Log.d("Firestore", "Utente aggiunto con successo")
+                                                Log.d("DEBUG", "Utente aggiunto con successo")
+
+                                                // se aggiungo l'utente con successo allora vado alla home
+                                                navController.navigate("home") {
+                                                    popUpTo("landing") { inclusive = true }
+                                                    launchSingleTop = true
+                                                }
                                             }
                                             .addOnFailureListener { e ->
-                                                Log.w("Firestore", "Errore nell'aggiunta utente", e)
+                                                Log.w("DEBUG", "Errore nell'aggiunta utente", e)
                                             }
                                     }
                                     else{
@@ -305,10 +314,7 @@ fun RegisterScreen(navController: NavController) {
 
 
 
-                                    navController.navigate("home") {
-                                        popUpTo("landing") { inclusive = true }
-                                        launchSingleTop = true
-                                    }
+
                                 } else {
                                     message = task.exception?.message ?: "Unknown error occurred"
                                 }

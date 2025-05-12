@@ -14,6 +14,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,8 +48,8 @@ fun AddContactButton(
                 contentDescription = "Add contact",
                 tint = Color.White,
                 modifier = Modifier
-                    .size(44.dp)
-                    .offset(x = 4.dp, y = 1.dp)
+                    .size(27.dp)
+                    .offset(x = 1.5.dp, y = 0.5.dp)
             )
         }
 
@@ -56,7 +58,8 @@ fun AddContactButton(
         Text(
             text = "Add contact",
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily(Font(R.font.poppins_regular)),
+            fontWeight = FontWeight(400),
             color = Color.Black
         )
     }

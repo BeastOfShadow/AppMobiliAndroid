@@ -30,21 +30,15 @@ fun NewChatButton(
         modifier = modifier
             .shadow(8.dp, RoundedCornerShape(20.dp), clip = false)
             .background(Color(0xFF9C46FF), shape = RoundedCornerShape(20.dp))
-            .size(60.dp)
+            .size(56.dp)
     ) {
         Image(
-            painter = painterResource(id= R.drawable.menu_chat_new),
+            painter = painterResource(id= R.drawable.menu_new_chat_3),
             contentDescription = "New Chat",
             modifier = Modifier
-                .size(58.dp)
-                .offset(x= 1.dp, y= 3.dp)
+                .size(34.dp)
+                .offset(x= 0.dp, y= 1.dp)
         )
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun NewChatButtonPreview() {
-    //NewChatButton()
-}

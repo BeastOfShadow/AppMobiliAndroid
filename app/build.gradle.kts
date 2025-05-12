@@ -3,6 +3,11 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+
+    // Hilt Plugin + KAPT support
+    id("com.google.dagger.hilt.android")
+    id("org.jetbrains.kotlin.kapt")
+
 }
 
 android {
@@ -69,6 +74,8 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.material3.lint)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.coil.compose.v240)
+    implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -77,8 +84,19 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+
     implementation("androidx.compose.material3:material3:1.2.0")
 
     //implementation("androidx.compose.ui:ui-graphics:1.3.0") //blurred background effect
 
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-compiler:2.51")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // Integrazione HiltViewModel in Composable e Navigation graph
+
+    // REALTIME DB
+    implementation("com.google.firebase:firebase-database-ktx")
+
+    // COIL (per le immagini)
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }
