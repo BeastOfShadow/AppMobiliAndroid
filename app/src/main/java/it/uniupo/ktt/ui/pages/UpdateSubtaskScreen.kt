@@ -37,6 +37,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
+import it.uniupo.ktt.ui.components.task.ReadOnlyTextField
+import it.uniupo.ktt.ui.components.task.ReadOnlyTextFieldPreview
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.lightGray
 import it.uniupo.ktt.ui.theme.primary
@@ -68,245 +70,19 @@ fun UpdateSubtaskScreen(navController: NavController) {
                 title = "Update Subtask"
             )
 
+            Spacer(modifier = Modifier.size(30.dp))
+
+            ReadOnlyTextField(
+                label = "Task name:",
+                value = "Task name"
+            )
+
             Spacer(modifier = Modifier.size(20.dp))
 
-            Box(
-                modifier = Modifier
-                    .shadow(
-                        4.dp,
-                        shape = MaterialTheme.shapes.extraLarge,
-                        clip = false
-                    )
-                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(27.dp)
-                            .background(
-                                color = lightGray,
-                                shape = CircleShape
-                            )
-                    ) {
-                        Text(
-                            text = "1",
-                            fontSize = 14.sp,
-                            color = buttonTextColor,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(10.dp))
-
-                    Text(
-                        text = "Subtask Description:",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp,
-                        color = titleColor,
-                        textAlign = TextAlign.Start
-                    )
-
-                    Spacer(modifier = Modifier.size(10.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .shadow(
-                                4.dp,
-                                shape = MaterialTheme.shapes.extraLarge,
-                                clip = false
-                            )
-                            .fillMaxWidth()
-                            .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
-                            .padding(16.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = "Prova con un testo verosimile molto lungo per vedere se effettivamente funziona todos",
-                                fontSize = 15.sp,
-                                maxLines = 6,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.size(10.dp))
-
-                    Text(
-                        text = "Photo:",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 20.sp,
-                        color = titleColor,
-                        textAlign = TextAlign.Start
-                    )
-
-                    Spacer(modifier = Modifier.size(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                                .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "See",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = lightGray
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Box(
-                                    modifier = Modifier
-                                        .shadow(4.dp, shape = CircleShape, clip = false)
-                                        .background(color = tertiary, shape = CircleShape)
-                                        .size(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.image_see),
-                                        contentDescription = "Extend",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge, clip = false)
-                                .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "Add",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = lightGray
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Box(
-                                    modifier = Modifier
-                                        .shadow(4.dp, shape = CircleShape, clip = false)
-                                        .background(color = tertiary, shape = CircleShape)
-                                        .size(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.image_upload),
-                                        contentDescription = "Extend",
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .shadow(
-                                    4.dp,
-                                    shape = MaterialTheme.shapes.extraLarge,
-                                    clip = false
-                                )
-                                .background(color = Color.White, shape = MaterialTheme.shapes.extraLarge)
-                                .padding(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(color = tertiary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(6.dp)
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.trashcan),
-                                    contentDescription = "Extend",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.size(40.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(45.dp)
-                                .shadow(
-                                    4.dp,
-                                    shape = MaterialTheme.shapes.large,
-                                    clip = false
-                                )
-                                .background(
-                                    color = tertiary,
-                                    shape = MaterialTheme.shapes.large
-                                )
-                                .clickable { /* Cancella */ },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Cancel",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(45.dp)
-                                .shadow(
-                                    4.dp,
-                                    shape = MaterialTheme.shapes.large,
-                                    clip = false
-                                )
-                                .background(
-                                    color = tertiary,
-                                    shape = MaterialTheme.shapes.large
-                                )
-                                .clickable { /* Crea task */ },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Update",
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
+            ReadOnlyTextField(
+                label = "Employee:",
+                value = "Task name"
+            )
         }
     }
 }

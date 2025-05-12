@@ -1,6 +1,7 @@
 package it.uniupo.ktt.ui.model
 
 data class SubTask(
+    val id: String,
     val listNumber: Int = 0,
     val description: String = "",
 
