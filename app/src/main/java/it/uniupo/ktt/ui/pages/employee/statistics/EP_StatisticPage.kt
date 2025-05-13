@@ -47,20 +47,16 @@ fun EP_StatisticPage(navController: NavController) {
         }
     }
 
+    val currentUid = BaseRepository.currentUid()
+
     // istanza + collegamento
     val statisticsViewModelRef = hiltViewModel<StatisticsViewModel>()
 
-                                    // AVG BAR INFO
-    // Durata Media dei lavori "completed" svolti oggi (dall'employee)
-    val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
-    // Durata Media dei lavori "completed" svolti in generale (dall'employee)
-    val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
+    // BOOLEAN INFO FLAGs (Loading)
+    val isLoadingAvgBarInfo = remember { mutableStateOf(false) }
+    val isLoadingTodayBarInfo = remember { mutableStateOf(false) }
+    val isLoadingCircleDiagramInfo = remember { mutableStateOf(false) }
 
-                                    // TODAY BAR INFO
-    // Task daily
-    val dailyCount = remember { mutableStateOf(0) }
-    // Task daily Completati
-    val dailyCompletedCount = remember { mutableStateOf(0) }
 
                                     // CIRCLE DIAGRAM INFO
     // Tasks Completed this Year
@@ -70,13 +66,86 @@ fun EP_StatisticPage(navController: NavController) {
     // Tasks Completed this Week
     val weeklyCompletedCount = remember { mutableStateOf(0) }
 
+    // INFO CIRCLE DIAGRAM CALl
+    LaunchedEffect(currentUid) {
+        isLoadingCircleDiagramInfo.value= true
 
-                            // BOOLEAN INFO FLAGs (Loading)
-    val isLoadingAvgBarInfo = remember { mutableStateOf(false) }
-    val isLoadingTodayBarInfo = remember { mutableStateOf(false) }
-    val isLoadingCircleDiagramInfo = remember { mutableStateOf(false) }
+        if (currentUid != null) {
+            statisticsViewModelRef.circleDiagramInfo(
+                uid = currentUid,
+                onSuccess = { yearly, monthly, weekly ->
+                    yearlyCompletedCount.value = yearly
+                    monthlyCompletedCount.value = monthly
+                    weeklyCompletedCount.value = weekly
 
-    val currentUid = BaseRepository.currentUid()
+                    isLoadingCircleDiagramInfo.value = false
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore circleDiagramInfo", e)
+
+                    isLoadingCircleDiagramInfo.value = false
+                }
+            )
+        }
+    }
+
+
+                                    // TODAY BAR INFO
+    // Task daily
+    val dailyCount = remember { mutableStateOf(0) }
+    // Task daily Completati
+    val dailyCompletedCount = remember { mutableStateOf(0) }
+
+    // INFO TODAY BAR
+    LaunchedEffect(currentUid) {
+        isLoadingTodayBarInfo.value= true
+
+        if (currentUid != null) {
+            statisticsViewModelRef.todayBarInfo(
+                uid = currentUid,
+                onSuccess = { all, completed ->
+                    dailyCount.value = all
+                    dailyCompletedCount.value = completed
+
+                    isLoadingTodayBarInfo.value = false
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore todayBarInfo", e)
+
+                    isLoadingTodayBarInfo.value = false
+                }
+            )
+        }
+    }
+
+
+                                    // AVG BAR INFO
+    // Durata Media dei lavori "completed" svolti oggi (dall'employee)
+    val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
+    // Durata Media dei lavori "completed" svolti in generale (dall'employee)
+    val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
+
+    // INFO AVG BAR
+    LaunchedEffect(currentUid) {
+        isLoadingAvgBarInfo.value= true
+
+        if (currentUid != null) {
+            statisticsViewModelRef.avgCompletionBarInfo(
+                role = "caregiver",
+                onSuccess = { avgDaily, avgGeneral ->
+                    avgDailyCompletionTime.value = avgDaily
+                    avgGeneralCompletionTime.value = avgGeneral
+
+                    isLoadingAvgBarInfo.value = false
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore avgCompletionBarInfo", e)
+
+                    isLoadingAvgBarInfo.value = false
+                }
+            )
+        }
+    }
 
 
 
@@ -100,37 +169,12 @@ fun EP_StatisticPage(navController: NavController) {
             )
 
 
-
                                         //CIRCLE DIAGRAM BOX
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
             ){
-
-                // INFO CIRCLE DIAGRAM
-                LaunchedEffect(currentUid) {
-                    isLoadingCircleDiagramInfo.value= true
-
-                    if (currentUid != null) {
-                        statisticsViewModelRef.circleDiagramInfo(
-                            uid = currentUid,
-                            onSuccess = { yearly, monthly, weekly ->
-                                yearlyCompletedCount.value = yearly
-                                monthlyCompletedCount.value = monthly
-                                weeklyCompletedCount.value = weekly
-
-                                isLoadingCircleDiagramInfo.value = false
-                            },
-                            onError = { e ->
-                                Log.e("DEBUG", "Errore circleDiagramInfo", e)
-
-                                isLoadingCircleDiagramInfo.value = false
-                            }
-                        )
-                    }
-                }
-
                 if(isLoadingCircleDiagramInfo.value == true){
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
@@ -144,23 +188,23 @@ fun EP_StatisticPage(navController: NavController) {
                     ){
                         // Circle Diagram
                         CircleDiagram(
-                            yearly = 85,
-                            monthly = 25,
-                            weekly = 6
+//                            yearly = 85,
+//                            monthly = 25,
+//                            weekly = 6
 
-//                            yearly =  yearlyCompletedCount.value,
-//                            monthly =  monthlyCompletedCount.value,
-//                            weekly = weeklyCompletedCount.value
+                            yearly =  yearlyCompletedCount.value,
+                            monthly =  monthlyCompletedCount.value,
+                            weekly = weeklyCompletedCount.value
                         )
                     }
 
                 }
-
             }
 
             Spacer(
                 modifier = Modifier.height(35.dp)
             )
+
 
                                         //TODAY BAR BOX
             Box(
@@ -168,29 +212,6 @@ fun EP_StatisticPage(navController: NavController) {
                     .fillMaxWidth()
                     .height(130.dp)
             ){
-
-                // INFO TODAY BAR
-                LaunchedEffect(currentUid) {
-                    isLoadingTodayBarInfo.value= true
-
-                    if (currentUid != null) {
-                        statisticsViewModelRef.todayBarInfo(
-                            uid = currentUid,
-                            onSuccess = { all, completed ->
-                                dailyCount.value = all
-                                dailyCompletedCount.value = completed
-
-                                isLoadingTodayBarInfo.value = false
-                            },
-                            onError = { e ->
-                                Log.e("DEBUG", "Errore todayBarInfo", e)
-
-                                isLoadingTodayBarInfo.value = false
-                            }
-                        )
-                    }
-                }
-
                 if(isLoadingTodayBarInfo.value == true){
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
@@ -214,12 +235,12 @@ fun EP_StatisticPage(navController: NavController) {
                     }
 
                 }
-
             }
 
             Spacer(
                 modifier = Modifier.height(35.dp)
             )
+
 
                                         //AVG BAR BOX
             Box(
@@ -227,31 +248,6 @@ fun EP_StatisticPage(navController: NavController) {
                     .fillMaxWidth()
                     .height(150.dp)
             ){
-
-
-
-                // INFO AVG BAR
-                LaunchedEffect(currentUid) {
-                    isLoadingAvgBarInfo.value= true
-
-                    if (currentUid != null) {
-                        statisticsViewModelRef.avgCompletionBarInfo(
-                            role = "caregiver",
-                            onSuccess = { avgDaily, avgGeneral ->
-                                avgDailyCompletionTime.value = avgDaily
-                                avgGeneralCompletionTime.value = avgGeneral
-
-                                isLoadingAvgBarInfo.value = false
-                            },
-                            onError = { e ->
-                                Log.e("DEBUG", "Errore avgCompletionBarInfo", e)
-
-                                isLoadingAvgBarInfo.value = false
-                            }
-                        )
-                    }
-                }
-
                 if(isLoadingAvgBarInfo.value == true){
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
@@ -489,10 +485,6 @@ fun EP_StatisticPage(navController: NavController) {
                 }
 
             }
-
-
-
-
 
         }
 

@@ -1,10 +1,18 @@
 package it.uniupo.ktt.ui.components.statistics
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
@@ -15,6 +23,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun CircleDiagramProgressBars(
@@ -27,10 +36,30 @@ fun CircleDiagramProgressBars(
     val maxMonthly = 50
     val maxWeekly = 20
 
-    // calcolo dei Ratio
-    val ratioYearly = (yearly.toFloat() / maxYearly).coerceIn(0f, 1f)
-    val ratioMonthly = (monthly.toFloat() / maxMonthly).coerceIn(0f, 1f)
-    val ratioWeekly = (weekly.toFloat() / maxWeekly).coerceIn(0f, 1f)
+    // calcolo dei Ratio (in Lista per animation)
+    val ratioList = listOf(
+        (yearly.toFloat() / maxYearly).coerceIn(0f, 1f),
+        (monthly.toFloat() / maxMonthly).coerceIn(0f, 1f),
+        (weekly.toFloat() / maxWeekly).coerceIn(0f, 1f)
+    )
+
+                            //ANIMAZIONE 3 Bars -> (Uso "Animatable" per gestire meglio 3 animazioni in parallelo)
+    val animatedRatios = remember {
+        List(3) { Animatable(0f) }
+    }
+    // Avvia le animazioni solo una volta
+    LaunchedEffect(Unit) {
+        animatedRatios.forEachIndexed { i, animatable ->
+            launch {
+                animatable.animateTo(
+                    targetValue = ratioList[i],
+                    animationSpec = tween(durationMillis = 800)
+                )
+            }
+        }
+    }
+
+
 
     Canvas(
         modifier = Modifier
@@ -56,13 +85,12 @@ fun CircleDiagramProgressBars(
             Color(0xFFA47BD4),
             Color(0xFFF5DFFA)
         )
-        val ratios = listOf(ratioYearly, ratioMonthly, ratioWeekly)
 
-        for (i in ratios.indices) {
+        for (i in 0..2) {
             drawArc(
                 color = colors[i],
                 startAngle = startAngle,
-                sweepAngle = sweepAngleMax * ratios[i],
+                sweepAngle = sweepAngleMax * animatedRatios[i].value,
                 useCenter = false,
                 topLeft = Offset(center.x - circles[i], center.y - circles[i]),
                 size = Size(circles[i] * 2, circles[i] * 2),
