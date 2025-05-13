@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.StatisticsRepository
+import it.uniupo.ktt.ui.model.Task
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -21,13 +22,23 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
         onResult: (ready: Int, ongoing: Int, completed: Int) -> Unit,
         onError: (Exception) -> Unit = {}
     ) {
-        StatisticsRepository.getAllDailyTaskByUid(
+        StatisticsRepository.getReadyOngoingCompletedByUid(
             role = "caregiver",
             uid = uid,
             onSuccess = { tasks ->
                 val ready = tasks.count { it.status == "ready" }
                 val ongoing = tasks.count { it.status == "ongoing" }
-                val completed = tasks.count { it.status == "completed" }
+
+                val today = LocalDate.now()
+                val zoneId = ZoneId.systemDefault()
+
+                val completed = tasks.count { task ->
+                    task.status == "completed" &&
+                            task.timeStampEnd?.toDate()
+                                ?.toInstant()
+                                ?.atZone(zoneId)
+                                ?.toLocalDate() == today
+                }
 
                 onResult(ready, ongoing, completed)
             },
@@ -151,7 +162,7 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
 
                 // 2) INFO:Task di questo mese corrente dalla lista annuale
                 val monthlyTasksList = yearlyTasksList.filter { task ->
-                    val endTime = task.timeSTampEnd?.toDate()
+                    val endTime = task.timeStampEnd?.toDate()
                         ?.toInstant()
                         ?.atZone(ZoneId.systemDefault())
                         ?.toLocalDate()
@@ -161,7 +172,7 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
 
                 // 3) Filtro i task di questa settimana dalla lista mensile
                 val weeklyTasks = monthlyTasksList.filter { task ->
-                    val endDate = task.timeSTampEnd?.toDate()
+                    val endDate = task.timeStampEnd?.toDate()
                         ?.toInstant()
                         ?.atZone(ZoneId.systemDefault())
                         ?.toLocalDate()

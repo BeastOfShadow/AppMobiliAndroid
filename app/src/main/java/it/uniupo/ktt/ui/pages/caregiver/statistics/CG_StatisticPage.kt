@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.StatisticsRepository
 import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.StatisticsViewModel
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 fun CG_StatisticPage(navController: NavController) {
@@ -49,8 +51,79 @@ fun CG_StatisticPage(navController: NavController) {
         }
     }
 
+    val personalUid = BaseRepository.currentUid()
+
     // istanza + collegamento
     val statisticsViewModelRef = hiltViewModel<StatisticsViewModel>()
+
+                            // BUBBLE CHART var & rif & call
+    val completedTasks = remember { mutableStateOf(0) }
+    val ongoingTasks = remember { mutableStateOf(0) }
+    val readyTasks = remember { mutableStateOf(0) }
+
+    //riferimenti traformazioni Dimensioni Cerchi (NON MODIFICARE)
+    val minTasks = 11
+    val maxTasks = 25
+    val minDimBubble = 35f
+    val maxDimBubble = 80f
+
+    // Loading Booleand (bubble chart -> 3 counter)
+    val isLoadingBubbleChart = remember { mutableStateOf(false) }
+
+    LaunchedEffect(personalUid) {
+        isLoadingBubbleChart.value = true
+
+        if(personalUid!= null){
+            statisticsViewModelRef.bubbleChartInfo(
+                uid = personalUid,
+                onResult = { ready, ongoing, completed ->
+                    readyTasks.value = ready
+                    ongoingTasks.value = ongoing
+                    completedTasks.value = completed
+
+                    isLoadingBubbleChart.value = false
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore nella query", e)
+
+                    isLoadingBubbleChart.value = false
+                }
+            )
+        }
+    }
+
+
+                            // AVG BAR var & call
+    val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
+    val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
+
+    // Loading Booleand (avgBar -> medie)
+    val isLoadingAvgBar = remember { mutableStateOf(false) }
+
+    LaunchedEffect(personalUid) {
+        isLoadingAvgBar.value= true
+
+        if (personalUid != null) {
+            statisticsViewModelRef.avgCompletionBarInfo(
+                role = "caregiver",
+                onSuccess = { avgDaily, avgGeneral ->
+                    avgDailyCompletionTime.value = avgDaily
+                    avgGeneralCompletionTime.value = avgGeneral
+
+                    isLoadingAvgBar.value = false
+                },
+                onError = { e ->
+                    Log.e("DEBUG", "Errore avgCompletionBarInfo", e)
+
+                    isLoadingAvgBar.value = false
+                }
+            )
+        }
+    }
+
+
+
+
 
     Box(
         modifier = Modifier
@@ -86,98 +159,51 @@ fun CG_StatisticPage(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                // 3 Variabili BASE da cui derivo "completed"
-                val completedTasks = remember { mutableStateOf(0) }
-                val ongoingTasks = remember { mutableStateOf(0) }
-                val readyTasks = remember { mutableStateOf(0) }
 
-                // Multi-Query -> per ottenere il numero tot. dei tasks nei loro 3 Stati
-                val personalUid = BaseRepository.currentUid()
+                                                // BUBBLE CHART WAIT
+                if(isLoadingBubbleChart.value == true){
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                    )
+                }
+                else{
 
-                LaunchedEffect(personalUid) {
-                    if(personalUid!= null){
-                        statisticsViewModelRef.bubbleChartInfo(
-                            uid = personalUid,
-                            onResult = { ready, ongoing, completed ->
-                                readyTasks.value = ready
-                                ongoingTasks.value = ongoing
-                                completedTasks.value = completed
-                            },
-                            onError = { e -> Log.e("DEBUG", "Errore nella query", e)}
-                        )
-                    }
-
+                                                //BUBBLE CHART
+                    DailyTasksBubbleChart(
+                        // "completed, ongoing, ready" sono il Raggio finale del cerchio rappresentato
+                        completed = when {
+                            completedTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                            completedTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                            else -> 35f + ((completedTasks.value - 10) *3f)         //caso intermedio Bubble
+                        },
+                        ongoing = when {
+                            ongoingTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                            ongoingTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                            else -> 35f + ((ongoingTasks.value - 10) *3f)         //caso intermedio Bubble
+                        },
+                        ready = when {
+                            readyTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
+                            readyTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
+                            else -> 35f + ((readyTasks.value - 10) *3f)         //caso intermedio Bubble
+                        },
+                        completedNumb = completedTasks.value,
+                        onGoingNumb = ongoingTasks.value,
+                        readyNumb = readyTasks.value
+                    )
                 }
 
-                //riferimenti Chiave traformazioni Dimensioni Cerchi (NON MODIFICARE)
-                val minTasks = 11       // Default: 11
-                val maxTasks = 25       // Default: 25
-
-                val minDimBubble = 35f
-                val maxDimBubble = 80f
-
-
-                //BubbleChart COMPONENT
-                DailyTasksBubbleChart(
-                    // "completed, ongoing, ready" sono il Raggio finale del cerchio rappresentato
-                    completed = when {
-                        completedTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        completedTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((completedTasks.value - 10) *3f)         //caso intermedio Bubble
-                    },
-                    ongoing = when {
-                        ongoingTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        ongoingTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((ongoingTasks.value - 10) *3f)         //caso intermedio Bubble
-                    },
-                    ready = when {
-                        readyTasks.value < minTasks -> minDimBubble //caso dimensione Bubble minima 35f
-                        readyTasks.value > maxTasks -> maxDimBubble //caso dimensione Bubble massima 80f
-                        else -> 35f + ((readyTasks.value - 10) *3f)         //caso intermedio Bubble
-                    },
-                    completedNumb = completedTasks.value,
-                    onGoingNumb = ongoingTasks.value,
-                    readyNumb = readyTasks.value
-                )
 
 
 
-                                                        //AVG BAR BOX
+                                                //AVG BAR BOX
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .height(100.dp)
                 ){
 
-                    val avgDailyCompletionTime = remember { mutableStateOf(0.0) }
-                    val avgGeneralCompletionTime = remember { mutableStateOf(0.0) }
-
-                    // Loading Booleand (per attendere le medie)
-                    val isLoading = remember { mutableStateOf(false) }
-
-                    // INFO medie per AvgBar
-                    LaunchedEffect(personalUid) {
-                        isLoading.value= true
-
-                        if (personalUid != null) {
-                            statisticsViewModelRef.avgCompletionBarInfo(
-                                role = "caregiver",
-                                onSuccess = { avgDaily, avgGeneral ->
-                                    avgDailyCompletionTime.value = avgDaily
-                                    avgGeneralCompletionTime.value = avgGeneral
-
-                                    isLoading.value = false
-                                },
-                                onError = { e ->
-                                    Log.e("DEBUG", "Errore avgCompletionBarInfo", e)
-
-                                    isLoading.value = false
-                                }
-                            )
-                        }
-                    }
-
-                    if(isLoading.value == true){
+                    if(isLoadingAvgBar.value == true){
                         CircularProgressIndicator(Modifier.align(Alignment.Center))
                     }
                     else{
