@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.uniupo.ktt.R
@@ -39,6 +40,8 @@ import it.uniupo.ktt.ui.theme.titleColor
 @Composable
 fun AvgComplationBar(
     ratio: Float,
+    progressBarHeight: Dp,
+    progressBarWidth: Dp,
     badgeTop : @Composable () -> Unit,
     textTop : @Composable () -> Unit,
     badgeBottom : @Composable () -> Unit,
@@ -99,8 +102,8 @@ fun AvgComplationBar(
                 ) {
                     Box( // Barra 1
                         modifier = Modifier
-                            .width(250.dp) // tutta piena
-                            .height(42.dp)
+                            .width(progressBarWidth)
+                            .height(progressBarHeight)
                             .clip(RoundedCornerShape(50))
                             .background(backgroundBarColor)
                             .border(

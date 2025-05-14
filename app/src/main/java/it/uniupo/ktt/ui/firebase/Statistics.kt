@@ -9,6 +9,7 @@ import java.time.ZoneId
 object StatisticsRepository {
 
                                     // BUBBLE CHART
+        // OK -> CompletedCount, OngoingCount, ReadyCount
     fun getReadyOngoingCompletedByUid(
         role: String,
         uid: String,
@@ -18,7 +19,7 @@ object StatisticsRepository {
         BaseRepository.db
             .collection("tasks")
             .whereEqualTo(role, uid)
-            .whereIn("status", listOf("ready", "ongoing", "completed"))
+            .whereIn("status", listOf("READY", "ONGOING", "COMPLETED"))
             .get()
             .addOnSuccessListener { snapshot ->
                 val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
@@ -33,36 +34,8 @@ object StatisticsRepository {
 
 
                                     // AVG BAR
-        // OK -> AVG BAR
-    fun getAllDailyCompletedTaskByUid(
-            role: String,
-            uid: String,
-            onSuccess: (List<Task>) -> Unit = {},
-            onError: (Exception) -> Unit = {}
-    ) {
-        val today = LocalDate.now() // "LocalDate.now()" data odierna (2025-04-04), mancano le ore che devo aggiungere
-        val dayStart = Timestamp(today.atStartOfDay(ZoneId.systemDefault()).toInstant()) // "today.atStartOfDay(ZoneId.systemDefault())" -> (2025-04-04T00:00:00), ".toInstant()"-> trasforma in un TimeStamp
-        val dayEnd = Timestamp(today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().minusMillis(1))
 
-        BaseRepository.db
-            .collection("tasks")
-            .whereEqualTo(role, uid)
-            .whereEqualTo("status", "completed")
-            .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
-            .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
-            .get()
-            .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
-                val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
-                Log.d("DEBUG", "Trovati ${tasks.size} Daily Completed Tasks dato Caregiver: $uid")
-                onSuccess(tasks)
-            }
-            .addOnFailureListener { e ->
-                Log.e("DEGUB", "QUERY-Error in StatisticsRepo -> getAllDailyCompletedTaskByUid", e)
-                onError(e)
-            }
-    }
-
-        // OK -> AVG BAR
+        // OK -> media Time DailyTask, media Time GeneralTasks
     fun getGeneralCompletedTaskByUid(
             role: String,
             uid: String,
@@ -73,11 +46,11 @@ object StatisticsRepository {
         BaseRepository.db
             .collection("tasks")
             .whereEqualTo(role, uid)
-            .whereEqualTo("status", "completed")
+            .whereEqualTo("status", "COMPLETED")
             .get()
             .addOnSuccessListener { snapshot -> //ritorna una lista di Tasks
                 val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
-                Log.d("DEBUG", "Trovati ${tasks.size} General Completed Tasks dato Caregiver: $uid")
+                // Log.d("DEBUG", "Trovati ${tasks.size} General Completed Tasks dato Caregiver: $uid")
                 onSuccess(tasks)
             }
             .addOnFailureListener { e ->
@@ -87,9 +60,9 @@ object StatisticsRepository {
     }
 
 
-                                    // TODAY BAR  -> MODIFICA LOGICA DAILY
+                                    // TODAY BAR
 
-    // DA TESTARE -> all Daily Tasks By: Role, Uid
+        // OK -> all Daily Tasks COMPLETED or ONGOING By: Role, Uid
     fun getAllDailyTaskByUid(
         role: String,
         uid: String,
@@ -103,12 +76,13 @@ object StatisticsRepository {
         BaseRepository.db
             .collection("tasks")
             .whereEqualTo(role, uid)
+            .whereIn("status", listOf("ONGOING", "COMPLETED"))
             .whereGreaterThanOrEqualTo("timeStampEnd", dayStart)
             .whereLessThanOrEqualTo("timeStampEnd", dayEnd)
             .get()
             .addOnSuccessListener { snapshot ->
                 val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
-                Log.d("DEBUG", "Totale task oggi: ${tasks.size}")
+                // Log.d("DEBUG", "Totale task oggi: ${tasks.size}")
                 onSuccess(tasks)
             }
             .addOnFailureListener { e ->
@@ -120,7 +94,7 @@ object StatisticsRepository {
 
                                     // CIRCLE DIAGRAM
 
-    // DA TESTARE -> CIRCLE DIAGRAM
+        // OK -> ritorna lista Task COMPLETED, dell'anno corrente
     fun getAllYearlyTasksCompletedByUid(
         uid: String,
         onSuccess: (List<Task>) -> Unit = {},
@@ -136,13 +110,13 @@ object StatisticsRepository {
         BaseRepository.db
             .collection("tasks")
             .whereEqualTo("employee", uid)
-            .whereEqualTo("status", "completed")
+            .whereEqualTo("status", "COMPLETED")
             .whereGreaterThanOrEqualTo("timeStampEnd", tsStart)
             .whereLessThanOrEqualTo("timeStampEnd", tsEnd)
             .get()
             .addOnSuccessListener { snapshot ->
                 val tasks = snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
-                Log.d("DEBUG", "Totale task COMPLETED this YEAR: ${tasks.size}")
+                // Log.d("DEBUG", "Totale task COMPLETED this YEAR: ${tasks.size}")
                 onSuccess(tasks)
             }
             .addOnFailureListener { e ->

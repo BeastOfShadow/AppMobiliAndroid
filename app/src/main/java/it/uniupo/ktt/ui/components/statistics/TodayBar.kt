@@ -38,13 +38,14 @@ import it.uniupo.ktt.ui.theme.titleColor
 
 @Composable
 fun TodayBar(
-    ratio : Float,
     doneCount : Int,
     totalCount : Int
 ) {
     val backgroundBarColor = Color(0xFFF5DFFA)
     val fillBarColor = Color(0xFF6326A9)
 
+    // RATIO
+    val ratio = if (totalCount > 0) doneCount.toFloat() / totalCount else 0f
 
                             //ANIMAZIONE
 
@@ -147,7 +148,6 @@ fun TodayBar(
 @Composable
 fun TodayBarPreview() {
     TodayBar(
-        1f,
         doneCount = 5,
         totalCount = 10
     )

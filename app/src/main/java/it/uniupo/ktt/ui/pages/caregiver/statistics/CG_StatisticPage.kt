@@ -168,8 +168,10 @@ fun CG_StatisticPage(navController: NavController) {
                     )
                 }
                 else{
+                    Log.d("DEBUG", " BUBBLE CHART -> completed: ${completedTasks.value}, ongoing: ${ongoingTasks.value}, ready: ${readyTasks.value}")
 
-                                                //BUBBLE CHART
+
+                    //BUBBLE CHART
                     DailyTasksBubbleChart(
                         // "completed, ongoing, ready" sono il Raggio finale del cerchio rappresentato
                         completed = when {
@@ -220,6 +222,9 @@ fun CG_StatisticPage(navController: NavController) {
                             ){
                                 AvgComplationBar(
                                     ratio = 0f,
+                                    progressBarHeight = 42.dp,
+                                    progressBarWidth = 250.dp,
+
                                     badgeTop = {},
                                     textTop = {},
                                     badgeBottom = {},
@@ -249,6 +254,8 @@ fun CG_StatisticPage(navController: NavController) {
                             ){
                                 AvgComplationBar(
                                     ratio = 1f, // Full Bar
+                                    progressBarHeight = 42.dp,
+                                    progressBarWidth = 250.dp,
 
                                     badgeTop = {
                                         StatStatusBadge(
@@ -318,6 +325,8 @@ fun CG_StatisticPage(navController: NavController) {
                                 ){
                                     AvgComplationBar(
                                         ratio = (avgDailyCompletionTime.value/avgGeneralCompletionTime.value).toFloat(),
+                                        progressBarHeight = 42.dp,
+                                        progressBarWidth = 250.dp,
 
                                         badgeTop = {
                                             StatStatusBadge(
@@ -382,6 +391,8 @@ fun CG_StatisticPage(navController: NavController) {
                                 ){
                                     AvgComplationBar(
                                         ratio = (avgGeneralCompletionTime.value/avgDailyCompletionTime.value).toFloat(),
+                                        progressBarHeight = 42.dp,
+                                        progressBarWidth = 250.dp,
 
                                         badgeTop = {
                                             StatStatusBadge(
