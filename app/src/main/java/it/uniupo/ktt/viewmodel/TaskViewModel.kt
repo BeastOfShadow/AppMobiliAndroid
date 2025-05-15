@@ -145,6 +145,7 @@ class TaskViewModel : ViewModel() {
                 val taskRef = db.collection("tasks").document(taskId)
                 taskRef.update("overallComment", comment).await()
                 taskRef.update("overallRating", rating).await()
+                taskRef.update("status", TaskStatus.RATED).await()
                 Log.d("TaskViewModel", "Task $taskId rating and comment updated")
             } catch (e: Exception) {
                 Log.e("TaskViewModel", "Error updating task rating and comment: ${e.message}")
