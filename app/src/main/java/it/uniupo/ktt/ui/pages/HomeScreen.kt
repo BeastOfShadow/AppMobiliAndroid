@@ -67,9 +67,9 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 fun HomeScreen(navController: NavController) {
 
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
-        navController.navigate("landing")
+        navController.navigate("login")
         {
-            popUpTo("landing") { inclusive = false }
+            popUpTo("login") { inclusive = false }
             launchSingleTop = true //precaricamento
         }
     }
@@ -145,7 +145,7 @@ fun HomeScreen(navController: NavController) {
                                 onClick = {
                                     // navController.popBackStack()
                                     FirebaseAuth.getInstance().signOut()
-                                    navController.navigate("landing") {
+                                    navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
                                         launchSingleTop = true
                                     }

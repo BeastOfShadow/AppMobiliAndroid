@@ -66,7 +66,7 @@ fun ModalAddContact(
     val viewModelRef : NewChatViewModel = viewModel()
     val contactList by viewModelRef.contactList.collectAsState()
 
-    //snackBar (modale info)
+    // SNACKBAR -> ERRORI
     val snackbarHostState = remember { SnackbarHostState() }
 
     var name by remember { mutableStateOf("") }

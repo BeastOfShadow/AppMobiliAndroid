@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FirebaseApp.initializeApp(this)
             val navController = rememberNavController()
-            val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "landing" else "home") }
+            val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "login" else "home") }
 
             KTTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("landing") { LandingScreen(navController) }
+                        //composable("landing") { LandingScreen(navController) }
                         composable("login") { LoginScreen(navController) }
                         composable("register") { RegisterScreen(navController) }
                         composable("home") { HomeScreen(navController) }

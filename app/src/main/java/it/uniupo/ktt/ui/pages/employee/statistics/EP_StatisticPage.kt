@@ -44,8 +44,8 @@ import it.uniupo.ktt.viewmodel.StatisticsViewModel
 @Composable
 fun EP_StatisticPage(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
-        navController.navigate("landing") {
-            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
+        navController.navigate("login") {
+            popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }
