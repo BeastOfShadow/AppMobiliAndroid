@@ -38,7 +38,6 @@ import it.uniupo.ktt.ui.components.statistics.StatStatusBadge
 import it.uniupo.ktt.ui.components.statistics.TodayBar
 import it.uniupo.ktt.ui.components.statistics.WrapBox
 import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.StatisticsViewModel
 
 @Composable

@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,13 +19,11 @@ import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatPage
 import it.uniupo.ktt.ui.pages.caregiver.statistics.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.HomeScreen
-import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
 import it.uniupo.ktt.ui.pages.caregiver.chat.NewChatPage
 import it.uniupo.ktt.ui.pages.CommentSubtaskScreen
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen
-import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
 import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatOpen
@@ -38,7 +35,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
-import it.uniupo.ktt.viewmodel.TaskViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,10 +54,11 @@ class MainActivity : ComponentActivity() {
                         startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        //composable("landing") { LandingScreen(navController) }
+                        // REWORKED
                         composable("login") { LoginScreen(navController) }
                         composable("register") { RegisterScreen(navController) }
                         composable("home") { HomeScreen(navController) }
+
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
                         composable(

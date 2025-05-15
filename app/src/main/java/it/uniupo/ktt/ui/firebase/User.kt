@@ -10,56 +10,23 @@ import androidx.compose.runtime.setValue
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
 
 object UserRepository {
 
-    //@Deprecated
-    @Composable
-    fun getRoleByUserId(): String {
-        val userId = BaseRepository.currentUid()
-        var role by remember { mutableStateOf("Loading...") }
-
-        val db = BaseRepository.db
-
-        LaunchedEffect(userId) {
-            if (userId != null) {
-                try {
-                    val document = db.collection("users").document(userId).get().await()
-                    role = document.getString("role").toString()
-                } catch (e: Exception) {
-                    role = "Error loading role"
-                }
-            }
-        }
-
-        return role
-    }
-
-    //@Deprecated
-    @Composable
-    fun getNameSurnameByUserId(): String {
-        val userId = BaseRepository.currentUid()
-        var userName by remember { mutableStateOf("Loading...") }
-
-        val db = FirebaseFirestore.getInstance()
-
-        LaunchedEffect(userId) {
-            if (userId != null) {
-                try {
-                    val document = db.collection("users").document(userId).get().await()
-                    val name =
-                        document.getString("name")?.replaceFirstChar { it.uppercase() } ?: "Unknown"
-                    val surname =
-                        document.getString("surname")?.replaceFirstChar { it.uppercase() } ?: "User"
-                    userName = "$name $surname"
-                } catch (e: Exception) {
-                    userName = "Error loading name"
-                }
-            }
-        }
-
-        return userName
+    fun postUser(
+        uid: String,
+        user: User,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .set(user)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onFailure(e) }
     }
 
         // OK

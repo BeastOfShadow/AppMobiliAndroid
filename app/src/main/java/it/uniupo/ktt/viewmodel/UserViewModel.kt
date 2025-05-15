@@ -10,6 +10,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.UserRepository
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.User
+import it.uniupo.ktt.ui.roles.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor() : ViewModel() {
+
                                     // USER
     // User
     private val _user = MutableStateFlow<User?>(null)
@@ -60,6 +62,56 @@ class UserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+
+                                // REGISTER SCREEN
+
+    fun postNewUser(
+        email: String,
+        name: String,
+        surname: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val auth = BaseRepository.auth
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    val uid = auth.currentUser?.uid
+
+                    if (uid != null) {
+                        val user = User(
+                            uid = uid,
+                            email = email.lowercase(),
+                            role = UserRole.EMPLOYEE.toString(),
+                            name = name.lowercase().replaceFirstChar { it.uppercase() },
+                            surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                            avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                            userPoint = 0
+                        )
+
+                        UserRepository.postUser(
+                            uid = uid,
+                            user = user,
+                            onSuccess = onSuccess,
+                            onFailure = {
+                                e -> onError("Failed to save user: ${e.localizedMessage}")
+                            }
+                        )
+                    } else {
+                        onError("UID is null.")
+                    }
+                } else {
+                    val errorMessage = task.exception?.message ?: "Unknown error occurred"
+                    onError(errorMessage)
+                }
+            }
+    }
+
+
+                                // HOME SCREEN
         // OK
     // (ottieni User + UserAvatar(downloadUrl + Coil) )
     fun loadUserByUid(uid: String) {
