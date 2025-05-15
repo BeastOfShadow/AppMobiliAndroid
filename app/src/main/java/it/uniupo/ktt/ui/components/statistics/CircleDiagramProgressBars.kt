@@ -37,11 +37,16 @@ fun CircleDiagramProgressBars(
     val maxWeekly = 20
 
     // calcolo dei Ratio (in Lista per animation)
-    val ratioList = listOf(
-        (yearly.toFloat() / maxYearly).coerceIn(0f, 1f),
-        (monthly.toFloat() / maxMonthly).coerceIn(0f, 1f),
-        (weekly.toFloat() / maxWeekly).coerceIn(0f, 1f)
-    )
+    val ratioList = if(yearly == 0){
+        listOf(1f, 1f, 1f)
+    }
+    else{
+        listOf(
+            (yearly.toFloat() / maxYearly).coerceIn(0f, 1f),
+            (monthly.toFloat() / maxMonthly).coerceIn(0f, 1f),
+            (weekly.toFloat() / maxWeekly).coerceIn(0f, 1f)
+        )
+    }
 
                             //ANIMAZIONE 3 Bars -> (Uso "Animatable" per gestire meglio 3 animazioni in parallelo)
     val animatedRatios = remember {
@@ -80,11 +85,19 @@ fun CircleDiagramProgressBars(
         )
 
         // Colori
-        val colors = listOf(
-            Color(0xFF6326A9),
-            Color(0xFFA47BD4),
-            Color(0xFFF5DFFA)
-        )
+        val colors = if(yearly == 0){
+            listOf(
+                Color(0xFFF5DFFA),
+                Color(0xFFF5DFFA),
+                Color(0xFFF5DFFA)
+            )
+        }
+        else{
+            listOf(
+                Color(0xFF6326A9),
+                Color(0xFFA47BD4),
+                Color(0xFFF5DFFA))
+        }
 
         for (i in 0..2) {
             drawArc(

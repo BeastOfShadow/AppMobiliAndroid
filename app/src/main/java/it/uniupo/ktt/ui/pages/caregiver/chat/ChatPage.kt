@@ -52,9 +52,9 @@ import it.uniupo.ktt.viewmodel.ChatViewModel
 fun ChatPage(navController: NavController) {
     //Controllo Login
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
-        navController.navigate("landing")
+        navController.navigate("login")
         {
-            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
+            popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true //precaricamento
         }
     }

@@ -16,7 +16,7 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
 
                                 // BUBBLE CHART
 
-    // OK -> Completed,Ongoing,Ready Counters
+        // OK -> Completed,Ongoing,Ready Counters
     fun bubbleChartInfo(
         uid: String,
         onResult: (ready: Int, ongoing: Int, completed: Int) -> Unit,
@@ -26,14 +26,14 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
             role = "caregiver",
             uid = uid,
             onSuccess = { tasks ->
-                val ready = tasks.count { it.status == "ready" }
-                val ongoing = tasks.count { it.status == "ongoing" }
+                val ready = tasks.count { it.status == "READY" }
+                val ongoing = tasks.count { it.status == "ONGOING" }
 
                 val today = LocalDate.now()
                 val zoneId = ZoneId.systemDefault()
 
                 val completed = tasks.count { task ->
-                    task.status == "completed" &&
+                    task.status == "COMPLETED" &&
                             task.timeStampEnd?.toDate()
                                 ?.toInstant()
                                 ?.atZone(zoneId)
@@ -54,6 +54,11 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
         onSuccess: (avgDaily: Double, avgGeneral: Double) -> Unit,
         onError: (Exception) -> Unit = {}
     ){
+        val today = LocalDate.now()
+        val zoneId = ZoneId.systemDefault()
+        val dayStart = today.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val dayEnd = today.plusDays(1).atStartOfDay(zoneId).minusNanos(1).toInstant().toEpochMilli()
+
 
         var avgDaily = 0.0
         var avgGeneral = 0.0
@@ -63,56 +68,42 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
         if(uid != null){
 
             // Calcolo Medie Daily&General dei task completati (solo quelli finiti dove "completionTimeActual" > 0)
-            StatisticsRepository.getAllDailyCompletedTaskByUid(
+            StatisticsRepository.getGeneralCompletedTaskByUid(
                 role = role,
                 uid = uid,
-                onSuccess = { dailyTasks ->
+                onSuccess = { allCompletedTasks ->
 
-                    val filteredDaily = dailyTasks.filter { it.isValid() } // lista filtrata secondo la mia "isValid()" scritta nel Task MODEL
+                    val validTasks = allCompletedTasks
+                        .filter { it.isValid() && it.completionTimeActual > 0 } // lista filtrata secondo la mia "isValid()" scritta nel Task MODEL
 
-                    if(filteredDaily.isNotEmpty()){
-                        avgDaily = filteredDaily
-                            .map { it.completionTimeActual }   // seleziona campo
-                            .filter { it > 0 }  // considera solo i valori > 0 (escludi task non ancora terminati)
-                            .average()  // calcola media
+                    avgGeneral = validTasks
+                        .map { it.completionTimeActual }
+                        .takeIf { it.isNotEmpty() } // se la lista è vuota setta "avgGeneral= 0" piuttosto che "avgGeneral= Nan"
+                        ?.average() ?: 0.0
 
-                        //Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
+
+                    val dailyTasks = validTasks.filter { task ->
+                        task.timeStampEnd?.toDate()?.time in dayStart..dayEnd
                     }
 
-                    StatisticsRepository.getGeneralCompletedTaskByUid(
-                        role = role,
-                        uid = uid,
-                        onSuccess = { generalTasks ->
+                    avgDaily = dailyTasks
+                        .map { it.completionTimeActual }
+                        .takeIf { it.isNotEmpty() } // se la lista è vuota setta "avgDaily= 0" piuttosto che "avgGeneral= Nan"
+                        ?.average() ?: 0.0
 
-                            val filteredGeneral = generalTasks.filter { it.isValid() } // lista filtrata secondo la mia "isValid()" scritta nel Task MODEL
+                    onSuccess(avgDaily, avgGeneral)
 
-                            if(filteredGeneral.isNotEmpty()){
-                                avgGeneral = filteredGeneral
-                                    .map { it.completionTimeActual }   // seleziona campo
-                                    .filter { it > 0 }  // considera solo i valori > 0 (escludi task non ancora terminati)
-                                    .average()  // calcola media
-
-                                //Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
-                            }
-
-                            onSuccess(avgDaily, avgGeneral)
-                        },
-                        onError = onError
-                    )
                 },
                 onError = onError
             )
         }
-
-
-
 
     }
 
 
                                 // TODAY BAR
 
-    // DA TESTARE -> DailyTask_Counter & DailyTaskCompleted_Counter
+        // OK -> DailyTask_Counter & DailyTaskCompleted_Counter
     fun todayBarInfo(
         uid: String,
         onSuccess: (total: Int, completed: Int) -> Unit = { _, _ -> },
@@ -123,7 +114,7 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
             uid = uid,
             onSuccess = { tasks ->
                 val dailyTaskCounter = tasks.size
-                val dailyTaskCompletedCounter = tasks.count { it.status == "completed" }
+                val dailyTaskCompletedCounter = tasks.count { it.status == "COMPLETED" }
                 onSuccess(dailyTaskCounter, dailyTaskCompletedCounter)
             },
             onError = onError
@@ -133,7 +124,7 @@ class StatisticsViewModel @Inject constructor() : ViewModel() {
 
                                 // CIRCLE DIAGRAM
 
-    // DA TESTARE -> countTaskYearly, countTaskMonthly, countTaskWeekly
+        // OK -> countTaskYearly, countTaskMonthly, countTaskWeekly
     fun circleDiagramInfo(
         uid: String,
         onSuccess: (yearly: Int, monthly: Int, weekly: Int) -> Unit,

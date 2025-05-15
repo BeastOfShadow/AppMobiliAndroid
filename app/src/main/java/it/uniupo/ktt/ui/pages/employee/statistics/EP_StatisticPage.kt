@@ -23,11 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.statistics.AvgComplationBar
 import it.uniupo.ktt.ui.components.statistics.CircleDiagram
@@ -41,8 +44,8 @@ import it.uniupo.ktt.viewmodel.StatisticsViewModel
 @Composable
 fun EP_StatisticPage(navController: NavController) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
-        navController.navigate("landing") {
-            popUpTo("landing") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
+        navController.navigate("login") {
+            popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }
@@ -131,7 +134,7 @@ fun EP_StatisticPage(navController: NavController) {
 
         if (currentUid != null) {
             statisticsViewModelRef.avgCompletionBarInfo(
-                role = "caregiver",
+                role = "employee",
                 onSuccess = { avgDaily, avgGeneral ->
                     avgDailyCompletionTime.value = avgDaily
                     avgGeneralCompletionTime.value = avgGeneral
@@ -169,7 +172,7 @@ fun EP_StatisticPage(navController: NavController) {
             )
 
 
-                                        //CIRCLE DIAGRAM BOX
+                                        //CIRCLE DIAGRAM BOX -> OK
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -179,7 +182,7 @@ fun EP_StatisticPage(navController: NavController) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
                 else{
-                    Log.d("DEBUG", "Yearly: ${yearlyCompletedCount.value}, Montly: ${monthlyCompletedCount.value}, Weekly: ${weeklyCompletedCount.value}")
+                    Log.d("DEBUG", " CIRCLE DIAGRAM -> Yearly: ${yearlyCompletedCount.value}, Montly: ${monthlyCompletedCount.value}, Weekly: ${weeklyCompletedCount.value}")
 
                     WrapBox (
                         modifier = Modifier
@@ -188,10 +191,6 @@ fun EP_StatisticPage(navController: NavController) {
                     ){
                         // Circle Diagram
                         CircleDiagram(
-//                            yearly = 85,
-//                            monthly = 25,
-//                            weekly = 6
-
                             yearly =  yearlyCompletedCount.value,
                             monthly =  monthlyCompletedCount.value,
                             weekly = weeklyCompletedCount.value
@@ -206,7 +205,7 @@ fun EP_StatisticPage(navController: NavController) {
             )
 
 
-                                        //TODAY BAR BOX
+                                        //TODAY BAR BOX -> NOT OK
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -216,7 +215,7 @@ fun EP_StatisticPage(navController: NavController) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
                 else{
-                    Log.d("DEBUG", "All Daily Tasks: ${dailyCount.value}, All Completed Daily Tasks: ${dailyCompletedCount.value}")
+                    Log.d("DEBUG", " TODAY BAR -> All Daily Tasks: ${dailyCount.value}, All Completed Daily Tasks: ${dailyCompletedCount.value}")
 
 
                     WrapBox (
@@ -226,11 +225,8 @@ fun EP_StatisticPage(navController: NavController) {
                     ){
                         // Today Bar
                         TodayBar(
-                            0.6f,
-                            5,10
-
-//                            dailyCount.value,
-//                            dailyCompletedCount.value
+                            doneCount = dailyCompletedCount.value,
+                            totalCount = dailyCount.value,
                         )
                     }
 
@@ -242,19 +238,18 @@ fun EP_StatisticPage(navController: NavController) {
             )
 
 
-                                        //AVG BAR BOX
+                                        //AVG BAR BOX -> OK
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
             ){
+
                 if(isLoadingAvgBarInfo.value == true){
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
                 else{
-                    Log.d("DEBUG", "Media Daily Tasks: ${avgDailyCompletionTime.value}")
-                    Log.d("DEBUG", "Media General Tasks: ${avgGeneralCompletionTime.value}")
-
+                    Log.d("DEBUG", " AVG BAR -> Media Daily Tasks: ${avgDailyCompletionTime.value}, Media General Tasks: ${avgGeneralCompletionTime.value}")
 
                     // Liste Vuote -> OK
                     if(avgDailyCompletionTime.value == 0.0 && avgGeneralCompletionTime.value == 0.0){
@@ -265,20 +260,24 @@ fun EP_StatisticPage(navController: NavController) {
                         ){
                             AvgComplationBar(
                                 ratio = 0f,
+                                progressBarHeight = 28.dp,
+                                progressBarWidth = 235.dp,
+
                                 badgeTop = {},
                                 textTop = {},
                                 badgeBottom = {},
                                 textBottom = {
                                     Text(
                                         text = "not available yet",
-                                        style = MaterialTheme.typography.labelSmall, //Poppins
 
-                                        fontSize = 18.sp,
+                                        fontFamily = FontFamily(Font(R.font.poppins_regular)),
                                         fontWeight = FontWeight(400),
+
+                                        fontSize = 16.sp,
 
                                         color = Color(0xFF827676),
                                         modifier = Modifier
-                                            .offset(x = (105).dp, y = (11).dp)
+                                            .offset(x = (105).dp, y = (3).dp)
                                     )
                                 }
                             )
@@ -294,6 +293,8 @@ fun EP_StatisticPage(navController: NavController) {
                         ){
                             AvgComplationBar(
                                 ratio = 1f, // Full Bar
+                                progressBarHeight = 28.dp,
+                                progressBarWidth = 235.dp,
 
                                 badgeTop = {
                                     StatStatusBadge(
@@ -303,7 +304,7 @@ fun EP_StatisticPage(navController: NavController) {
                                         //Modifier aggiuntivi utili passabili
                                         modifier = Modifier
                                             .scale(0.6f)
-                                            .offset(x = (-30).dp, y = (-30).dp)
+                                            .offset(x = (-30).dp, y = (-40).dp)
                                     )
                                 },
                                 textTop = {
@@ -316,7 +317,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                         color = Color(0xFF827676),
                                         modifier = Modifier
-                                            .offset(x = (30).dp, y = (-30).dp)
+                                            .offset(x = (30).dp, y = (-35).dp)
                                             .height(18.dp)
                                     )
                                 },
@@ -328,7 +329,7 @@ fun EP_StatisticPage(navController: NavController) {
                                         //Modifier aggiuntivi utili passabili
                                         modifier = Modifier
                                             .scale(0.6f)
-                                            .offset(x = (+315).dp, y = (+37).dp)
+                                            .offset(x = (+315).dp, y = (+22).dp)
                                     )
                                 },
                                 textBottom = {
@@ -341,7 +342,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                         color = Color(0xFF827676),
                                         modifier = Modifier
-                                            .offset(x = (258).dp, y = (59).dp)
+                                            .offset(x = (258).dp, y = (50).dp)
                                     )
                                 }
                             )
@@ -363,6 +364,8 @@ fun EP_StatisticPage(navController: NavController) {
                             ){
                                 AvgComplationBar(
                                     ratio = (avgDailyCompletionTime.value/avgGeneralCompletionTime.value).toFloat(),
+                                    progressBarHeight = 28.dp,
+                                    progressBarWidth = 235.dp,
 
                                     badgeTop = {
                                         StatStatusBadge(
@@ -372,7 +375,7 @@ fun EP_StatisticPage(navController: NavController) {
                                             //Modifier aggiuntivi utili passabili
                                             modifier = Modifier
                                                 .scale(0.6f)
-                                                .offset(x = (-30).dp, y = (-30).dp)
+                                                .offset(x = (-30).dp, y = (-40).dp)
                                         )
                                     },
                                     textTop = {
@@ -385,7 +388,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                             color = Color(0xFF827676),
                                             modifier = Modifier
-                                                .offset(x = (30).dp, y = (-30).dp)
+                                                .offset(x = (30).dp, y = (-35).dp)
                                                 .height(18.dp)
                                         )
                                     },
@@ -397,7 +400,7 @@ fun EP_StatisticPage(navController: NavController) {
                                             //Modifier aggiuntivi utili passabili
                                             modifier = Modifier
                                                 .scale(0.6f)
-                                                .offset(x = (+342).dp, y = (+37).dp)
+                                                .offset(x = (+342).dp, y = (+22).dp)
                                             //.align(Alignment.TopStart)
                                         )
                                     },
@@ -411,7 +414,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                             color = Color(0xFF827676),
                                             modifier = Modifier
-                                                .offset(x = (258).dp, y = (59).dp)
+                                                .offset(x = (258).dp, y = (50).dp)
                                         )
                                     }
                                 )
@@ -427,6 +430,8 @@ fun EP_StatisticPage(navController: NavController) {
                             ){
                                 AvgComplationBar(
                                     ratio = (avgGeneralCompletionTime.value/avgDailyCompletionTime.value).toFloat(),
+                                    progressBarHeight = 28.dp,
+                                    progressBarWidth = 235.dp,
 
                                     badgeTop = {
                                         StatStatusBadge(
@@ -436,7 +441,7 @@ fun EP_StatisticPage(navController: NavController) {
                                             //Modifier aggiuntivi utili passabili
                                             modifier = Modifier
                                                 .scale(0.6f)
-                                                .offset(x = (-30).dp, y = (-30).dp)
+                                                .offset(x = (-30).dp, y = (-40).dp)
                                         )
                                     },
                                     textTop = {
@@ -449,7 +454,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                             color = Color(0xFF827676),
                                             modifier = Modifier
-                                                .offset(x = (22).dp, y = (-30).dp)
+                                                .offset(x = (22).dp, y = (-35).dp)
                                                 .height(18.dp)
                                         )
                                     },
@@ -461,7 +466,7 @@ fun EP_StatisticPage(navController: NavController) {
                                             //Modifier aggiuntivi utili passabili
                                             modifier = Modifier
                                                 .scale(0.6f)
-                                                .offset(x = (+342).dp, y = (+37).dp)
+                                                .offset(x = (+342).dp, y = (+22).dp)
                                         )
                                     },
                                     textBottom = {
@@ -474,7 +479,7 @@ fun EP_StatisticPage(navController: NavController) {
 
                                             color = Color(0xFF827676),
                                             modifier = Modifier
-                                                .offset(x = (262).dp, y = (59).dp)
+                                                .offset(x = (262).dp, y = (50).dp)
                                         )
                                     }
                                 )
