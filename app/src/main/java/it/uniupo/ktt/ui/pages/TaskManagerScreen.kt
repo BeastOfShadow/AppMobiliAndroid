@@ -80,11 +80,12 @@ fun TaskManagerScreen(navController: NavController) {
     val taskViewModel : TaskViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
     var selectedFilter by remember { mutableStateOf("All") }
-    val filters = listOf("All", "Ready", "Ongoing", "Completed")
+    val filters = listOf("All", "Ready", "Ongoing", "Completed", "Rated")
 
     var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
     var ongoingTasks by remember { mutableStateOf(emptyList<Task>()) }
     var completedTasks by remember { mutableStateOf(emptyList<Task>()) }
+    var ratedTasks by remember { mutableStateOf(emptyList<Task>()) }
 
     LaunchedEffect(Unit) {
         val uid = currentUid()
@@ -92,6 +93,7 @@ fun TaskManagerScreen(navController: NavController) {
             readyTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.READY.toString())
             ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString())
             completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
+            ratedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.RATED.toString())
         }
     }
 
@@ -198,6 +200,11 @@ fun TaskManagerScreen(navController: NavController) {
                                                             taskViewModel.getTasksByStatus(
                                                                 uid,
                                                                 TaskStatus.COMPLETED.toString()
+                                                            )
+                                                        ratedTasks =
+                                                            taskViewModel.getTasksByStatus(
+                                                                uid,
+                                                                TaskStatus.RATED.toString()
                                                             )
                                                     }
                                                 }

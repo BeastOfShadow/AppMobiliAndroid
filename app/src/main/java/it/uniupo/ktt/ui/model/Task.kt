@@ -20,7 +20,7 @@ data class Task(
     val timeStampEnd: Timestamp = Timestamp.now(), // da inserire a task finito -> l'employee quando finisce e fa il commit all'ultimo subtask della lista (posta il timeStampEnd del currentTask)
     val location: GeoPoint= GeoPoint(0.0, 0.0), // da inserire a task in corso -> postato dall'employee al completamento del SubTask Location
 
-    val status: String = ""                 // Possibili stati: ready, ongoing, completed
+    val status: String = ""                 // Possibili stati: ready, ongoing, completed, rated
 ){
 
     fun isValid(): Boolean {
