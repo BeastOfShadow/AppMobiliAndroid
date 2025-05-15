@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -434,6 +435,99 @@ fun TaskManagerScreen(navController: NavController) {
                                                     modifier = Modifier.align(Alignment.Center)
                                                 )
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+            }
+
+            if(selectedFilter == "All" || selectedFilter == "Rated")
+            {
+                TextSection("Rated")
+
+                Spacer(modifier = Modifier.size(10.dp))
+
+                if (ratedTasks.isEmpty())
+                    NullMessage("rated")
+                else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        ratedTasks.forEach { task ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(start = 10.dp)
+                                    .width(180.dp)
+                                    .height(180.dp)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
+                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = task.title,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = titleColor,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = getEmployeeName(task.employee),
+                                        fontWeight = FontWeight.Light,
+                                        fontSize = 14.sp,
+                                        color = subtitleColor,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+
+                                    Spacer(modifier = Modifier.size(15.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceAround,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .shadow(4.dp, shape = CircleShape, clip = false)
+                                                .clickable {
+                                                    navController.navigate("rated_task/${task.id}")
+                                                }
+                                                .background(
+                                                    color = tertiary,
+                                                    shape = CircleShape
+                                                )
+                                                .padding(vertical = 8.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.RateReview,
+                                                contentDescription = "Rate Review",
+                                                tint = buttonTextColor,
+                                                modifier = Modifier.size(24.dp)
+                                            )
                                         }
                                     }
                                 }
