@@ -35,7 +35,7 @@ object StatisticsRepository {
 
                                     // AVG BAR
 
-        // OK -> media Time DailyTask, media Time GeneralTasks
+        // OK -> lista CompletedTask by Uid & role
     fun getGeneralCompletedTaskByUid(
             role: String,
             uid: String,

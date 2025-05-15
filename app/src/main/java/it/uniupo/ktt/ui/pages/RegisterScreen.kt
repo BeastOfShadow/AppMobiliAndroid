@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
@@ -27,6 +30,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,8 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -45,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
+import it.uniupo.ktt.R
+import it.uniupo.ktt.ui.components.AccessCustomTextField
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.model.User
 import it.uniupo.ktt.ui.roles.UserRole
@@ -103,270 +117,241 @@ fun RegisterScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // Title
             Text(
                 text = "Register",
-                fontWeight = FontWeight.Bold,
+
+                fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                fontWeight = FontWeight(500),
                 fontSize = 40.sp,
-                color = MaterialTheme.colorScheme.primary, // Usa il colore primary del theme
+
+                color = Color.Black,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        offset = Offset(2f, 2f),
+                        blurRadius = 4f
+                    )
+                ),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             // Solicitous
             Text(
                 text = "Create your new account",
-                fontSize = 24.sp,
+
+                fontFamily = FontFamily(Font(R.font.poppins_light)),
+                fontWeight = FontWeight(350),
+                fontSize = 19.sp,
+
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), // Color secondary
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             Spacer(modifier = Modifier.height(80.dp))
 
-            /* Button
-            Button(
-                onClick = { /* Aggiungi azione sign up con Google */ },
-                shape = RoundedCornerShape(5.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 5.dp,
-                    pressedElevation = 2.dp,
-                    hoveredElevation = 8.dp,
-                    focusedElevation = 8.dp
-                ),
-                // Per il Google Sign-In si usa solitamente uno sfondo bianco e contenuti in nero
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
+
+            // TEXTFIELDs + BUTTON + ENDPage
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
+                    .wrapContentWidth()
+                    .align(Alignment.CenterHorizontally)
+                    .width(360.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Assicurati di avere aggiunto la risorsa del logo Google (es. R.drawable.ic_google)
-                /*Icon(
-                    painter = painterResource(id = R.drawable.google),
-                    contentDescription = "Google logo",
-                    modifier = Modifier.size(24.dp)
+
+                // Email Input
+
+                AccessCustomTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    labelText = "Email"
                 )
-                Spacer(modifier = Modifier.width(8.dp))*/
-                Text(
-                    text = "Sign up with Google",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    // Name Input
+                    AccessCustomTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        labelText = "Name",
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    // Surname Input
+                    AccessCustomTextField(
+                        value = surname,
+                        onValueChange = { surname = it },
+                        labelText = "Surname",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Password Input
+                AccessCustomTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    labelText = "Password",
+                    isPassword = true,
+                    isPasswordVisible = isPasswordVisible,
+                    onPasswordToggle = { isPasswordVisible = !isPasswordVisible }
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
-            */
-            // Email Input
-            OutlinedTextField(
-                value = email,
-                onValueChange = { newText -> email = newText },
-                label = { Text("Enter email") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Confirm Password Input
+                AccessCustomTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    labelText = "Confirm password",
+                    isPassword = true,
+                    isPasswordVisible = isConfirmPasswordVisible,
+                    onPasswordToggle = { isConfirmPasswordVisible = !isConfirmPasswordVisible }
+                )
 
-            // Name Input
-            OutlinedTextField(
-                value = name,
-                onValueChange = { newText -> name = newText },
-                label = { Text("Enter name") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(38.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
 
-            // Surname Input
-            OutlinedTextField(
-                value = surname,
-                onValueChange = { newText -> surname = newText },
-                label = { Text("Enter surname") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+                // Button
+                Button(
+                    onClick = {
+                        if (email.isEmpty() || email.isBlank()) {
+                            message = "Email is required.\n"
+                        } else if (name.isEmpty() || name.isBlank()) {
+                            message = "Name is required.\n"
+                        } else if (surname.isEmpty() || surname.isBlank()) {
+                            message = "Surname is required.\n"
+                        } else if (password.isEmpty() || password.isBlank()) {
+                            message = "Password is required.\n"
+                        } else if (confirmPassword.isEmpty() || confirmPassword.isBlank()) {
+                            message = "Confirm password is required.\n"
+                        } else if (password != confirmPassword) {
+                            message = "Passwords do not match.\n"
+                        } else {
+                            auth.createUserWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
 
-            Spacer(modifier = Modifier.height(16.dp))
+                                        // ++ Creazione User DataBase ++
+                                        val uid= BaseRepository.currentUid()
 
-            // Password Input
-            OutlinedTextField(
-                value = password,
-                onValueChange = { newText -> password = newText },
-                label = { Text("Enter password") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                        Icon(
-                            imageVector = if (isPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                            contentDescription = if (isPasswordVisible) "Hide password" else "Show password"
-                        )
-                    }
-                }
-            )
+                                        val user = User(
+                                            uid = uid.toString(),
+                                            email = email.lowercase(),
+                                            role = UserRole.EMPLOYEE.toString(),
+                                            name = name.lowercase().replaceFirstChar { it.uppercase() },
+                                            surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                                            avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                                            userPoint = 0
+                                        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                                        //post on DB
+                                        if (uid != null) {
 
-            // Confirm Password Input
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { newText -> confirmPassword = newText },
-                label = { Text("Confirm password") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { isConfirmPasswordVisible = !isConfirmPasswordVisible }) {
-                        Icon(
-                            imageVector = if (isConfirmPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                            contentDescription = if (isConfirmPasswordVisible) "Hide password" else "Show password"
-                        )
-                    }
-                }
-            )
+                                            BaseRepository.db
+                                                .collection("users")
+                                                .document(uid)
+                                                .set(user)
+                                                .addOnSuccessListener {
+                                                    Log.d("DEBUG", "Utente aggiunto con successo")
 
-            Spacer(modifier = Modifier.height(55.dp))
-
-            // Button
-            Button(
-                onClick = {
-                    if (email.isEmpty() || email.isBlank()) {
-                        message = "Email is required.\n"
-                    } else if (name.isEmpty() || name.isBlank()) {
-                        message = "Name is required.\n"
-                    } else if (surname.isEmpty() || surname.isBlank()) {
-                        message = "Surname is required.\n"
-                    } else if (password.isEmpty() || password.isBlank()) {
-                        message = "Password is required.\n"
-                    } else if (confirmPassword.isEmpty() || confirmPassword.isBlank()) {
-                        message = "Confirm password is required.\n"
-                    } else if (password != confirmPassword) {
-                        message = "Passwords do not match.\n"
-                    } else {
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-
-                                    // ++ Creazione User DataBase ++
-                                    val uid= BaseRepository.currentUid()
-
-                                    val user = User(
-                                        uid = uid.toString(),
-                                        email = email.lowercase(),
-                                        role = UserRole.EMPLOYEE.toString(),
-                                        name = name.lowercase().replaceFirstChar { it.uppercase() },
-                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() },
-                                        avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
-                                        userPoint = 0
-                                    )
-
-                                    //post on DB
-                                    if (uid != null) {
-
-                                        BaseRepository.db
-                                            .collection("users")
-                                            .document(uid)
-                                            .set(user)
-                                            .addOnSuccessListener {
-                                                Log.d("DEBUG", "Utente aggiunto con successo")
-
-                                                // se aggiungo l'utente con successo allora vado alla home
-                                                navController.navigate("home") {
-                                                    popUpTo("landing") { inclusive = true }
-                                                    launchSingleTop = true
+                                                    // se aggiungo l'utente con successo allora vado alla home
+                                                    navController.navigate("home") {
+                                                        popUpTo("landing") { inclusive = true }
+                                                        launchSingleTop = true
+                                                    }
                                                 }
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Log.w("DEBUG", "Errore nell'aggiunta utente", e)
-                                            }
+                                                .addOnFailureListener { e ->
+                                                    Log.w("DEBUG", "Errore nell'aggiunta utente", e)
+                                                }
+                                        }
+                                        else{
+                                            Log.d("UID", "UID nullo")
+                                        }
+
+
+
+
+
+                                    } else {
+                                        message = task.exception?.message ?: "Unknown error occurred"
                                     }
-                                    else{
-                                        Log.d("UID", "UID nullo")
-                                    }
-
-
-
-
-
-                                } else {
-                                    message = task.exception?.message ?: "Unknown error occurred"
                                 }
-                            }
-                    }
-                },
-                shape = RoundedCornerShape(5.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 5.dp,
-                    pressedElevation = 2.dp,
-                    hoveredElevation = 8.dp,
-                    focusedElevation = 8.dp
-                ),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = "Sign up",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 5.dp,
+                        pressedElevation = 2.dp,
+                        hoveredElevation = 8.dp,
+                        focusedElevation = 8.dp
+                    ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF9C46FF),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(62.dp)
+                ) {
+                    Text(
+                        text = "Sign up",
+
+                        fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                        fontWeight = FontWeight(500),
+
+                        fontSize = 20.sp,
+                    )
+                }
+
+                if (message.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(text = message, color = MaterialTheme.colorScheme.error)
+                }
+
+                Spacer(modifier = Modifier.height(90.dp))
+
+                // Link to LOGIN
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    Text(
+                        text = "Already have an account? ",
+                        fontSize = 16.sp,
+
+
+                        fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                        fontWeight = FontWeight(400),
+
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    )
+
+                    Text(
+                        text = "Login",
+                        fontSize = 17.sp,
+
+                        fontFamily = FontFamily(Font(R.font.poppins_medium)),
+                        fontWeight = FontWeight(400),
+
+                        textDecoration = TextDecoration.Underline,
+                        color = Color(0xFF9C46FF),
+                        modifier = Modifier.clickable { navController.navigate("login") }
+                    )
+                }
             }
 
-            if (message.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(text = message, color = MaterialTheme.colorScheme.error)
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "Already have an account? ",
-                    fontSize = 18.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-
-                Text(
-                    text = "Login",
-                    fontSize = 18.sp,
-                    textDecoration = TextDecoration.Underline,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    modifier = Modifier.clickable { navController.navigate("login") }
-                )
-            }
         }
     }
 }
