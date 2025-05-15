@@ -38,6 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
+import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
 import it.uniupo.ktt.viewmodel.TaskViewModel
 
 @AndroidEntryPoint
@@ -71,6 +72,14 @@ class MainActivity : ComponentActivity() {
                             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
                             TaskRatingScreen(navController = navController, taskId = taskId)
+                        }
+                        composable(
+                            route = "rated_task/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+
+                            VisualizeRatedTaskScreen(navController = navController, taskId = taskId)
                         }
 
 
