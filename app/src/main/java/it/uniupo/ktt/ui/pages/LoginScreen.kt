@@ -56,11 +56,13 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.AccessCustomTextField
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,6 +78,9 @@ fun LoginScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
 
     var isPasswordVisible by remember { mutableStateOf(false) }
+
+    // istanza
+    val userViewModelRef: UserViewModel = hiltViewModel()
 
     // SNACKBAR -> ERRORI
     val snackbarHostState = remember { SnackbarHostState() }
@@ -186,21 +191,21 @@ fun LoginScreen(navController: NavController) {
                                     }
                                 }
                                 else {
-                                    FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-                                        .addOnCompleteListener { task ->
-                                            if (task.isSuccessful) {
-                                                navController.navigate("home") {
-                                                    popUpTo("login") { inclusive = true }
-                                                    launchSingleTop = true
-                                                }
+                                    userViewModelRef.loginUser(
+                                        email = email,
+                                        password = password,
+                                        onSuccess = {
+                                            navController.navigate("home") {
+                                                popUpTo("login") { inclusive = true }
+                                                launchSingleTop = true
                                             }
-                                            else {
-                                                val errorMessage = task.exception?.message ?: "Unknown error occurred"
-                                                coroutineScope.launch {
-                                                    snackbarHostState.showSnackbar("Error : $errorMessage")
-                                                }
+                                        },
+                                        onError = { errorMessage ->
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar("Error: $errorMessage")
                                             }
                                         }
+                                    )
                                 }
                             },
                             shape = RoundedCornerShape(12.dp),

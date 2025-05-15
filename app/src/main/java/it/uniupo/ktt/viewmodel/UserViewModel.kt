@@ -22,6 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class UserViewModel @Inject constructor() : ViewModel() {
 
+    val auth = BaseRepository.auth
+
                                     // USER
     // User
     private val _user = MutableStateFlow<User?>(null)
@@ -73,7 +75,6 @@ class UserViewModel @Inject constructor() : ViewModel() {
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        val auth = BaseRepository.auth
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -103,6 +104,27 @@ class UserViewModel @Inject constructor() : ViewModel() {
                     } else {
                         onError("UID is null.")
                     }
+                } else {
+                    val errorMessage = task.exception?.message ?: "Unknown error occurred"
+                    onError(errorMessage)
+                }
+            }
+    }
+
+
+                                // LOGIN SCREEN
+
+    fun loginUser(
+        email: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess()
                 } else {
                     val errorMessage = task.exception?.message ?: "Unknown error occurred"
                     onError(errorMessage)
