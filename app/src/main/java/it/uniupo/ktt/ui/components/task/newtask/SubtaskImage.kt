@@ -87,7 +87,8 @@ fun SubtaskImage(
                     CustomTextField(
                         label = "Subtask Description:",
                         textfieldValue = subtaskDescription.value,
-                        onValueChange = { subtaskDescription.value = it }
+                        onValueChange = { subtaskDescription.value = it },
+                        false
                     )
 
                     Spacer(modifier = Modifier.size(20.dp))

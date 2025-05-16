@@ -14,7 +14,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun DurationInputField(
     duration: String,
-    onDurationChange: (String) -> Unit
+    onDurationChange: (String) -> Unit,
+    isError: Boolean
 ) {
     Column(
         verticalArrangement = Arrangement.Center,

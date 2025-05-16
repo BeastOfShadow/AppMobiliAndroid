@@ -89,7 +89,6 @@ import it.uniupo.ktt.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NewTaskScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
@@ -114,6 +113,11 @@ fun NewTaskScreen(navController: NavController) {
     var isChecked by remember { mutableStateOf(false) }
     var visibleImage by remember { mutableStateOf(false) }
     var showDescriptionError by remember { mutableStateOf(false) }
+
+    // Aggiungiamo variabili di stato per gli errori dei campi obbligatori
+    var taskNameError by remember { mutableStateOf(false) }
+    var employeeError by remember { mutableStateOf(false) }
+    var durationError by remember { mutableStateOf(false) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deleteIndex by remember { mutableStateOf(-1) }
@@ -141,6 +145,36 @@ fun NewTaskScreen(navController: NavController) {
         uri?.let { editSelectedImageUri.value = it }
     }
 
+    // Funzione per validare i campi
+    fun validateFields(): Boolean {
+        var isValid = true
+
+        if (taskName.trim().isEmpty()) {
+            taskNameError = true
+            isValid = false
+        } else {
+            taskNameError = false
+        }
+
+        if (employee.trim().isEmpty()) {
+            employeeError = true
+            isValid = false
+        } else {
+            employeeError = false
+        }
+
+        val regex = """^([0-9]{1,2}):([0-5][0-9])$""".toRegex()
+
+        if (duration.trim().isEmpty() || !regex.matches(duration)) {
+            durationError = true
+            isValid = false
+        } else {
+            durationError = false
+        }
+
+        return isValid
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -160,26 +194,57 @@ fun NewTaskScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(30.dp))
 
-            CustomTextField(
-                label = "Task name:",
-                textfieldValue = taskName,
-                onValueChange = { taskName = it }
-            )
+            // TextField per taskName con messaggio di errore
+            Column {
+                CustomTextField(
+                    label = "Task name:",
+                    textfieldValue = taskName,
+                    onValueChange = {
+                        taskName = it
+                        if (it.isNotEmpty()) taskNameError = false
+                    },
+                    isError = taskNameError
+                )
+                if (taskNameError) {
+                    Text(
+                        text = "Task name is required",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.size(20.dp))
 
-            CustomTextField(
-                label = "Employee:",
-                textfieldValue = employee,
-                onValueChange = { employee = it }
-            )
+            // TextField per employee con messaggio di errore
+            Column {
+                CustomTextField(
+                    label = "Employee:",
+                    textfieldValue = employee,
+                    onValueChange = {
+                        employee = it
+                        if (it.isNotEmpty()) employeeError = false
+                    },
+                    isError = employeeError
+                )
+                if (employeeError) {
+                    Text(
+                        text = "Employee is required",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.size(20.dp))
 
             CustomTextField(
                 label = "Description:",
                 textfieldValue = description,
-                onValueChange = { description = it }
+                onValueChange = { description = it },
+                isError = false
             )
 
             Row(
@@ -192,10 +257,25 @@ fun NewTaskScreen(navController: NavController) {
                     onCheckedChange = { isChecked = it }
                 )
 
-                DurationInputField(
-                    duration = duration,
-                    onDurationChange = { duration = it }
-                )
+                // Campo duration con messaggio di errore
+                Column {
+                    DurationInputField(
+                        duration = duration,
+                        onDurationChange = {
+                            duration = it
+                            if (it.isNotEmpty()) durationError = false
+                        },
+                        isError = durationError
+                    )
+                    if (durationError) {
+                        Text(
+                            text = "Duration is required or invalid format",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.size(10.dp))
@@ -389,32 +469,32 @@ fun NewTaskScreen(navController: NavController) {
                         // Add Subtask Dialog
                         if (showDialog) {
                             var showAddDialog by remember { mutableStateOf(true) }
-                                SubtaskImage(
-                                    title = "Add Subtask",
-                                    initialDescription = subtaskDescription,
-                                    initialImageUri = selectedImageUri.value,
-                                    showDialog = showAddDialog,
-                                    onDismiss = {
-                                        showAddDialog = false
-                                        showDialog = false
-                                        subtaskDescription = ""
-                                        selectedImageUri.value = null
-                                    },
-                                    onSave = { description, imageUri ->
-                                        val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
-                                        subtasks += SubTask(
-                                            id = UUID.randomUUID().toString(),
-                                            listNumber = nextNumber,
-                                            description = description,
-                                            descriptionImgStorageLocation = imageUri.toString(),
-                                            status = SubtaskStatus.AVAILABLE.toString()
-                                        )
-                                        showAddDialog = false
-                                        showDialog = false
-                                        subtaskDescription = ""
-                                        selectedImageUri.value = null
-                                    }
-                                )
+                            SubtaskImage(
+                                title = "Add Subtask",
+                                initialDescription = subtaskDescription,
+                                initialImageUri = selectedImageUri.value,
+                                showDialog = showAddDialog,
+                                onDismiss = {
+                                    showAddDialog = false
+                                    showDialog = false
+                                    subtaskDescription = ""
+                                    selectedImageUri.value = null
+                                },
+                                onSave = { description, imageUri ->
+                                    val nextNumber = if (subtasks.isEmpty()) 1 else subtasks.last().listNumber + 1
+                                    subtasks += SubTask(
+                                        id = UUID.randomUUID().toString(),
+                                        listNumber = nextNumber,
+                                        description = description,
+                                        descriptionImgStorageLocation = imageUri.toString(),
+                                        status = SubtaskStatus.AVAILABLE.toString()
+                                    )
+                                    showAddDialog = false
+                                    showDialog = false
+                                    subtaskDescription = ""
+                                    selectedImageUri.value = null
+                                }
+                            )
                         }
 
                         if (showEditDialog && editSubtaskIndex >= 0) {
@@ -458,34 +538,37 @@ fun NewTaskScreen(navController: NavController) {
         ActionTaskButton(
             onCancel = { navController.popBackStack() },
             onConfirm = {
-                coroutineScope.launch {
-                    val caregiverUid = currentUid()
+                if (validateFields()) {
+                    coroutineScope.launch {
+                        val caregiverUid = currentUid()
 
-                    if (caregiverUid == null) {
-                        Log.d("Db", "Caregiver non loggato.")
-                        return@launch
-                    }
+                        if (caregiverUid == null) {
+                            Log.d("Db", "Caregiver non loggato.")
+                            return@launch
+                        }
 
-                    val uid = userViewModel.getUidByEmail(employee)
+                        val uid = userViewModel.getUidByEmail(employee)
 
-                    if (uid != null) {
-                        val time = parseDurationToSeconds(duration)
+                        if (uid != null) {
+                            val time = parseDurationToSeconds(duration)
 
-                        taskViewModel.addTaskAndSubtasks(
-                            task = Task(
-                                id = UUID.randomUUID().toString(),
-                                caregiver = caregiverUid,
-                                title = taskName,
-                                employee = uid,
-                                description = description,
-                                completionTimeEstimate = time,
-                                status = TaskStatus.READY.toString()
-                            ),
-                            subtasks = subtasks
-                        )
-                        navController.popBackStack()
-                    } else {
-                        Log.d("Db", "Nessun utente trovato con quell'email.")
+                            taskViewModel.addTaskAndSubtasks(
+                                task = Task(
+                                    id = UUID.randomUUID().toString(),
+                                    caregiver = caregiverUid,
+                                    title = taskName,
+                                    employee = uid,
+                                    description = description,
+                                    completionTimeEstimate = time,
+                                    status = TaskStatus.READY.toString()
+                                ),
+                                subtasks = subtasks
+                            )
+                            navController.popBackStack()
+                        } else {
+                            Log.d("Db", "Nessun utente trovato con quell'email.")
+                            employeeError = true
+                        }
                     }
                 }
             },
