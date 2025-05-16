@@ -15,6 +15,27 @@ import kotlinx.coroutines.tasks.await
 
 object UserRepository {
 
+        // OK
+    fun getUserByUid(
+        uid: String,
+        onSuccess: (User?) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val user = snapshot.toObject(User::class.java)
+                onSuccess(user)
+            }
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore durante il recupero dell'utente", e)
+                onError(e)
+            }
+    }
+
+        // OK
     fun postUser(
         uid: String,
         user: User,
@@ -119,7 +140,6 @@ object UserRepository {
             }
     }
 
-
     @Composable
     fun getEmployeeName(uid: String): String {
         var employeeName by remember(uid) { mutableStateOf("Loading...") }
@@ -138,4 +158,5 @@ object UserRepository {
 
         return employeeName
     }
+
 }

@@ -76,15 +76,16 @@ object ChatRepository {
             }
     }
 
-        // OK
+        // OK -> Role & Uid : return all chats
     fun getAllChatsByUid(
         uid: String,
+        role : String,
         onSuccess: (List<Chat>) -> Unit = {},
         onError: (Exception) -> Unit = {}
     ) {
         BaseRepository.db
             .collection("chats")
-            .whereEqualTo("caregiver", uid)
+            .whereEqualTo(role, uid)
             .get()
             .addOnSuccessListener { snapshot -> //ritorna una lista di Chats
                 val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }

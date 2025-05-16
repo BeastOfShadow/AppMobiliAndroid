@@ -98,7 +98,7 @@ fun MenuLabel(
                     Text(
                         text = description,
 
-                        fontFamily = FontFamily(Font(R.font.poppins_light)),
+                        fontFamily = FontFamily(Font(R.font.poppins_regular)),
                         style = MaterialTheme.typography.bodySmall, //Poppins
                         fontSize = 16.sp,
                         fontWeight = FontWeight(400),

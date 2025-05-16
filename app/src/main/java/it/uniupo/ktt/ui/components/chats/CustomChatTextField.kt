@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +48,12 @@ fun CustomChatTextField(
         TextField(
             value = textFieldValue,
             onValueChange = onValueChange,
+            textStyle = TextStyle(
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                fontWeight = FontWeight.Normal,
+                //fontSize = 18.sp,
+                color = Color.Black
+            ),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color(0xFFFFFFFF),
                 unfocusedContainerColor = Color(0xFFFFFFFF),

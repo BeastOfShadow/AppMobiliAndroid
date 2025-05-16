@@ -64,7 +64,7 @@ fun ModalAddContact(
         Per questo funziona correttamente anceh così
     */
     val viewModelRef : NewChatViewModel = viewModel()
-    val contactList by viewModelRef.contactList.collectAsState()
+    val enrichedContactList by viewModelRef.enrichedContactList.collectAsState()
 
     // SNACKBAR -> ERRORI
     val snackbarHostState = remember { SnackbarHostState() }
@@ -175,7 +175,7 @@ fun ModalAddContact(
                             }
 
                             // Controllo contatto già presente nella tua Lista contatti
-                            val contactExists = contactList.any { it.email == email.lowercase() }
+                            val contactExists = enrichedContactList.any { it.contact.email == email.lowercase() }
 
                             if (contactExists) {
                                 scope.launch {

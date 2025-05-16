@@ -30,10 +30,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -42,7 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import it.uniupo.ktt.R
-import it.uniupo.ktt.ui.theme.titleColor
+import kotlin.math.absoluteValue
+import androidx.compose.ui.util.lerp
 
 
 @Composable
@@ -119,10 +119,23 @@ fun ModalShowAvatars(
                         val realIndex = index % avatarUrlListRef.size
                         val avatarUrl = avatarUrlListRef[realIndex]
 
-
+                        // Calcolo OFFSET per l'effetto "avatar laterali + piccoli"
+                        val pageOffset = (
+                                (pagerState.currentPage - index) + pagerState.currentPageOffsetFraction
+                                ).absoluteValue
+                        // PARAM de-Scale degli avatar laterali
+                        val scale = lerp(
+                            start = 0.80f, // modifico per diminuire la loro dim
+                            stop = 1f,
+                            fraction = 1f - pageOffset.coerceIn(0f, 1f)
+                        )
 
                         Box(
                             modifier = Modifier
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
                                 .size(135.dp)
                                 .shadow(elevation = 8.dp, shape = CircleShape, clip = false)
                                 .background(Color(0xFFF5DFFA), CircleShape),
