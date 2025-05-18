@@ -94,7 +94,7 @@ fun ChatOpen(
         ChatPageTitle(
             navController = navController,
             nome = contactName,
-            imgId = R.drawable.profile_female_default,
+            avatarUrl = R.drawable.profile_female_default,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 20.dp)

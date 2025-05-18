@@ -24,9 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
@@ -44,7 +47,7 @@ import it.uniupo.ktt.ui.theme.titleColor
 fun ChatPageTitle(
     navController: NavController,
     nome: String,
-    imgId: Int,   //R.drawable?
+    avatarUrl: Int,
     modifier: Modifier
 )
 {
@@ -104,12 +107,22 @@ fun ChatPageTitle(
                 ) {
                     Image(
                         //painter = painterResource(imgId),
-                        painter = painterResource(imgId),
+                        painter = painterResource(avatarUrl),
                         contentDescription = "Avatar",
                         modifier = Modifier
                             .offset(x= 0.dp, y= 0.dp)
                             .scale(0.8f)
                     )
+
+//                    AsyncImage(
+//                        model = avatarUrl,
+//                        contentDescription = "Avatar",
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .size(40.dp)
+//                            .scale(0.8f)
+//                            .clip(CircleShape)
+//                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -138,7 +151,7 @@ fun ChatPageTitlePreview() {
     ChatPageTitle(
         navController = navController,
         nome = "LUIGI CAPUANI",
-        imgId = R.drawable.profile_female_default,
+        avatarUrl = R.drawable.profile_female_default,
         modifier = Modifier
             .scale(1.3f),
     )
