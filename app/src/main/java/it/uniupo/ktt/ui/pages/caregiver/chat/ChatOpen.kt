@@ -62,6 +62,11 @@ fun ChatOpen(
     val messages by viewModel.messageList.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.errorMessage.collectAsState()
+    // Contact + Contact AvatarUrl
+    val avatarUrl by viewModel.avatarUrl
+    val contactUser by viewModel.contactUser
+    val isLoadingContact by viewModel.isLoadingContact
+
 
     // Stato MessageText + scorrimento lista
     var messageText by rememberSaveable { mutableStateOf("") }
@@ -73,7 +78,7 @@ fun ChatOpen(
         listState.animateScrollToItem(0)
     }
 
-    // passaggio UidContact al viewModel
+    // passaggio UidContact al viewModel e Call to get User + AvatarUrl
     LaunchedEffect(uidContact) {
         viewModel.setUidContact(uidContact)
     }
@@ -91,15 +96,22 @@ fun ChatOpen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        ChatPageTitle(
-            navController = navController,
-            nome = contactName,
-            avatarUrl = R.drawable.profile_female_default,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 20.dp)
-                .scale(1.3f)
-        )
+        if (isLoadingContact) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+            )
+        }
+        else {
+            ChatPageTitle(
+                navController = navController,
+                nome = contactUser?.let { "${it.name} ${it.surname}" } ?: contactName,
+                avatarUrl = avatarUrl ?: "",
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 20.dp)
+                    .scale(1.3f)
+            )
+        }
 
         Column(
             modifier = Modifier

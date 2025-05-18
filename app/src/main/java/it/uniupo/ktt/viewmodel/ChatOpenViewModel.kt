@@ -10,8 +10,10 @@ import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
+import it.uniupo.ktt.ui.firebase.ChatUtils
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Message
+import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +21,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatOpenViewModel @Inject constructor() : ViewModel() {
+
+    // User + avatarUrl
+    var contactUser = mutableStateOf<User?>(null)
+    var avatarUrl = mutableStateOf<String?>(null)
+    var isLoadingContact = mutableStateOf(false)
 
     private var uidContact: String = ""
 
@@ -249,7 +256,25 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         // OK
     fun setUidContact(uid: String){
         uidContact = uid
+        isLoadingContact.value = true
+
         Log.d("DEBUG", "UIDContact SET ricevuto: $uid")
+
+
+        ChatUtils.getUserAndAndAvatarByUid(
+            uidUser = uid,
+            onSuccess = { user, url ->
+                contactUser.value = user
+                avatarUrl.value = url
+
+                isLoadingContact.value = false
+            },
+            onError = {
+                Log.e("DEBUG", "Errore nel recupero avatar/user", it)
+
+                isLoadingContact.value = false
+            }
+        )
     }
 
 }

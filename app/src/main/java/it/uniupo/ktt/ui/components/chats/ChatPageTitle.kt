@@ -47,7 +47,7 @@ import it.uniupo.ktt.ui.theme.titleColor
 fun ChatPageTitle(
     navController: NavController,
     nome: String,
-    avatarUrl: Int,
+    avatarUrl: String,
     modifier: Modifier
 )
 {
@@ -105,24 +105,16 @@ fun ChatPageTitle(
                         .size(48.dp)
                         .background(Color.White, shape = CircleShape)
                 ) {
-                    Image(
-                        //painter = painterResource(imgId),
-                        painter = painterResource(avatarUrl),
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .offset(x= 0.dp, y= 0.dp)
-                            .scale(0.8f)
-                    )
 
-//                    AsyncImage(
-//                        model = avatarUrl,
-//                        contentDescription = "Avatar",
-//                        contentScale = ContentScale.Crop,
-//                        modifier = Modifier
-//                            .size(40.dp)
-//                            .scale(0.8f)
-//                            .clip(CircleShape)
-//                    )
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "Avatar",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(40.dp)
+                            //.scale(0.9f)
+                            .clip(CircleShape)
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -151,7 +143,7 @@ fun ChatPageTitlePreview() {
     ChatPageTitle(
         navController = navController,
         nome = "LUIGI CAPUANI",
-        avatarUrl = R.drawable.profile_female_default,
+        avatarUrl = "R.drawable.profile_female_default",
         modifier = Modifier
             .scale(1.3f),
     )
