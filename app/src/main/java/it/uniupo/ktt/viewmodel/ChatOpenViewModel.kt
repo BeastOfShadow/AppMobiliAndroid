@@ -1,6 +1,7 @@
 package it.uniupo.ktt.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,15 +44,25 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     private val _messageList = MutableStateFlow<List<Message>>(emptyList())
     val messageList: StateFlow<List<Message>> = _messageList.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _isLoadingMessages = MutableStateFlow(false)
+    val isLoadingMessages: StateFlow<Boolean> = _isLoadingMessages.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+
+    // LOADING UNIFICATO (loadMessages + setUidContact)
+    val isLoading = derivedStateOf {
+        isLoadingContact.value || _isLoadingMessages.value
+    }
+
+
+
+
     // Listener REF per ascoltare il DB_RealTime
     private var messageListener: ValueEventListener? = null
     private var chatIdInUse: String? = null
+
 
 
     /*
@@ -60,10 +71,15 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         Il Listener crea una connessione WebSocket client-DB, per tutto il suo tempo
         di vita avrò un response RealTime.
 
+        in sintesi, scarica tutti i messaggi di una CHatID e genera un RealTime Listener
+        e finchè sono in ChatOpen ho messaggi in RealTime responsive, appena esco viene chiuso
+        il Listener. Il Listener viene creato solo se "ChatId != null" e vengono evitati possibili
+        duplicati tramite "chatIdInUse"
+
         NB: si usa ad esigenza, per evitare impatto su RAM etc
     */
     fun loadMessages(chatId: String) {
-        _isLoading.value = true
+        _isLoadingMessages.value = true
 
         // se la chat non esiste non creo il LISTENER
         if (chatId == "notFound") {
@@ -72,7 +88,6 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
             // nessun problema: _listMessage rimane VUOTO
         }
-
         // -> richiamando loadMessage evito LISTENER DUPLICATO
         if(chatIdInUse == chatId) {
             Log.d("DEBUG", "Listener già creato in precedenza per la chat $chatId")
@@ -98,13 +113,13 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                     }
                 }
                 _messageList.value = messages.sortedBy { it.timeStamp }
-                _isLoading.value = false
+                _isLoadingMessages.value = false
             }
 
             override fun onCancelled(error: DatabaseError) {
                 _messageList.value = emptyList()
                 _errorMessage.value = error.message
-                _isLoading.value = false
+                _isLoadingMessages.value = false
             }
         }
 
@@ -253,7 +268,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-        // OK
+        // OK (setta uidContact + get User&AvatarUserUrl)
     fun setUidContact(uid: String){
         uidContact = uid
         isLoadingContact.value = true

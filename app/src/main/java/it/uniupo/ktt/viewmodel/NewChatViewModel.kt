@@ -82,7 +82,16 @@ class NewChatViewModel @Inject constructor() : ViewModel(){
         ChatRepository.postNewContact(
             newContact = newContact,
             onSuccess = {
-                //_contactList.value += newContact
+                ChatUtils.getUserAndAndAvatarByUid(
+                    uidUser = newContact.uidContact,
+                    onSuccess = { _, avatarUrl ->
+                        val enriched = EnrichedContact(newContact, avatarUrl ?: "")
+                        _enrichedContactList.value += enriched
+                    },
+                    onError = { e ->
+                        Log.e("DEBUG", "Errore durante l'aggiunta dell'avatatr al newContact: ${e.message}")
+                    }
+                )
             },
             onError = { error ->
                 _errorMessage.value = error.message

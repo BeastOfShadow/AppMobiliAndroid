@@ -44,8 +44,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 fun ChatOpen(
     navController: NavController,
     chatId: String,
-    uidContact: String,
-    contactName: String
+    uidContact: String
 ) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("login") {
@@ -60,13 +59,12 @@ fun ChatOpen(
     // Istanza viewModel + OBSERVABLE
     val viewModel: ChatOpenViewModel = hiltViewModel()
     val messages by viewModel.messageList.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.errorMessage.collectAsState()
     // Contact + Contact AvatarUrl
     val avatarUrl by viewModel.avatarUrl
     val contactUser by viewModel.contactUser
-    val isLoadingContact by viewModel.isLoadingContact
-
+    // Unified Waiter (attende Messages & User)
+    val isLoading by viewModel.isLoading
 
     // Stato MessageText + scorrimento lista
     var messageText by rememberSaveable { mutableStateOf("") }
@@ -96,79 +94,85 @@ fun ChatOpen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        if (isLoadingContact) {
+
+        if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+                modifier = Modifier.align(Alignment.Center)
             )
         }
-        else {
-            ChatPageTitle(
-                navController = navController,
-                nome = contactUser?.let { "${it.name} ${it.surname}" } ?: contactName,
-                avatarUrl = avatarUrl ?: "",
+        else{
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 20.dp)
-                    .scale(1.3f)
-            )
-        }
+                    .fillMaxSize()
+                    .imePadding()
+            ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 130.dp) // Spazio per il titolo
-                .imePadding()
-        ) {
-            // --- LISTA MESSAGGI ---
-            Box(modifier = Modifier.weight(1f)) {
-                when {
-                    isLoading -> {
-                        CircularProgressIndicator(Modifier.align(Alignment.Center))
-                    }
-                    error != null -> {
-                        Log.e("DEBUG-ModelView", "Errore caricamento messaggi")
-                    }
-                    else -> {
-                        val sortedMessages = messages.sortedByDescending { it.timeStamp }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    // ----*****  HEADER  *****----
+                    ChatPageTitle(
+                        navController = navController,
+                        nome = "${contactUser?.name} ${contactUser?.surname}",
+                        avatarUrl = avatarUrl ?: "",
+                        modifier = Modifier
+                            .padding(top = 20.dp)
+                            .align(Alignment.CenterHorizontally)
+                            .scale(1.3f)
+                    )
 
-                        LazyColumn(
-                            state = listState,
-                            reverseLayout = true,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(8.dp)
-                        ) {
-                            items(
-                                items = sortedMessages,
-                                key = { message -> message.timeStamp } // oppure puoi usare anche un campo ID univoco
-                            ) { message ->
-                                ChatMsgBubble(
-                                    isMine = message.sender == currentUid,
-                                    text = message.text,
-                                    timeStamp = message.timeStamp,
-                                    seen = message.seen
-                                )
-                                Spacer(modifier = Modifier.height(5.dp))
+
+                    // ----*****  MESSAGES  *****----
+                    when {
+                        error != null -> {
+                            Log.e("DEBUG-ModelView", "Errore caricamento messaggi")
+                        }
+                        else -> {
+                            LazyColumn(
+                                state = listState,
+                                reverseLayout = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentPadding = PaddingValues(8.dp)
+                            ) {
+                                val sortedMessages = messages.sortedByDescending { it.timeStamp }
+                                items(
+                                    items = sortedMessages,
+                                    key = { message -> message.timeStamp }
+                                ) { message ->
+                                    ChatMsgBubble(
+                                        isMine = message.sender == currentUid,
+                                        text = message.text,
+                                        timeStamp = message.timeStamp,
+                                        seen = message.seen
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // --- INPUT BAR ---
-            ChatInputBar(
-                text = messageText,
-                onTextChange = { messageText = it },
-                onSendClick = {
-                    if (messageText.isNotBlank()) {
-                        viewModel.sendMessage(chatId, messageText)
-                        messageText = ""
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-            )
+                ChatInputBar(
+                    text = messageText,
+                    onTextChange = { messageText = it },
+                    onSendClick = {
+                        if (messageText.isNotBlank()) {
+                            viewModel.sendMessage(chatId, messageText)
+                            messageText = ""
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                )
+            }
         }
+
     }
 }
 
@@ -176,5 +180,5 @@ fun ChatOpen(
 @Preview
 @Composable
 fun ChatOpenPreview() {
-    ChatOpen(navController = NavController(context = LocalContext.current), "prova", "prova", "prova nome")
+    //ChatOpen(navController = NavController(context = LocalContext.current), "prova", "prova", "prova nome")
 }

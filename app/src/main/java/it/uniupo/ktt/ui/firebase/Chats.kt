@@ -153,14 +153,22 @@ object ChatRepository {
 
                                             // REAL-TIME-DB FUNCTION
         // OK
-    fun sendMessageRealtime(chatId: String, message: Message, onSuccess: () -> Unit = {}, onError: (DatabaseError) -> Unit = {}) {
+    fun sendMessageRealtime(
+            chatId: String,
+            message: Message,
+            onSuccess: () -> Unit = {},
+            onError: (DatabaseError) -> Unit = {}
+    ) {
+
+        // generazione del NODO in "message" nel RealTime DB (non posta il message, ma crea Nodo + IDMessage)
         val messageId = realtimeDb.child("messages").child(chatId).push().key
 
+        // Post message nel Nodo con IDMessage generato
         if (messageId != null) {
             realtimeDb.child("messages")
                 .child(chatId)
                 .child(messageId)
-                .setValue(message)
+                .setValue(message) // scrittura Message
                 .addOnSuccessListener { onSuccess() }
                 .addOnFailureListener { e ->
                     if (e is DatabaseError) {

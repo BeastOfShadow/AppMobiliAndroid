@@ -86,16 +86,17 @@ class MainActivity : ComponentActivity() {
                         composable("chat") { ChatPage(navController) }
                         composable("new chat") { NewChatPage(navController) }
                         composable(
-                            "chat open/{chatId}/{uidContact}/{contactName}", // Route che accetta 3 PARAM
+                            "chat open/{chatId}/{uidContact}", // Route che accetta 2 PARAM
                             arguments = listOf(
                                 navArgument("chatId") { type = NavType.StringType }, // Def PARAM1 type
-                                navArgument("uidContact") {type = NavType.StringType}, // Def PARAM2 type
-                                navArgument("contactName") {type = NavType.StringType}), // Def PARAM3 type
+                                navArgument("uidContact") {type = NavType.StringType} // Def PARAM2 type
+                            )
+
                         ) { backStackEntry ->
                             val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
                             val uidContact = backStackEntry.arguments?.getString("uidContact") ?: ""
-                            val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
-                            ChatOpen(navController, chatId, uidContact, contactName) // Passaggio dei 3 PARAM
+
+                            ChatOpen(navController, chatId, uidContact) // Passaggio dei  PARAM
                         }
                     }
                 }

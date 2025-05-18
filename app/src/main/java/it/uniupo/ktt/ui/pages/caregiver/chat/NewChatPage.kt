@@ -1,6 +1,5 @@
 package it.uniupo.ktt.ui.pages.caregiver.chat
 
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -215,12 +214,6 @@ fun NewChatPage(navController: NavController) {
                                             .scale(1.3f),
                                         imgUrl = contact.avatarUrl,
                                         onClick = {
-                                            /*
-                                                L' "uidContact" della persona con cui voglio creare una chat è gia nelle chat di cui faccio parte?
-                                                    - IF(true): Get Locale del "chatId" della chat esistente e naviga to "ChatOpen" passando "chatId/ uidContact"
-                                                    - ELSE: naviga to "ChatOpen" passando "null/ uidContact"
-                                             */
-                                            val contactName = "${contact.contact.name} ${contact.contact.surname}"
 
                                             // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato
                                             val chatFound = chatViewModelRefHilt.searchChatByUidEmployee(contact.contact.uidContact)
@@ -228,11 +221,11 @@ fun NewChatPage(navController: NavController) {
 
                                             // CHAT già esistente
                                             if(chatFound != null){
-                                                navController.navigate("chat open/${chatFound.chat.chatId}/${contact.contact.uidContact}/${contactName}")
+                                                navController.navigate("chat open/${chatFound.chat.chatId}/${contact.contact.uidContact}")
                                             }
                                             // CHAT non esistente
                                             else{
-                                                navController.navigate("chat open/notFound/${contact.contact.uidContact}/${contactName}")
+                                                navController.navigate("chat open/notFound/${contact.contact.uidContact}")
                                             }
                                         }
                                     )

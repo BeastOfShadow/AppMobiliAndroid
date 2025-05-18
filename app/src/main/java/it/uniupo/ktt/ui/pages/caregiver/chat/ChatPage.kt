@@ -180,9 +180,9 @@ fun ChatPage(navController: NavController) {
                                             .scale(1.3f),
                                         imgUrl = enrichedChat.avatarUrl,
                                         onClick = {
-                                            // GOTO -> "ChatOpen",  passing "chatId, uidEmployee, employeeName"
-                                            val contactName = "${enrichedChat.name} ${enrichedChat.surname}"
-                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}/${contactName}")
+                                            // GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
+
+                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}")
                                         }
                                     )
                                     Spacer(
