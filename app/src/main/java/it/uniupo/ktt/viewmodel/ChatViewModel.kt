@@ -135,10 +135,10 @@ class ChatViewModel @Inject constructor() : ViewModel(){
                                         // NEW CHAT PAGE
 
         // OK
-    fun searchChatByUidEmployee(uid: String): EnrichedChat? {
+    fun searchChatByUid(uid: String): EnrichedChat? {
         return _enrichedChatList.value.firstOrNull { enrichedChat ->
             Log.d("DEBUG", "Chat trovata ${enrichedChat.chat.chatId}")
-            enrichedChat.chat.employee == uid
+            (enrichedChat.chat.employee == uid || enrichedChat.chat.caregiver == uid)
         }
     }
 

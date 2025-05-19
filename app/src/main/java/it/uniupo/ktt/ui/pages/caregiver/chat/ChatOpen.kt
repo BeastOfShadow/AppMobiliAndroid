@@ -76,6 +76,11 @@ fun ChatOpen(
         listState.animateScrollToItem(0)
     }
 
+    // Get Role
+    LaunchedEffect(currentUid) {
+        currentUid?.let { viewModel.getRoleByUid(it) }
+    }
+
     // passaggio UidContact al viewModel e Call to get User + AvatarUrl
     LaunchedEffect(uidContact) {
         viewModel.setUidContact(uidContact)

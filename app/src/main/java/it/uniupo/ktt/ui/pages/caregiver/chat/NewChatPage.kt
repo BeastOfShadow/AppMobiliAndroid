@@ -216,7 +216,7 @@ fun NewChatPage(navController: NavController) {
                                         onClick = {
 
                                             // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato
-                                            val chatFound = chatViewModelRefHilt.searchChatByUidEmployee(contact.contact.uidContact)
+                                            val chatFound = chatViewModelRefHilt.searchChatByUid(contact.contact.uidContact)
 
 
                                             // CHAT già esistente

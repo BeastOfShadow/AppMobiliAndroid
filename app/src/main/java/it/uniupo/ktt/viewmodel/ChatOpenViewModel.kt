@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.firebase.ChatUtils
+import it.uniupo.ktt.ui.firebase.UserRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Message
 import it.uniupo.ktt.ui.model.User
@@ -23,7 +24,10 @@ import javax.inject.Inject
 @HiltViewModel
 class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
-    // User + avatarUrl
+    // PersonalInfo
+    var userRole: String = "unknown"
+
+    // ContactUser + avatarUrl
     var contactUser = mutableStateOf<User?>(null)
     var avatarUrl = mutableStateOf<String?>(null)
     var isLoadingContact = mutableStateOf(false)
@@ -57,13 +61,22 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     }
 
 
-
-
     // Listener REF per ascoltare il DB_RealTime
     private var messageListener: ValueEventListener? = null
     private var chatIdInUse: String? = null
 
-
+    fun getRoleByUid(uid: String) {
+        UserRepository.getUserByUid(
+            uid,
+            onSuccess = { user ->
+                userRole = user?.role ?: "unknown"
+                // Log.d("DEBUG", "Ruolo utente loggato: $userRole")
+            },
+            onError = { error ->
+                Log.e("DEBUG", "Errore nel recupero del ruolo utente: ${error.message}")
+            }
+        )
+    }
 
     /*
         la Fun effettua la CREAZIONE DI UN LISTENER al DB REALTIME:
@@ -209,11 +222,13 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
             // chat non esistente in generale, devo fare tutto -> OK
             else{
 
-                // crea newChat, updateChatId
-                val newChat = Chat(
-                    caregiver = BaseRepository.currentUid()!!,
-                    employee = uidContact
-                )
+                // crea newChat (in base al Role), updateChatId
+                val currentUid = BaseRepository.currentUid()!!
+                val newChat = if (userRole.lowercase() == "caregiver") {
+                    Chat(caregiver = currentUid, employee = uidContact)
+                } else {
+                    Chat(caregiver = uidContact, employee = currentUid)
+                }
 
                 // NEW CHAT + ...
                 ChatRepository.postNewChat(

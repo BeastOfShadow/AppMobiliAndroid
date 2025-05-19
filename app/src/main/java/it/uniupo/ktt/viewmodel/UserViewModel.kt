@@ -221,6 +221,4 @@ class UserViewModel @Inject constructor() : ViewModel() {
         UserRepository.updateUserAvatar(path)
     }
 
-
-
 }
