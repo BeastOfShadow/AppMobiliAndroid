@@ -48,6 +48,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.viewmodel.ChatViewModel
+import it.uniupo.ktt.viewmodel.UserViewModel
 
 @Composable
 fun ChatPage(navController: NavController) {
@@ -60,6 +61,8 @@ fun ChatPage(navController: NavController) {
         }
     }
 
+    val currentUid = BaseRepository.currentUid()
+
     // collegamento con ChatViewModel
     val chatViewModelRefHilt = hiltViewModel<ChatViewModel>()
     // proprietà osservabili del ChatViewModel (Only Read)
@@ -67,12 +70,24 @@ fun ChatPage(navController: NavController) {
     val isLoadingRef by chatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by chatViewModelRefHilt.errorMessage.collectAsState()
 
-    val currentUid = BaseRepository.currentUid()
+    // per avere il "role" chiedo all'istanza del ViewModel del Padre "HomeScreen"
+    val parentEntry = remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry("home")
+    }
+    val userViewModelref: UserViewModel = hiltViewModel(parentEntry)
+    // osservabili
+    val userRef by userViewModelref.user.collectAsState()
+    val role = userRef?.role ?: "unknown"
 
     // ogni volta che entro nella page viene lanciato per update
-    LaunchedEffect (currentUid){
-        if(currentUid!= null){
-            chatViewModelRefHilt.loadChats(currentUid)
+    LaunchedEffect (currentUid, role){
+        if(currentUid != null){
+            if(role == "CAREGIVER"){
+                chatViewModelRefHilt.loadChats(currentUid, role= "caregiver")
+            }
+            else if(role == "EMPLOYEE"){
+                chatViewModelRefHilt.loadChats(currentUid, role= "employee")
+            }
         }
     }
 
@@ -170,11 +185,17 @@ fun ChatPage(navController: NavController) {
                                 // itera lista e crea Lable contatti
                                 sortedChatList.forEach { enrichedChat ->
 
+
+
                                     // scompongo la lista arricchita
                                     val chat = enrichedChat.chat
 
+                                    // in base a role arricchisco
+                                    val otherParticipantUid = if (role == "CAREGIVER") chat.employee else chat.caregiver
+                                    val displayName = "${enrichedChat.name} ${enrichedChat.surname}"
+
                                     ChatContactLable(
-                                        nome = "${enrichedChat.name} ${enrichedChat.surname}",
+                                        nome = displayName,
                                         lastMessage = chat.lastMsg,
                                         modifier = Modifier
                                             .scale(1.3f),
@@ -182,7 +203,8 @@ fun ChatPage(navController: NavController) {
                                         onClick = {
                                             // GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
 
-                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}")
+                                            Log.d("DEBUG-CHAT OPEN", "INPUT -> chatId : ${chat.chatId}, contactUid: $otherParticipantUid ")
+                                            navController.navigate("chat open/${chat.chatId}/$otherParticipantUid")
                                         }
                                     )
                                     Spacer(
@@ -196,6 +218,8 @@ fun ChatPage(navController: NavController) {
 
                     }
                 }
+
+
 
                 // BUTTON new Chat
                 Box(
@@ -212,6 +236,7 @@ fun ChatPage(navController: NavController) {
                             .scale(1.2f)
                     )
                 }
+
 
 
 

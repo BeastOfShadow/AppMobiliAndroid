@@ -97,6 +97,15 @@ fun HomeScreen(navController: NavController) {
                 userViewModelRef.loadUserByUid(userUid)
             }
         }
+
+        // caso ELiminazione Utente mentre è Loggato
+        if (!isLoadingUserRef && errorRef != null) {
+            FirebaseAuth.getInstance().signOut()
+            navController.navigate("login") {
+                popUpTo("home") { inclusive = true }
+                launchSingleTop = true
+            }
+        }
     }
 
     Box(

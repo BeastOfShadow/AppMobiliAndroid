@@ -101,6 +101,15 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
         messageListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+
+                // IMPORTANTE : Se il nodo non esiste ancora, set lista vuota e chiudi loading altrimenti ciclo wait infinito
+                if (!snapshot.exists()) {
+                    Log.d("DEBUG", "Nessun nodo messaggi esistente per questa chat.")
+                    _messageList.value = emptyList()
+                    _isLoadingMessages.value = false
+                    return
+                }
+
                 val messages = mutableListOf<Message>()
                 snapshot.children.forEach { child ->
                     try {

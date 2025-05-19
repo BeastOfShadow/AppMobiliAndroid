@@ -88,7 +88,6 @@ fun ChatOpen(
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
