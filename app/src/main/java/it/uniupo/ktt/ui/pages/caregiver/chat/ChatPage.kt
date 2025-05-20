@@ -70,25 +70,12 @@ fun ChatPage(navController: NavController) {
     val isLoadingRef by chatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by chatViewModelRefHilt.errorMessage.collectAsState()
 
-    // per avere il "role" chiedo all'istanza del ViewModel del Padre "HomeScreen"
-    val parentEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry("home")
-    }
-    val userViewModelref: UserViewModel = hiltViewModel(parentEntry)
-    // osservabili
-    val userRef by userViewModelref.user.collectAsState()
-    val role = userRef?.role ?: "unknown"
-
     // ogni volta che entro nella page viene lanciato per update
-    LaunchedEffect (currentUid, role){
+    LaunchedEffect (currentUid){
         if(currentUid != null){
-            if(role == "CAREGIVER"){
-                chatViewModelRefHilt.loadChats(currentUid, role= "caregiver")
-            }
-            else if(role == "EMPLOYEE"){
-                chatViewModelRefHilt.loadChats(currentUid, role= "employee")
-            }
+            chatViewModelRefHilt.loadChats(currentUid)
         }
+
     }
 
     Box(
@@ -191,7 +178,7 @@ fun ChatPage(navController: NavController) {
                                     val chat = enrichedChat.chat
 
                                     // in base a role arricchisco
-                                    val otherParticipantUid = if (role == "CAREGIVER") chat.employee else chat.caregiver
+                                    val otherParticipantUid = if (currentUid == chat.caregiver) chat.employee else chat.caregiver
                                     val displayName = "${enrichedChat.name} ${enrichedChat.surname}"
 
                                     ChatContactLable(

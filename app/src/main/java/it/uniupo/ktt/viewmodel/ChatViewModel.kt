@@ -44,16 +44,15 @@ class ChatViewModel @Inject constructor() : ViewModel(){
     *       NB: è necessario per sapere se la query è ancora in corso o è terminata
     */
         //OK
-    fun loadChats(uid: String, role : String) {
+    fun loadChats(uid: String) {
         _isLoading.value = true
         ChatRepository.getAllChatsByUid(
             uid,
-            role = role,
             onSuccess = { chats ->
                 Log.d("DEBUG", "Trovate ${chats.size} chats dato uid: $uid")
-                Log.d("DEBUG", "Lista Chats: ${chats.joinToString(separator = "\n")}")
+                // Log.d("DEBUG", "Lista Chats: ${chats.joinToString(separator = "\n")}")
 
-                enrichAllChats(chats, role)
+                enrichAllChats(chats, uid)
             },
             onError = { error ->
                 _enrichedChatList.value = emptyList()  // Best practise -> se ho errore pulisco la lista
@@ -64,7 +63,7 @@ class ChatViewModel @Inject constructor() : ViewModel(){
     }
 
         //OK
-    fun enrichAllChats(chats: List<Chat>, role : String){
+    fun enrichAllChats(chats: List<Chat>, uid : String){
         // caso emptyList -> set "_isLoading" & return
         if (chats.isEmpty()) {
             _enrichedChatList.value = emptyList()
@@ -89,8 +88,8 @@ class ChatViewModel @Inject constructor() : ViewModel(){
 
         chats.forEach { chat ->
 
-            // arricchisco in base al role
-            val otherUid = if (role == "caregiver") chat.employee else chat.caregiver
+            // arricchisco con le info dell'altro utente
+            val otherUid = if (uid == chat.caregiver) chat.employee else chat.caregiver
 
             ChatUtils.getUserAndAndAvatarByUid(
                 uidUser = otherUid,
