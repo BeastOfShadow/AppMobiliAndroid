@@ -2,11 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.gms.google-services")
+
 
     // Hilt Plugin + KAPT support
     id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.kapt")
+
+    // FCM (FIREBASE CLOUD MESSAGING -> notifiche Chat)
+    id("com.google.gms.google-services")
 
 }
 
@@ -76,6 +79,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.coil.compose.v240)
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -15,6 +15,25 @@ import kotlinx.coroutines.tasks.await
 
 object UserRepository {
 
+// -------++++++++ DEVICE TOKEN ++++++++-------
+
+    fun updateDeviceToken(
+        uid: String,
+        token: String,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .update("deviceToken", token)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onError(e) }
+    }
+
+// -------++++++++ DEVICE TOKEN ++++++++-------
+
+
         // OK
     fun getUserByUid(
         uid: String,

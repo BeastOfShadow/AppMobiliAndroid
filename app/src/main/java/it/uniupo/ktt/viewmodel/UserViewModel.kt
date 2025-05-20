@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.StorageReference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
@@ -67,6 +68,7 @@ class UserViewModel @Inject constructor() : ViewModel() {
 
                                 // REGISTER SCREEN
 
+        // GET DeviceToken + Post NewUser
     fun postNewUser(
         email: String,
         name: String,
@@ -83,27 +85,42 @@ class UserViewModel @Inject constructor() : ViewModel() {
                     val uid = auth.currentUser?.uid
 
                     if (uid != null) {
-                        val user = User(
-                            uid = uid,
-                            email = email.lowercase(),
-                            role = UserRole.EMPLOYEE.toString(),
-                            name = name.lowercase().replaceFirstChar { it.uppercase() },
-                            surname = surname.lowercase().replaceFirstChar { it.uppercase() },
-                            avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
-                            userPoint = 0
-                        )
 
-                        UserRepository.postUser(
-                            uid = uid,
-                            user = user,
-                            onSuccess = onSuccess,
-                            onFailure = {
-                                e -> onError("Failed to save user: ${e.localizedMessage}")
+                        // PASSO 1) : ottieni DEVICE TOKEN (FCM)
+                        FirebaseMessaging.getInstance().token
+                            .addOnCompleteListener { tokenTask ->
+                                if (tokenTask.isSuccessful) {
+                                    val token = tokenTask.result ?: ""
+
+
+                                    // PASSO 2) : crea User e Post on DB
+                                    val user = User(
+                                        uid = uid,
+                                        email = email.lowercase(),
+                                        role = UserRole.EMPLOYEE.toString(),
+                                        name = name.lowercase().replaceFirstChar { it.uppercase() },
+                                        surname = surname.lowercase().replaceFirstChar { it.uppercase() },
+                                        avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
+                                        userPoint = 0,
+                                        deviceToken = token
+                                    )
+
+                                    UserRepository.postUser(
+                                        uid = uid,
+                                        user = user,
+                                        onSuccess = onSuccess,
+                                        onFailure = {
+                                                e -> onError("Failed to save user: ${e.localizedMessage}")
+                                        }
+                                    )
+                                }
+                                else{
+                                    onError("Impossibile ottenere il device token: ${tokenTask.exception?.message}")
+                                }
                             }
-                        )
-                    } else {
-                        onError("UID is null.")
+
                     }
+
                 } else {
                     val errorMessage = task.exception?.message ?: "Unknown error occurred"
                     onError(errorMessage)
@@ -114,6 +131,13 @@ class UserViewModel @Inject constructor() : ViewModel() {
 
                                 // LOGIN SCREEN
 
+    /*
+    *   LOGIN & Update DeviceToken (update che faccio sempre nel caso in cui cambi
+    *   faccio direttamente così per risparmiare call a DB:
+    *
+    *               solitamente si dovrebbe fare GET al DB per verificare se il DeviceToken è uguale
+    *               e se è cambiato fare un update, invece così faccio sempre massimo 1 call a DB
+    */
     fun loginUser(
         email: String,
         password: String,
@@ -121,10 +145,35 @@ class UserViewModel @Inject constructor() : ViewModel() {
         onError: (String) -> Unit
     ) {
 
+        // PASSO 1) : LOGIN con Auth
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    onSuccess()
+
+                    // PASSO 2) : ottieni DEVICE TOKEN (FCM) per fare l'update nel DB
+                    FirebaseMessaging.getInstance().token
+                        .addOnCompleteListener { tokenTask ->
+
+                            val currentUid = BaseRepository.currentUid()
+                            val token = tokenTask.result ?: ""
+
+                            if(currentUid != null){
+                                UserRepository.updateDeviceToken(
+                                    uid = currentUid,
+                                    token = token,
+                                    onSuccess = {
+                                        Log.d("Login", "Token FCM aggiornato.")
+                                        onSuccess()
+                                    },
+                                    onError = { e ->
+                                        Log.e("Login", "Errore aggiornamento Token: ${e.message}")
+                                        onSuccess() // Continua comunque
+                                    }
+                                )
+                            }
+
+                        }
+
                 } else {
                     val errorMessage = task.exception?.message ?: "Unknown error occurred"
                     onError(errorMessage)

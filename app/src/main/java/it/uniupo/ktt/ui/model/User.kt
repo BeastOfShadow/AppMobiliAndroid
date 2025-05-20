@@ -9,7 +9,9 @@ data class User(
     val surname: String = "",
 
     val avatar: String = "",
-    val userPoint: Int = 0
+    val userPoint: Int = 0,
+
+    val deviceToken: String= "" // DeviceToken per le notifiche Chat
 ){
 
     /* Non metto controlli "require" dato che per la creazione è otttimo, ma per
@@ -22,6 +24,7 @@ data class User(
                 name.isNotBlank() &&
                 surname.isNotBlank() &&
                 avatar.isNotBlank() &&
-                userPoint >= 0
+                userPoint >= 0 &&
+                deviceToken.isNotBlank()
     }
 }
