@@ -42,28 +42,35 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification) // ← Deve esistere
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(messageBody)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(messageBody))
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Notifiche KTT",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
+                "KTT",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                setSound(defaultSoundUri, null)
+                enableLights(true)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
+                description = "Canale notifiche per nuovi messaggi"
+            }
+
             notificationManager.createNotificationChannel(channel)
         }
 
-        notificationManager.notify(0, notificationBuilder.build())
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
-
 
     override fun onNewToken(token: String) {
         Log.d("FCM", "Nuovo token FCM: $token")
