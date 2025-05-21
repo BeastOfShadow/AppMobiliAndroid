@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -21,13 +20,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+
+
 @HiltViewModel
 class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
     // PersonalInfo
     var userRole: String = "unknown"
 
-    // ContactUser + avatarUrl
+    // ContactUser + avatarUrl + deviceToken
     var contactUser = mutableStateOf<User?>(null)
     var avatarUrl = mutableStateOf<String?>(null)
     var isLoadingContact = mutableStateOf(false)
@@ -150,7 +156,12 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     }
 
         // OK
-    fun sendMessage(chatId: String, text: String) {
+    fun sendMessage(
+            chatId: String,
+            text: String,
+            deviceToken: String,
+            senderName: String
+    ) {
         val senderUid = BaseRepository.currentUid() ?: return
 
         val message = Message(
@@ -175,6 +186,9 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                         message = message,
                         onSuccess = {
                             Log.d("DEBUG", "Chat Aggiornata con successo (ChatOpenViewModel-> caso 1).")
+
+                            // PUSH NOTIFICATION -> caso 1 (chat pre-esistente)
+                            sendPushNotification(deviceToken, senderName, text)
                         },
                         onError = { error ->
                             Log.e("DEBUG", "Errore durante l'UPDATE della Chat: ${error.message} (ChatOpenViewModel-> caso 1)")
@@ -205,6 +219,9 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                             message = message,
                             onSuccess = {
                                 Log.d("DEBUG", "Chat Aggiornata con successo (ChatOpenViewModel-> caso 2).")
+
+                                // PUSH NOTIFICATION -> caso 2 (chat creata durante la permanenza nella chatOpen)
+                                sendPushNotification(deviceToken, senderName, text)
                             },
                             onError = { error ->
                                 Log.e("DEBUG", "Errore durante l'UPDATE della Chat: ${error.message} (ChatOpenViewModel-> caso 2)")
@@ -253,6 +270,9 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                                     message = message,
                                     onSuccess = {
                                         Log.d("DEBUG", "Chat Aggiornata con successo (ChatOpenViewModel-> caso 3).")
+
+                                        // PUSH NOTIFICATION -> caso 3 (chat ancora non esistente in generale)
+                                        sendPushNotification(deviceToken, senderName, text)
                                     },
                                     onError = { error ->
                                         Log.e("DEBUG", "Errore durante l'UPDATE della Chat: ${error.message} (ChatOpenViewModel-> caso 3)")
@@ -281,7 +301,45 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
     }
 
-        // OK
+
+    // PUSH notification
+    private fun sendPushNotification(
+        deviceToken: String,
+        senderName: String,
+        text: String
+    ) {
+        val json = JSONObject().apply {
+            put("token", deviceToken)
+            put("title", "Nuovo messaggio da $senderName")
+            put("body", text)
+        }
+
+        val requestBody = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url("https://us-central1-keepthetime-69c7a.cloudfunctions.net/sendFCM")
+            .post(requestBody)
+            .build()
+
+        val client = OkHttpClient()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("DEBUG-FCM", "Errore di rete durante l'invio notifica: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    Log.d("DEBUG-FCM", "Notifica inviata con successo")
+                } else {
+                    Log.e("DEBUG-FCM", "Errore HTTP: ${response.code}, messaggio: ${response.body?.string()}")
+                }
+            }
+        })
+    }
+
+
+    // OK
     override fun onCleared() {
         super.onCleared()
         // Distruzione del Listener in seguito all'uscita dalla pagina
@@ -299,7 +357,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
         Log.d("DEBUG", "UIDContact SET ricevuto: $uid")
 
-
+        //
         ChatUtils.getUserAndAndAvatarByUid(
             uidUser = uid,
             onSuccess = { user, url ->

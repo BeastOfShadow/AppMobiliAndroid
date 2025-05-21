@@ -1,36 +1,83 @@
 package it.uniupo.ktt
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.media.RingtoneManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.firebase.UserRepository
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        Log.d("FCM", "Nuovo token ricevuto: $token")
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        Log.d("FCM", "From: ${remoteMessage.from}")
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d("FCM", "Data: ${remoteMessage.data}")
+        }
 
-        val currentUid = BaseRepository.currentUid()
-        if (currentUid != null) {
-            UserRepository.updateDeviceToken(
-                uid = currentUid,
-                token = token,
-                onSuccess = { Log.d("FCM", "Token aggiornato nel DB") },
-                onError = { e -> Log.e("FCM", "Errore update token: ${e.message}") }
-            )
+        remoteMessage.notification?.let {
+            Log.d("FCM", "Notification: ${it.body}")
+            sendNotification(it.title ?: "Nuovo messaggio", it.body ?: "")
         }
     }
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        super.onMessageReceived(remoteMessage)
+    private fun sendNotification(title: String, messageBody: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-        val title = remoteMessage.notification?.title ?: "Nuovo messaggio"
-        val body = remoteMessage.notification?.body ?: "Hai ricevuto un nuovo messaggio"
+        val channelId = "default_channel_id"
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        Log.d("FCM", "Notifica ricevuta: $title - $body")
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification) // ← Deve esistere
+            .setContentTitle(title)
+            .setContentText(messageBody)
+            .setAutoCancel(true)
+            .setSound(defaultSoundUri)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        // TODO: Costruisci una notifica visibile con NotificationCompat.Builder (te la posso generare)
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Notifiche KTT",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        notificationManager.notify(0, notificationBuilder.build())
+    }
+
+
+    override fun onNewToken(token: String) {
+        Log.d("FCM", "Nuovo token FCM: $token")
+
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            Firebase.firestore.collection("users").document(uid)
+                .update("deviceToken", token)
+                .addOnSuccessListener {
+                    Log.d("FCM", "Token aggiornato con successo")
+                }
+                .addOnFailureListener {
+                    Log.e("FCM", "Errore aggiornamento token: ${it.message}")
+                }
+        }
     }
 }

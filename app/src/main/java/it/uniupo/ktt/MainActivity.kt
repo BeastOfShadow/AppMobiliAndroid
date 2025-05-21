@@ -1,5 +1,7 @@
 package it.uniupo.ktt
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatPage
 import it.uniupo.ktt.ui.pages.caregiver.statistics.CG_StatisticPage
@@ -35,15 +36,23 @@ import dagger.hilt.android.AndroidEntryPoint
 import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
+import android.Manifest
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+
         enableEdgeToEdge()
 
         setContent {
-            FirebaseApp.initializeApp(this)
             val navController = rememberNavController()
             val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "login" else "home") }
 

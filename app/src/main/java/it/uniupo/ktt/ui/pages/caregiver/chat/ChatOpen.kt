@@ -56,7 +56,7 @@ fun ChatOpen(
 
     val currentUid = BaseRepository.currentUid()
 
-    // Istanza viewModel + OBSERVABLE
+    // Istanza chatOpenViewModel + OBSERVABLEs
     val viewModel: ChatOpenViewModel = hiltViewModel()
     val messages by viewModel.messageList.collectAsState()
     val error by viewModel.errorMessage.collectAsState()
@@ -166,7 +166,12 @@ fun ChatOpen(
                     onTextChange = { messageText = it },
                     onSendClick = {
                         if (messageText.isNotBlank()) {
-                            viewModel.sendMessage(chatId, messageText)
+                            viewModel.sendMessage(
+                                chatId = chatId,
+                                text = messageText,
+                                deviceToken = contactUser?.deviceToken ?: "error",
+                                senderName = "Prova"
+                                )
                             messageText = ""
                         }
                     },
