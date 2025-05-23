@@ -19,39 +19,58 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.Query
+
 
 class TaskViewModel : ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
+
     fun addTaskAndSubtasks(task: Task, subtasks: List<SubTask>) {
         viewModelScope.launch {
             try {
-                db.collection("tasks").document(task.id).set(task).await()
+                Log.d("DEBUG_FIRESTORE", "Salvo task ${task.id}")
+                db.collection("tasks")
+                    .document(task.id)
+                    .set(task)
+                    .await()
 
-                subtasks.forEach { subtask ->
-                    val taskId = task.id
-                    val subtaskRef = db.collection("tasks").document(taskId)
-                        .collection("subtasks").document(subtask.id)
+                for (sub in subtasks) {
+                    Log.d("DEBUG_SUBTASK", "Processing subtask ${sub.id}, imgPath=${sub.descriptionImgStorageLocation}")
 
-                    // Upload immagini su Firebase Storage (se ci sono)
-                    val updatedSubtask = subtask.copy(
-                        descriptionImgStorageLocation = subtask.descriptionImgStorageLocation.takeIf { it.isNotBlank() }
-                            ?.let { uploadImageToStorage(it, "${ImageLocationFolders.DESCRIPTION}/${subtask.id}") } ?: "",
-                        employeeImgStorageLocation = subtask.employeeImgStorageLocation.takeIf { it.isNotBlank() }
-                            ?.let { uploadImageToStorage(it, "${ImageLocationFolders.EMPLOYEE}/${subtask.id}") } ?: "",
-                        caregiverImgStorageLocation = subtask.caregiverImgStorageLocation.takeIf { it.isNotBlank() }
-                            ?.let { uploadImageToStorage(it, "${ImageLocationFolders.CAREGIVER}/${subtask.id}") } ?: ""
-                    )
+                    var updated = sub
+                    if (sub.descriptionImgStorageLocation.isNotBlank()) {
+                        try {
+                            uploadImageToStorage(sub.descriptionImgStorageLocation, "${ImageLocationFolders.DESCRIPTION}/${sub.id}")
+                            updated = sub.copy(descriptionImgStorageLocation = "${ImageLocationFolders.DESCRIPTION}/${sub.id}")
+                        } catch (e: Exception) {
+                            Log.e("DEBUG_FIRESTORE", "Upload fallito per subtask ${sub.id}", e)
+                            throw e  // temporaneamente rilancio per debug
+                        }
+                    }
 
-                    // Salva il subtask aggiornato (con path immagini)
-                    subtaskRef.set(updatedSubtask).await()
+                    try {
+                        Log.d("DEBUG_FIRESTORE", "Salvo subtasks/${updated.id}")
+                        db.collection("tasks")
+                            .document(task.id)
+                            .collection("subtasks")
+                            .document(updated.id)
+                            .set(updated)
+                            .await()
+                    } catch (e: Exception) {
+                        Log.e("DEBUG_FIRESTORE", "Errore salvataggio subtask ${updated.id}", e)
+                        throw e
+                    }
                 }
+
             } catch (e: Exception) {
-                Log.e("TaskViewModel", "Error adding task: ${e.message}")
+                Log.e("TaskViewModel", "Errore generale", e)
+                // Qui puoi anche mostrarti un toast o un snackbar per avvertire l'utente
             }
         }
     }
+
 
     suspend fun getTasksByStatus(uid: String, status: String): List<Task> {
         val db = BaseRepository.db
@@ -68,11 +87,40 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    suspend fun getTasksByEmployeeId(uid: String): List<Task> {
+        val db = BaseRepository.db
+        return try {
+            val snapshot = db.collection("tasks")
+                .whereEqualTo("employee", uid)
+                .whereIn("status", listOf(TaskStatus.ONGOING.toString(), TaskStatus.COMPLETED.toString()))
+                //.orderBy("createdAt", Query.Direction.ASCENDING)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     fun startTask(taskId: String) {
         viewModelScope.launch {
             try {
                 val taskRef = db.collection("tasks").document(taskId)
                 taskRef.update("status", TaskStatus.ONGOING).await()
+                Log.d("TaskViewModel", "Task $taskId status updated to in_progress")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error updating task status: ${e.message}")
+            }
+        }
+    }
+
+    fun startTaskEmployee(taskId: String) {
+        viewModelScope.launch {
+            try {
+                val taskRef = db.collection("tasks").document(taskId)
+                taskRef.update("active", true).await()
+                taskRef.update("timeStampStart", com.google.firebase.Timestamp.now()).await()
                 Log.d("TaskViewModel", "Task $taskId status updated to in_progress")
             } catch (e: Exception) {
                 Log.e("TaskViewModel", "Error updating task status: ${e.message}")
@@ -106,6 +154,7 @@ class TaskViewModel : ViewModel() {
                 val snapshot = db.collection("tasks")
                     .document(taskId)
                     .collection("subtasks")
+                    .orderBy("listNumber", Query.Direction.ASCENDING)
                     .get()
                     .await()
 
