@@ -24,17 +24,13 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.theme.titleColor
 
 @Composable
-fun CurrentSubtaskPage(navController: NavController) {
+fun CurrentSubtaskPage(navController: NavController, taskId: String) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("login") {
             popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
             launchSingleTop = true
         }
     }
-
-
-
-
 
     Box(
         modifier = Modifier
