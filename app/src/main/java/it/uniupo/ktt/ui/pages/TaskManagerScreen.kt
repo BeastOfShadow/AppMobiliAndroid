@@ -54,6 +54,7 @@ import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.task.taskmanager.ChipsFilter
+import it.uniupo.ktt.ui.components.task.taskmanager.ElapsedTimeDisplay
 import it.uniupo.ktt.ui.components.task.taskmanager.NullMessage
 import it.uniupo.ktt.ui.components.task.taskmanager.TextSection
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
@@ -68,7 +69,6 @@ import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TaskManagerScreen(navController: NavController) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
@@ -311,19 +311,16 @@ fun TaskManagerScreen(navController: NavController) {
                                                 modifier = Modifier
                                                     .border(
                                                         width = 3.dp,
-                                                        color = Color(0xFFEED547),
+                                                        color = if(task.active) Color(0xFF38D236) else Color(0xFFEED547),
                                                         shape = CircleShape
                                                     )
                                                     .padding(6.dp)
                                                     .height(38.dp)
-                                                    .width(38.dp)
+                                                    .width(38.dp),
+                                                contentAlignment = Alignment.Center
                                             ) {
-                                                Text(
-
-                                                    text = "12:47",
-                                                    fontSize = 14.sp,
-                                                    color = subtitleColor,
-                                                    modifier = Modifier.align(Alignment.Center)
+                                                ElapsedTimeDisplay(
+                                                    task = task
                                                 )
                                             }
                                         }

@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 fun TaskRatingScreen(navController: NavController, taskId: String) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
-            popUpTo("task manager") { inclusive = true }
+            popUpTo("task_rating") { inclusive = true }
             launchSingleTop = true
         }
     }
@@ -138,9 +138,9 @@ fun TaskRatingScreen(navController: NavController, taskId: String) {
                 )
             }
 
-            Spacer(modifier = Modifier.size(20.dp))
+            if (task != null && task.description != "") {
+                Spacer(modifier = Modifier.size(20.dp))
 
-            if (task != null) {
                 ReadOnlyTextField(
                     label = "Description:",
                     value = task.description
