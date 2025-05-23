@@ -39,6 +39,9 @@ import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
 import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
+import it.uniupo.ktt.ui.pages.employee.currentTask.SubTaskViewScreen
+import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
+import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
 import it.uniupo.ktt.viewmodel.TaskViewModel
 
 @AndroidEntryPoint
@@ -81,7 +84,31 @@ class MainActivity : ComponentActivity() {
 
                             VisualizeRatedTaskScreen(navController = navController, taskId = taskId)
                         }
+                        composable("daily task") { DailyTaskScreen(navController) }
+                        composable(
+                            route = "view_task/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
+                            ViewTaskScreen(navController = navController, taskId = taskId)
+                        }
+                        composable(
+                            route = "subtask_view/{taskId}/{subtaskId}",
+                            arguments = listOf(
+                                navArgument("taskId") { type = NavType.StringType },
+                                navArgument("subtaskId") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                            val subtaskId = backStackEntry.arguments?.getString("subtaskId") ?: ""
+
+                            SubTaskViewScreen(
+                                navController = navController,
+                                taskId = taskId,
+                                subtaskId = subtaskId
+                            )
+                        }
 
                         //new ROUTE
                         composable("update subtask") { UpdateSubtaskScreen(navController) }
@@ -89,7 +116,14 @@ class MainActivity : ComponentActivity() {
 
 
                         //CurrentSubtask (Target)
-                        composable("current subtask") { CurrentSubtaskPage(navController) }
+                        composable(
+                            route = "current_subtask/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+
+                            CurrentSubtaskPage(navController = navController, taskId = taskId)
+                        }
 
                         //Statistics
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
