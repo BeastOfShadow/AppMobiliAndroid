@@ -117,7 +117,7 @@ fun VisualizeRatedTaskScreen(navController: NavController, taskId: String) {
         ) {
             PageTitle(
                 navController = navController,
-                title = "Task Rating"
+                title = "Rated Task"
             )
 
             Spacer(modifier = Modifier.size(30.dp))
@@ -138,9 +138,9 @@ fun VisualizeRatedTaskScreen(navController: NavController, taskId: String) {
                 )
             }
 
-            Spacer(modifier = Modifier.size(20.dp))
+            if (task != null && task.description != "") {
+                Spacer(modifier = Modifier.size(20.dp))
 
-            if (task != null) {
                 ReadOnlyTextField(
                     label = "Description:",
                     value = task.description
