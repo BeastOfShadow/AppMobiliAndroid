@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import it.uniupo.ktt.ui.firebase.TaskRepository
 
 
@@ -28,6 +29,8 @@ class TaskViewModel : ViewModel() {
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
 
+
+        // OK
     fun addTaskAndSubtasks(
         task: Task,
         subtasks: List<SubTask>
@@ -75,6 +78,28 @@ class TaskViewModel : ViewModel() {
         )
     }
 
+        //  DATO un Subtask, ritorna la sua ImgUrl pronta
+    fun getSubtaskImageUrl(
+        subtask: SubTask,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val path = subtask.descriptionImgStorageLocation
+
+        if (path.isBlank()) {
+            onError(Exception("Path immagine vuoto"))
+            return
+        }
+
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        storageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+            .addOnFailureListener { exception ->
+                onError(exception)
+            }
+    }
 
 
     suspend fun getTasksByStatus(uid: String, status: String): List<Task> {
