@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.outlined.RateReview
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
+import it.uniupo.ktt.time.isToday
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.task.taskmanager.ChipsFilter
 import it.uniupo.ktt.ui.components.task.taskmanager.ElapsedTimeDisplay
@@ -63,6 +68,7 @@ import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.primary
+import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
@@ -80,8 +86,6 @@ fun TaskManagerScreen(navController: NavController) {
 
     val taskViewModel : TaskViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
-    var selectedFilter by remember { mutableStateOf("All") }
-    val filters = listOf("All", "Ready", "Ongoing", "Completed", "Rated")
 
     var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
     var ongoingTasks by remember { mutableStateOf(emptyList<Task>()) }
@@ -91,11 +95,32 @@ fun TaskManagerScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         val uid = currentUid()
         if (uid != null) {
-            readyTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.READY.toString())
-            ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString())
-            completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
-            ratedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.RATED.toString())
+            readyTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.READY.toString()).filter { isToday(it.createdAt) }
+            ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString()).filter { isToday(it.createdAt) }
+            completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString()).filter { isToday(it.createdAt) }
+            ratedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.RATED.toString()).filter { isToday(it.createdAt) }
         }
+    }
+
+    // Lista filtri basata su liste non vuote
+    val nonEmptyFilters = listOf(
+        "Ready" to readyTasks.isNotEmpty(),
+        "Ongoing" to ongoingTasks.isNotEmpty(),
+        "Completed" to completedTasks.isNotEmpty(),
+        "Rated" to ratedTasks.isNotEmpty()
+    ).filter { it.second }.map { it.first }
+
+    val filters = if (nonEmptyFilters.size >= 2) {
+        listOf("All") + nonEmptyFilters
+    } else {
+        nonEmptyFilters
+    }
+
+// Stato di selectedFilter inizializzato e aggiornato al cambio di filters
+    var selectedFilter by remember { mutableStateOf("All") }
+
+    LaunchedEffect(filters) {
+        selectedFilter = if (filters.size == 1) filters.first() else "All"
     }
 
     Box(
@@ -116,401 +141,138 @@ fun TaskManagerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.size(20.dp))
 
-            ChipsFilter(
-                filters = filters,
-                selectedFilter = selectedFilter,
-                onFilterSelected = { selectedFilter = it }
-            )
+            if (filters.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No tasks available. Add a task to get started!",
+                        color = Color.DarkGray,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
 
-            Spacer(modifier = Modifier.size(30.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-            if (selectedFilter == "All" || selectedFilter == "Ready") {
-                TextSection("Ready")
-
-                Spacer(modifier = Modifier.size(10.dp))
-
-                if (readyTasks.isEmpty()) NullMessage("ready")
-                else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    Button(
+                        onClick = {
+                            navController.navigate("new task")
+                                  },
+                        colors = ButtonDefaults.buttonColors(containerColor = primary),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        modifier = Modifier.shadow(4.dp, MaterialTheme.shapes.extraLarge)
                     ) {
-                        readyTasks.forEach { task ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 10.dp)
-                                    .width(180.dp)
-                                    .height(180.dp)
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.SpaceBetween,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = task.title,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = titleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = getEmployeeName(task.employee),
-                                        fontWeight = FontWeight.Light,
-                                        fontSize = 14.sp,
-                                        color = subtitleColor,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                        Text(
+                            text = "Add Task",
+                            fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight(200),
+                            color = Color.Black
+                        )
+                    }
+                }
+            }
 
-                                    Spacer(modifier = Modifier.size(10.dp))
+            if(filters.isNotEmpty()) {
+                ChipsFilter(
+                    filters = filters,
+                    selectedFilter = selectedFilter,
+                    onFilterSelected = { selectedFilter = it }
+                )
 
-                                    Box(
-                                        modifier = Modifier
-                                            .size(44.dp)
-                                            .shadow(4.dp, shape = CircleShape, clip = false)
-                                            .clickable {
-                                                taskViewModel.startTask(task.id)
+                Spacer(modifier = Modifier.size(30.dp))
 
-                                                val uid = currentUid()
-                                                if (uid != null) {
-                                                    coroutineScope.launch {
-                                                        readyTasks = taskViewModel.getTasksByStatus(
-                                                            uid,
-                                                            TaskStatus.READY.toString()
-                                                        )
-                                                        ongoingTasks =
-                                                            taskViewModel.getTasksByStatus(
-                                                                uid,
-                                                                TaskStatus.ONGOING.toString()
-                                                            )
-                                                        completedTasks =
-                                                            taskViewModel.getTasksByStatus(
-                                                                uid,
-                                                                TaskStatus.COMPLETED.toString()
-                                                            )
-                                                        ratedTasks =
-                                                            taskViewModel.getTasksByStatus(
-                                                                uid,
-                                                                TaskStatus.RATED.toString()
-                                                            )
-                                                    }
-                                                }
-                                            }
-                                            .background(
-                                                color = tertiary,
-                                                shape = CircleShape
-                                            )
-                                            .padding(vertical = 8.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.RocketLaunch,
-                                            contentDescription = "Start",
-                                            tint = buttonTextColor,
-                                            modifier = Modifier.size(24.dp)
+                if (selectedFilter == "All" || selectedFilter == "Ready") {
+                    if (readyTasks.isNotEmpty()) {
+                        TextSection("Ready")
+
+                        Spacer(modifier = Modifier.size(10.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            readyTasks.forEach { task ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(start = 10.dp)
+                                        .width(180.dp)
+                                        .height(180.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
                                         )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.size(30.dp))
-            }
-
-            if (selectedFilter == "All" || selectedFilter == "Ongoing") {
-                TextSection("Ongoing")
-
-                Spacer(modifier = Modifier.size(10.dp))
-
-                if (ongoingTasks.isEmpty())
-                    NullMessage("ongoing")
-                else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ongoingTasks.forEach { task ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 10.dp)
-                                    .width(180.dp)
-                                    .height(180.dp)
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.SpaceBetween,
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                        .background(
+                                            primary,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = task.title,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = titleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = getEmployeeName(task.employee),
-                                        fontWeight = FontWeight.Light,
-                                        fontSize = 14.sp,
-                                        color = subtitleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-
-                                    Spacer(modifier = Modifier.size(15.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceAround,
-                                        verticalAlignment = Alignment.CenterVertically
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Image(
-                                                painter = painterResource(id = R.drawable.task_sun),
-                                                contentDescription = "Clock",
-                                                modifier = Modifier.size(55.dp)
-                                            )
-                                        }
+                                        Text(
+                                            text = task.title,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = titleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = getEmployeeName(task.employee),
+                                            fontWeight = FontWeight.Light,
+                                            fontSize = 14.sp,
+                                            color = subtitleColor,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
 
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .border(
-                                                        width = 3.dp,
-                                                        color = if(task.active) Color(0xFF38D236) else Color(0xFFEED547),
-                                                        shape = CircleShape
-                                                    )
-                                                    .padding(6.dp)
-                                                    .height(38.dp)
-                                                    .width(38.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                ElapsedTimeDisplay(
-                                                    task = task
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.size(30.dp))
-            }
+                                        Spacer(modifier = Modifier.size(10.dp))
 
-            if (selectedFilter == "All" || selectedFilter == "Completed") {
-                TextSection("Completed")
-
-                Spacer(modifier = Modifier.size(10.dp))
-
-                if (completedTasks.isEmpty())
-                    NullMessage("completed")
-                else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        completedTasks.forEach { task ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 10.dp)
-                                    .width(180.dp)
-                                    .height(180.dp)
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(16.dp)
-                                    .clickable(
-                                        onClick = {
-                                            navController.navigate("task_rating/${task.id}")
-
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.SpaceBetween,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = task.title,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = titleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = getEmployeeName(task.employee),
-                                        fontWeight = FontWeight.Light,
-                                        fontSize = 14.sp,
-                                        color = subtitleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-
-                                    Spacer(modifier = Modifier.size(15.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceAround,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Image(
-                                                painter = painterResource(id = R.drawable.task_finished),
-                                                contentDescription = "Endline",
-                                                modifier = Modifier.size(50.dp)
-                                            )
-                                        }
-
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .border(
-                                                        width = 3.dp,
-                                                        color = Color(0xFFEA4242),
-                                                        shape = CircleShape
-                                                    )
-                                                    .padding(6.dp)
-                                                    .height(38.dp)
-                                                    .width(38.dp)
-                                            ) {
-                                                Text(
-                                                    text = "12:47",
-                                                    fontSize = 14.sp,
-                                                    color = subtitleColor,
-                                                    modifier = Modifier.align(Alignment.Center)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.size(10.dp))
-            }
-
-            if(selectedFilter == "All" || selectedFilter == "Rated")
-            {
-                TextSection("Rated")
-
-                Spacer(modifier = Modifier.size(10.dp))
-
-                if (ratedTasks.isEmpty())
-                    NullMessage("rated")
-                else {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        ratedTasks.forEach { task ->
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 10.dp)
-                                    .width(180.dp)
-                                    .height(180.dp)
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.SpaceBetween,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = task.title,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                        color = titleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = getEmployeeName(task.employee),
-                                        fontWeight = FontWeight.Light,
-                                        fontSize = 14.sp,
-                                        color = subtitleColor,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-
-                                    Spacer(modifier = Modifier.size(15.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceAround,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
                                         Box(
                                             modifier = Modifier
                                                 .size(44.dp)
                                                 .shadow(4.dp, shape = CircleShape, clip = false)
                                                 .clickable {
-                                                    navController.navigate("rated_task/${task.id}")
+                                                    coroutineScope.launch {
+                                                        taskViewModel.startTask(task.id)
+
+                                                        val uid = currentUid()
+                                                        if (uid != null) {
+                                                            readyTasks =
+                                                                taskViewModel.getTasksByStatus(
+                                                                    uid,
+                                                                    TaskStatus.READY.toString()
+                                                                )
+                                                            ongoingTasks =
+                                                                taskViewModel.getTasksByStatus(
+                                                                    uid,
+                                                                    TaskStatus.ONGOING.toString()
+                                                                )
+                                                            completedTasks =
+                                                                taskViewModel.getTasksByStatus(
+                                                                    uid,
+                                                                    TaskStatus.COMPLETED.toString()
+                                                                )
+                                                            ratedTasks =
+                                                                taskViewModel.getTasksByStatus(
+                                                                    uid,
+                                                                    TaskStatus.RATED.toString()
+                                                                )
+                                                        }
+                                                    }
                                                 }
                                                 .background(
                                                     color = tertiary,
@@ -520,8 +282,8 @@ fun TaskManagerScreen(navController: NavController) {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
-                                                imageVector = Icons.Outlined.RateReview,
-                                                contentDescription = "Rate Review",
+                                                imageVector = Icons.Default.RocketLaunch,
+                                                contentDescription = "Start",
                                                 tint = buttonTextColor,
                                                 modifier = Modifier.size(24.dp)
                                             )
@@ -531,8 +293,315 @@ fun TaskManagerScreen(navController: NavController) {
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.size(30.dp))
                 }
-                Spacer(modifier = Modifier.size(10.dp))
+
+                if (selectedFilter == "All" || selectedFilter == "Ongoing") {
+                    if (ongoingTasks.isNotEmpty()) {
+                        TextSection("Ongoing")
+
+                        Spacer(modifier = Modifier.size(10.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            ongoingTasks.forEach { task ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(start = 10.dp)
+                                        .width(180.dp)
+                                        .height(180.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
+                                        )
+                                        .background(
+                                            primary,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = task.title,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = titleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = getEmployeeName(task.employee),
+                                            fontWeight = FontWeight.Light,
+                                            fontSize = 14.sp,
+                                            color = subtitleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        Spacer(modifier = Modifier.size(15.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceAround,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.task_sun),
+                                                    contentDescription = "Clock",
+                                                    modifier = Modifier.size(55.dp)
+                                                )
+                                            }
+
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .border(
+                                                            width = 3.dp,
+                                                            color = if (task.active) Color(
+                                                                0xFF38D236
+                                                            ) else Color(0xFFEED547),
+                                                            shape = CircleShape
+                                                        )
+                                                        .padding(6.dp)
+                                                        .height(38.dp)
+                                                        .width(38.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    ElapsedTimeDisplay(
+                                                        task = task
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(30.dp))
+                }
+
+                if (selectedFilter == "All" || selectedFilter == "Completed") {
+                    if (completedTasks.isNotEmpty()) {
+                        TextSection("Completed")
+
+                        Spacer(modifier = Modifier.size(10.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            completedTasks.forEach { task ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(start = 10.dp)
+                                        .width(180.dp)
+                                        .height(180.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
+                                        )
+                                        .background(
+                                            primary,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(16.dp)
+                                        .clickable(
+                                            onClick = {
+                                                navController.navigate("task_rating/${task.id}")
+
+                                            }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = task.title,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = titleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = getEmployeeName(task.employee),
+                                            fontWeight = FontWeight.Light,
+                                            fontSize = 14.sp,
+                                            color = subtitleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        Spacer(modifier = Modifier.size(15.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceAround,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.task_finished),
+                                                    contentDescription = "Endline",
+                                                    modifier = Modifier.size(50.dp)
+                                                )
+                                            }
+
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .border(
+                                                            width = 3.dp,
+                                                            color = Color(0xFFEA4242),
+                                                            shape = CircleShape
+                                                        )
+                                                        .padding(6.dp)
+                                                        .height(38.dp)
+                                                        .width(38.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "12:47",
+                                                        fontSize = 14.sp,
+                                                        color = subtitleColor,
+                                                        modifier = Modifier.align(Alignment.Center)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(10.dp))
+                }
+
+                if (selectedFilter == "All" || selectedFilter == "Rated") {
+                    if (ratedTasks.isNotEmpty()) {
+                        TextSection("Rated")
+
+                        Spacer(modifier = Modifier.size(10.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            ratedTasks.forEach { task ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(start = 10.dp)
+                                        .width(180.dp)
+                                        .height(180.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
+                                        )
+                                        .background(
+                                            primary,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize(),
+                                        verticalArrangement = Arrangement.SpaceBetween,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = task.title,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp,
+                                            color = titleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = getEmployeeName(task.employee),
+                                            fontWeight = FontWeight.Light,
+                                            fontSize = 14.sp,
+                                            color = subtitleColor,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+
+                                        Spacer(modifier = Modifier.size(15.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceAround,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .shadow(4.dp, shape = CircleShape, clip = false)
+                                                    .clickable {
+                                                        navController.navigate("rated_task/${task.id}")
+                                                    }
+                                                    .background(
+                                                        color = tertiary,
+                                                        shape = CircleShape
+                                                    )
+                                                    .padding(vertical = 8.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.RateReview,
+                                                    contentDescription = "Rate Review",
+                                                    tint = buttonTextColor,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.size(10.dp))
+                }
             }
         }
 
