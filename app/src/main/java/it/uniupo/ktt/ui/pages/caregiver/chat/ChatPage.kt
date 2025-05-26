@@ -40,6 +40,7 @@ import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ChatSearchBar
 import it.uniupo.ktt.ui.components.chats.NewChatButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,6 +48,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.viewmodel.ChatViewModel
+import it.uniupo.ktt.viewmodel.UserViewModel
 
 @Composable
 fun ChatPage(navController: NavController) {
@@ -55,24 +57,25 @@ fun ChatPage(navController: NavController) {
         navController.navigate("login")
         {
             popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
-            launchSingleTop = true //precaricamento
+            launchSingleTop = true
         }
     }
+
+    val currentUid = BaseRepository.currentUid()
 
     // collegamento con ChatViewModel
     val chatViewModelRefHilt = hiltViewModel<ChatViewModel>()
     // proprietà osservabili del ChatViewModel (Only Read)
-    val chatsRef by chatViewModelRefHilt.chatList.collectAsState()
+    val chatsRef by chatViewModelRefHilt.enrichedChatList.collectAsState()
     val isLoadingRef by chatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by chatViewModelRefHilt.errorMessage.collectAsState()
 
-    val currentUid = BaseRepository.currentUid()
-
     // ogni volta che entro nella page viene lanciato per update
     LaunchedEffect (currentUid){
-        if(currentUid!= null){
+        if(currentUid != null){
             chatViewModelRefHilt.loadChats(currentUid)
         }
+
     }
 
     Box(
@@ -92,8 +95,12 @@ fun ChatPage(navController: NavController) {
             // PAGE (NO PAGE-TITLE)
             Box(
                 modifier = Modifier
-                    //.shadow(8.dp, RoundedCornerShape(20.dp), clip = false)
                     .padding(4.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(10),
+                        clip = false
+                    )
                     .background(Color(0xFFF5DFFA), shape = RoundedCornerShape(10))
                     .fillMaxSize()
             ){
@@ -153,7 +160,7 @@ fun ChatPage(navController: NavController) {
                         )
 
                         // ordina la lista in base alla data dell'ultimo messaggio
-                        val sortedChatList = chatsRef.sortedBy { it.lastTimeStamp }
+                        val sortedChatList = chatsRef.sortedBy { it.chat.lastTimeStamp }
 
                         Box(
                             modifier = Modifier
@@ -163,17 +170,28 @@ fun ChatPage(navController: NavController) {
                         ){
                             Column{
                                 // itera lista e crea Lable contatti
-                                sortedChatList.forEach { chat ->
+                                sortedChatList.forEach { enrichedChat ->
+
+
+
+                                    // scompongo la lista arricchita
+                                    val chat = enrichedChat.chat
+
+                                    // in base a role arricchisco
+                                    val otherParticipantUid = if (currentUid == chat.caregiver) chat.employee else chat.caregiver
+                                    val displayName = "${enrichedChat.name} ${enrichedChat.surname}"
+
                                     ChatContactLable(
-                                        nome = "${chat.name} ${chat.surname}",
+                                        nome = displayName,
                                         lastMessage = chat.lastMsg,
                                         modifier = Modifier
                                             .scale(1.3f),
-                                        imgId = R.drawable.profile_female_default,
+                                        imgUrl = enrichedChat.avatarUrl,
                                         onClick = {
-                                            // goto ChatOpen passing "chatId, uidEmployee, employeeName"
-                                            val contactName = "${chat.name} ${chat.surname}"
-                                            navController.navigate("chat open/${chat.chatId}/${chat.employee}/${contactName}")
+                                            // GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
+
+                                            Log.d("DEBUG-CHAT OPEN", "INPUT -> chatId : ${chat.chatId}, contactUid: $otherParticipantUid ")
+                                            navController.navigate("chat open/${chat.chatId}/$otherParticipantUid")
                                         }
                                     )
                                     Spacer(
@@ -187,6 +205,8 @@ fun ChatPage(navController: NavController) {
 
                     }
                 }
+
+
 
                 // BUTTON new Chat
                 Box(
@@ -203,6 +223,7 @@ fun ChatPage(navController: NavController) {
                             .scale(1.2f)
                     )
                 }
+
 
 
 

@@ -1,5 +1,7 @@
 package it.uniupo.ktt
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,22 +13,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatPage
 import it.uniupo.ktt.ui.pages.caregiver.statistics.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.HomeScreen
-import it.uniupo.ktt.ui.pages.LandingScreen
 import it.uniupo.ktt.ui.pages.LoginScreen
 import it.uniupo.ktt.ui.pages.caregiver.chat.NewChatPage
 import it.uniupo.ktt.ui.pages.CommentSubtaskScreen
 import it.uniupo.ktt.ui.pages.NewTaskScreen
 import it.uniupo.ktt.ui.pages.RegisterScreen
-import it.uniupo.ktt.ui.pages.StatisticsScreen
 import it.uniupo.ktt.ui.pages.TaskManagerScreen
 import it.uniupo.ktt.ui.pages.UpdateSubtaskScreen
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatOpen
@@ -38,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
+import android.Manifest
 import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
 import it.uniupo.ktt.ui.pages.employee.currentTask.SubTaskViewScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
@@ -48,10 +47,16 @@ import it.uniupo.ktt.viewmodel.TaskViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+
         enableEdgeToEdge()
 
         setContent {
-            FirebaseApp.initializeApp(this)
             val navController = rememberNavController()
             val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "login" else "home") }
 
@@ -62,10 +67,11 @@ class MainActivity : ComponentActivity() {
                         startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        //composable("landing") { LandingScreen(navController) }
+                        // REWORKED
                         composable("login") { LoginScreen(navController) }
                         composable("register") { RegisterScreen(navController) }
                         composable("home") { HomeScreen(navController) }
+
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
                         composable(
@@ -132,16 +138,17 @@ class MainActivity : ComponentActivity() {
                         composable("chat") { ChatPage(navController) }
                         composable("new chat") { NewChatPage(navController) }
                         composable(
-                            "chat open/{chatId}/{uidContact}/{contactName}", // Route che accetta 3 PARAM
+                            "chat open/{chatId}/{uidContact}", // Route che accetta 2 PARAM
                             arguments = listOf(
                                 navArgument("chatId") { type = NavType.StringType }, // Def PARAM1 type
-                                navArgument("uidContact") {type = NavType.StringType}, // Def PARAM2 type
-                                navArgument("contactName") {type = NavType.StringType}), // Def PARAM3 type
+                                navArgument("uidContact") {type = NavType.StringType} // Def PARAM2 type
+                            )
+
                         ) { backStackEntry ->
                             val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
                             val uidContact = backStackEntry.arguments?.getString("uidContact") ?: ""
-                            val contactName = backStackEntry.arguments?.getString("contactName") ?: ""
-                            ChatOpen(navController, chatId, uidContact, contactName) // Passaggio dei 3 PARAM
+
+                            ChatOpen(navController, chatId, uidContact) // Passaggio dei  PARAM
                         }
                     }
                 }

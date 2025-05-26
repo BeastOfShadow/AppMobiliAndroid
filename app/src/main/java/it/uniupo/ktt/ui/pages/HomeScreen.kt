@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.Dialog
@@ -97,6 +98,15 @@ fun HomeScreen(navController: NavController) {
     LaunchedEffect(userUid) {
         if (userUid != null && userRef == null) {
             userViewModelRef.loadUserByUid(userUid)
+        }
+
+        // caso ELiminazione Utente mentre è Loggato
+        if (!isLoadingUserRef && errorRef != null) {
+            FirebaseAuth.getInstance().signOut()
+            navController.navigate("login") {
+                popUpTo("home") { inclusive = true }
+                launchSingleTop = true
+            }
         }
     }
 
@@ -321,7 +331,7 @@ fun HomeScreen(navController: NavController) {
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight(400),
 
-                                color = subtitleColor,
+                                color = Color(0xFF403E3E),
                                 modifier = Modifier.offset(x = 20.dp, y = 0.dp)
                             )
 

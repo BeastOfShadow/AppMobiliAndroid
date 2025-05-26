@@ -10,56 +10,63 @@ import androidx.compose.runtime.setValue
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import it.uniupo.ktt.ui.model.Contact
+import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
 
 object UserRepository {
 
-    //@Deprecated
-    @Composable
-    fun getRoleByUserId(): String {
-        val userId = BaseRepository.currentUid()
-        var role by remember { mutableStateOf("Loading...") }
+// -------++++++++ DEVICE TOKEN ++++++++-------
 
-        val db = BaseRepository.db
-
-        LaunchedEffect(userId) {
-            if (userId != null) {
-                try {
-                    val document = db.collection("users").document(userId).get().await()
-                    role = document.getString("role").toString()
-                } catch (e: Exception) {
-                    role = "Error loading role"
-                }
-            }
-        }
-
-        return role
+    fun updateDeviceToken(
+        uid: String,
+        token: String,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .update("deviceToken", token)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onError(e) }
     }
 
-    //@Deprecated
-    @Composable
-    fun getNameSurnameByUserId(): String {
-        val userId = BaseRepository.currentUid()
-        var userName by remember { mutableStateOf("Loading...") }
+// -------++++++++ DEVICE TOKEN ++++++++-------
 
-        val db = FirebaseFirestore.getInstance()
 
-        LaunchedEffect(userId) {
-            if (userId != null) {
-                try {
-                    val document = db.collection("users").document(userId).get().await()
-                    val name =
-                        document.getString("name")?.replaceFirstChar { it.uppercase() } ?: "Unknown"
-                    val surname =
-                        document.getString("surname")?.replaceFirstChar { it.uppercase() } ?: "User"
-                    userName = "$name $surname"
-                } catch (e: Exception) {
-                    userName = "Error loading name"
-                }
+        // OK
+    fun getUserByUid(
+        uid: String,
+        onSuccess: (User?) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val user = snapshot.toObject(User::class.java)
+                onSuccess(user)
             }
-        }
+            .addOnFailureListener { e ->
+                Log.e("DEBUG", "Errore durante il recupero dell'utente", e)
+                onError(e)
+            }
+    }
 
-        return userName
+        // OK
+    fun postUser(
+        uid: String,
+        user: User,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        BaseRepository.db
+            .collection("users")
+            .document(uid)
+            .set(user)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onFailure(e) }
     }
 
         // OK
@@ -152,7 +159,6 @@ object UserRepository {
             }
     }
 
-
     @Composable
     fun getEmployeeName(uid: String): String {
         var employeeName by remember(uid) { mutableStateOf("Loading...") }
@@ -171,4 +177,5 @@ object UserRepository {
 
         return employeeName
     }
+
 }

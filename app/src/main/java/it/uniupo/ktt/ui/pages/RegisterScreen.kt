@@ -1,6 +1,5 @@
 package it.uniupo.ktt.ui.pages
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,30 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +28,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -53,19 +37,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.AccessCustomTextField
 import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.model.User
-import it.uniupo.ktt.ui.roles.UserRole
+import it.uniupo.ktt.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -77,8 +58,6 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 
-    val auth = FirebaseAuth.getInstance()
-
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var surname by remember { mutableStateOf("") }
@@ -87,6 +66,9 @@ fun RegisterScreen(navController: NavController) {
 
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
+
+    // istanza
+    val userViewModelRef: UserViewModel = hiltViewModel()
 
 
     // SNACKBAR -> ERRORI
@@ -255,60 +237,23 @@ fun RegisterScreen(navController: NavController) {
                                     }
                                 }
                                 else {
-                                    auth.createUserWithEmailAndPassword(email, password)
-                                        .addOnCompleteListener { task ->
-                                            if (task.isSuccessful) {
-
-                                                // ++ Creazione User DataBase ++
-                                                val uid= BaseRepository.currentUid()
-
-                                                val user = User(
-                                                    uid = uid.toString(),
-                                                    email = email.lowercase(),
-                                                    role = UserRole.EMPLOYEE.toString(),
-                                                    name = name.lowercase().replaceFirstChar { it.uppercase() },
-                                                    surname = surname.lowercase().replaceFirstChar { it.uppercase() },
-                                                    avatar = "avatar/Screenshot 2025-04-29 alle 17.42.53.png",
-                                                    userPoint = 0
-                                                )
-
-                                                //post on DB
-                                                if (uid != null) {
-
-                                                    BaseRepository.db
-                                                        .collection("users")
-                                                        .document(uid)
-                                                        .set(user)
-                                                        .addOnSuccessListener {
-                                                            Log.d("DEBUG", "Utente aggiunto con successo")
-
-                                                            // se aggiungo l'utente con successo allora vado alla home
-                                                            navController.navigate("home") {
-                                                                popUpTo("landing") { inclusive = true }
-                                                                launchSingleTop = true
-                                                            }
-                                                        }
-                                                        .addOnFailureListener { e ->
-                                                            Log.w("DEBUG", "Errore nell'aggiunta utente", e)
-                                                        }
-                                                }
-                                                else{
-                                                    Log.d("UID", "UID nullo")
-                                                }
-
-
-
-
-
-                                            } else {
-                                                val errorMessage = task.exception?.message ?: "Unknown error occurred"
-
-                                                coroutineScope.launch {
-                                                    snackbarHostState.showSnackbar("Error: $errorMessage.")
-                                                }
-
+                                    userViewModelRef.postNewUser(
+                                        email = email,
+                                        name = name,
+                                        surname = surname,
+                                        password = password,
+                                        onSuccess = {
+                                            navController.navigate("home") {
+                                                popUpTo("login") { inclusive = true }
+                                                launchSingleTop = true
+                                            }
+                                        },
+                                        onError = { errorMessage ->
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(errorMessage)
                                             }
                                         }
+                                    )
                                 }
                             },
                             shape = RoundedCornerShape(12.dp),

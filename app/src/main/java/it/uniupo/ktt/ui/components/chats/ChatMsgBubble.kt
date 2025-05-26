@@ -15,8 +15,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.common.formatTimeStamp
 
 @Composable
@@ -26,7 +32,8 @@ fun ChatMsgBubble(
     timeStamp: Long,
     seen: Boolean
 ) {
-    val bubbleColor = if (isMine) Color(0xFFE1FFC7) else Color(0xFFFFFFFF)
+    val bubbleColor = if (isMine) Color(0xFF9C46FF) else Color(0xFFC5B5D8)
+    val textColor = if (isMine) Color.White else Color.Black
     val alignment = if (isMine) Arrangement.End else Arrangement.Start
 
     Row(
@@ -36,15 +43,31 @@ fun ChatMsgBubble(
     ) {
         Column(
             modifier = Modifier
-                .background(bubbleColor, shape = RoundedCornerShape(16.dp))
-                .padding(12.dp)
+                .background(bubbleColor, shape = RoundedCornerShape(20.dp))
+                .padding(13.dp)
                 .widthIn(max = 250.dp)
         ) {
-            Text(text = text)
+            Text(
+                text = text,
+
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                fontWeight = FontWeight(400),
+                fontSize = 17.sp,
+
+                color = textColor
+                )
+
             Spacer(modifier = Modifier.height(4.dp))
+
             Text(
                 text = formatTimeStamp(timeStamp),
-                style = MaterialTheme.typography.labelSmall,
+
+                fontFamily = FontFamily(Font(R.font.poppins_regular)),
+                fontWeight = FontWeight(400),
+                fontSize = 13.sp,
+
+                color = textColor,
+
                 modifier = Modifier.align(Alignment.End)
             )
         }

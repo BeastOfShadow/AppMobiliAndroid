@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.SpanStyle
@@ -39,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
@@ -75,7 +75,7 @@ fun NewChatPage(navController: NavController) {
     // collegamento ad un "new" NewChatViewModel (con Hilt)
     val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>()
     // properties observable
-    val contactsRef by newChatViewModelRefHilt.contactList.collectAsState()
+    val enrichedContactRef by newChatViewModelRefHilt.enrichedContactList.collectAsState()
     val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by newChatViewModelRefHilt.errorMessage.collectAsState()
 
@@ -106,6 +106,11 @@ fun NewChatPage(navController: NavController) {
                 modifier = Modifier
                     //.shadow(8.dp, RoundedCornerShape(20.dp), clip = false)
                     .padding(4.dp)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(10),
+                        clip = false
+                    )
                     .background(Color(0xFFF5DFFA), shape = RoundedCornerShape(10))
                     .fillMaxSize()
             ){
@@ -147,7 +152,7 @@ fun NewChatPage(navController: NavController) {
                         Log.e("DEBUG-ModelView", "Errore delivery Lista Contacts")
                     }
                     // lista Chat recieved vuota (0 Chat al momento)
-                    contactsRef.isEmpty() ->{
+                    enrichedContactRef.isEmpty() ->{
                         Text(
                             text = buildAnnotatedString {
                                 append("Press ")
@@ -176,7 +181,7 @@ fun NewChatPage(navController: NavController) {
                     else -> {
 
                         // ordina la lista in ordine alfabetico in base al "name"
-                        val sortedContactsList = contactsRef.sortedBy { it.name }
+                        val sortedContactsList = enrichedContactRef.sortedBy { it.contact.name }
 
                         Text(
                             text = "Contacts on Keep The Time",
@@ -203,27 +208,24 @@ fun NewChatPage(navController: NavController) {
                                 // scotti lista e crea ChatLable contatti
                                 sortedContactsList.forEach { contact ->
                                     ChatContactLable(
-                                        nome = "${contact.name} ${contact.surname}",
+                                        nome = "${contact.contact.name} ${contact.contact.surname}",
                                         lastMessage = "send a message",
                                         modifier = Modifier
                                             .scale(1.3f),
-                                        imgId = R.drawable.profile_female_default,
+                                        imgUrl = contact.avatarUrl,
                                         onClick = {
-                                            /*
-                                                L' "uidContact" della persona con cui voglio creare una chat è gia nelle chat di cui faccio parte?
-                                                    - IF(true): Get Locale del "chatId" della chat esistente e naviga to "ChatOpen" passando "chatId/ uidContact"
-                                                    - ELSE: naviga to "ChatOpen" passando "null/ uidContact"
-                                             */
-                                            val contactName = "${contact.name} ${contact.surname}"
-                                            val chatFound = chatViewModelRefHilt.searchChatByUidEmployee(contact.uidContact)
+
+                                            // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato
+                                            val chatFound = chatViewModelRefHilt.searchChatByUid(contact.contact.uidContact)
+
 
                                             // CHAT già esistente
                                             if(chatFound != null){
-                                                navController.navigate("chat open/${chatFound.chatId}/${contact.uidContact}/${contactName}")
+                                                navController.navigate("chat open/${chatFound.chat.chatId}/${contact.contact.uidContact}")
                                             }
                                             // CHAT non esistente
                                             else{
-                                                navController.navigate("chat open/notFound/${contact.uidContact}/${contactName}")
+                                                navController.navigate("chat open/notFound/${contact.contact.uidContact}")
                                             }
                                         }
                                     )

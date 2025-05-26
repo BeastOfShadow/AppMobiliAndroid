@@ -76,25 +76,43 @@ object ChatRepository {
             }
     }
 
-        // OK
+        // OK -> Uid : return all chats
     fun getAllChatsByUid(
         uid: String,
         onSuccess: (List<Chat>) -> Unit = {},
         onError: (Exception) -> Unit = {}
     ) {
+
+        val allChatsList = mutableListOf<Chat>()
+
+        // First Query -> (caregiver == uid)
         BaseRepository.db
             .collection("chats")
             .whereEqualTo("caregiver", uid)
             .get()
-            .addOnSuccessListener { snapshot -> //ritorna una lista di Chats
-                val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
-                Log.d("Firestore", "Trovate ${chats.size} chats dato uid: $uid")
-                onSuccess(chats)
+            .addOnSuccessListener { snapshotFirstQuery ->
+                allChatsList.addAll(snapshotFirstQuery.documents.mapNotNull { it.toObject(Chat::class.java) })
+
+                // Second QUERY -> (employee == uid)
+                BaseRepository.db
+                    .collection("chats")
+                    .whereEqualTo("employee", uid)
+                    .get()
+                    .addOnSuccessListener { snapshotSecondQuery ->
+                        allChatsList.addAll(snapshotSecondQuery.documents.mapNotNull { it.toObject(Chat::class.java) })
+
+                        onSuccess(allChatsList.distinctBy { it.chatId })
+                    }
+                    .addOnFailureListener { error ->
+                        onError(error)
+                    }
+
             }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Errore durante la query getAllChatsByUid", e)
-                onError(e)
+            .addOnFailureListener { error ->
+                onError(error)
             }
+
+
     }
 
         // OK
@@ -152,14 +170,22 @@ object ChatRepository {
 
                                             // REAL-TIME-DB FUNCTION
         // OK
-    fun sendMessageRealtime(chatId: String, message: Message, onSuccess: () -> Unit = {}, onError: (DatabaseError) -> Unit = {}) {
+    fun sendMessageRealtime(
+            chatId: String,
+            message: Message,
+            onSuccess: () -> Unit = {},
+            onError: (DatabaseError) -> Unit = {}
+    ) {
+
+        // generazione del NODO in "message" nel RealTime DB (non posta il message, ma crea Nodo + IDMessage)
         val messageId = realtimeDb.child("messages").child(chatId).push().key
 
+        // Post message nel Nodo con IDMessage generato
         if (messageId != null) {
             realtimeDb.child("messages")
                 .child(chatId)
                 .child(messageId)
-                .setValue(message)
+                .setValue(message) // scrittura Message
                 .addOnSuccessListener { onSuccess() }
                 .addOnFailureListener { e ->
                     if (e is DatabaseError) {
