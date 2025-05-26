@@ -7,22 +7,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-// In it.uniupo.ktt.ui.storage
-suspend fun uploadImageToStorage(localPath: String, storagePath: String) {
-    withContext(Dispatchers.IO) {
-        try {
-            Log.d("FirebaseUpload", "Start upload: $localPath → $storagePath")
+fun uploadImageToStorage(
+    localPath: String,
+    storagePath: String,
+    onSuccess: () -> Unit,
+    onError: (Exception) -> Unit
+) {
 
-            val uri = Uri.parse(localPath)
-            val storageRef = FirebaseStorage.getInstance().reference.child(storagePath)
+    val uri = Uri.parse(localPath)
+    val storageRef = FirebaseStorage.getInstance().reference.child(storagePath)
 
-            storageRef.putFile(uri).await()
+    storageRef.putFile(uri)
+        .addOnSuccessListener {
             Log.d("FirebaseUpload", "Upload completato con successo: $storagePath")
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            Log.e("FirebaseUpload", "Upload cancellato per $storagePath: ${e.message}")
-            throw e
-        } catch (e: Exception) {
-            Log.e("FirebaseUpload", "Errore durante l'upload di $storagePath: ${e.message}", e)
+            onSuccess()
         }
-    }
+        .addOnFailureListener { e ->
+            Log.e("FirebaseUpload", "Errore durante upload: ${e.message}", e)
+            onError(e)
+        }
 }
