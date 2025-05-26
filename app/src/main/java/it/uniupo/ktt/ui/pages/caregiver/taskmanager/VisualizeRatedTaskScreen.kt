@@ -1,4 +1,4 @@
-package it.uniupo.ktt.ui.pages
+package it.uniupo.ktt.ui.pages.caregiver.taskmanager
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +36,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,17 +87,15 @@ import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun TaskRatingScreen(navController: NavController, taskId: String) {
+fun VisualizeRatedTaskScreen(navController: NavController, taskId: String) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
-            popUpTo("task_rating") { inclusive = true }
+            popUpTo("task manager") { inclusive = true }
             launchSingleTop = true
         }
     }
 
-    var currentRating by remember { mutableStateOf(0) }
-    var ratingComment by remember { mutableStateOf("") }
-
+    val maxStars = 5
     var selectedSubtaskIndex by remember { mutableStateOf(-1) }
     var showSubtaskDetailDialog by remember { mutableStateOf(false) }
 
@@ -117,7 +117,7 @@ fun TaskRatingScreen(navController: NavController, taskId: String) {
         ) {
             PageTitle(
                 navController = navController,
-                title = "Task Rating"
+                title = "Rated Task"
             )
 
             Spacer(modifier = Modifier.size(30.dp))
@@ -347,16 +347,59 @@ fun TaskRatingScreen(navController: NavController, taskId: String) {
 
             Spacer(modifier = Modifier.size(30.dp))
 
-            RatingComponent(
-                initialRating = currentRating,
-                comment = ratingComment,
-                onRatingChanged = {
-                    newRating -> currentRating = newRating
-                },
-                onCommentChanged = {
-                    newComment -> ratingComment = newComment
+            Box(
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .fillMaxWidth()
+                    .shadow(
+                        4.dp,
+                        shape = MaterialTheme.shapes.extraLarge,
+                        clip = false
+                    )
+                    .background(Color(0xFFF5DFFA), shape = MaterialTheme.shapes.extraLarge)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Overall Rating Comment:",
+                        fontSize = 16.sp,
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (task != null) {
+                        Text(
+                            text = task.overallComment,
+                            fontSize = 16.sp,
+                            color = subtitleColor
+                        )
+                    }
+
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Overall Rating:",
+                        fontSize = 16.sp,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        for (index in 0 until maxStars) {
+                            val filled = index < (task?.overallRating ?: 0)
+                            Icon(
+                                imageVector = if (filled) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                contentDescription = "Rating ${index + 1} of $maxStars",
+                                tint = if (filled) Color(0xFF000000) else Color.Gray,
+                                modifier = Modifier
+                                    .size(35.dp)
+                                    .padding(horizontal = 2.dp)
+                            )
+                        }
+                    }
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.size(20.dp))
         }
@@ -369,61 +412,29 @@ fun TaskRatingScreen(navController: NavController, taskId: String) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row (
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .width(145.dp)
+                    .height(45.dp)
+                    .shadow(
+                        4.dp,
+                        shape = MaterialTheme.shapes.large,
+                        clip = false
+                    )
+                    .background(
+                        color = tertiary,
+                        shape = MaterialTheme.shapes.large
+                    ).clickable{
+                        navController.navigate("task manager")
+                    },
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(145.dp)
-                        .height(45.dp)
-                        .shadow(
-                            4.dp,
-                            shape = MaterialTheme.shapes.large,
-                            clip = false
-                        )
-                        .background(
-                            color = tertiary,
-                            shape = MaterialTheme.shapes.large
-                        ).clickable{
-                            navController.navigate("task manager")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Cancel",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .width(145.dp)
-                        .height(45.dp)
-                        .shadow(
-                            4.dp,
-                            shape = MaterialTheme.shapes.large,
-                            clip = false
-                        )
-                        .background(
-                            color = tertiary,
-                            shape = MaterialTheme.shapes.large
-                        )
-                        .clickable {
-                            viewModel.rateTask(taskId, ratingComment, currentRating)
-                            navController.navigate("task manager")
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Rate",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "Go back",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -431,6 +442,6 @@ fun TaskRatingScreen(navController: NavController, taskId: String) {
 
 @Preview
 @Composable
-fun TaskRatingScreenPreview() {
-    TaskRatingScreen(navController = NavController(context = LocalContext.current), taskId = "043e4e8e-b4ef-4da0-87fc-973f786d9fd1")
+fun VisualizeRatedTaskScreenPreview() {
+    VisualizeRatedTaskScreen(navController = NavController(context = LocalContext.current), taskId = "043e4e8e-b4ef-4da0-87fc-973f786d9fd1")
 }

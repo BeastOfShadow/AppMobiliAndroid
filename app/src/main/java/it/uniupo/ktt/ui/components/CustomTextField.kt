@@ -29,7 +29,8 @@ import androidx.compose.ui.unit.sp
 fun CustomTextField(
     label: String,
     textfieldValue: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    isError: Boolean
 ) {
     Text(
         text = label,
@@ -83,6 +84,7 @@ fun CustomTextFieldPreview() {
     CustomTextField(
         label = "Label",
         textfieldValue = "Value",
-        onValueChange = { var textfieldValue = it }
+        onValueChange = { var textfieldValue = it },
+        true
     )
 }

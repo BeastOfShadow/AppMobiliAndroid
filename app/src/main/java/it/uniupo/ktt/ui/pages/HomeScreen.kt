@@ -55,12 +55,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import it.uniupo.ktt.R
+import it.uniupo.ktt.time.isToday
 import it.uniupo.ktt.ui.components.homePage.AvatarSticker
 import it.uniupo.ktt.ui.components.homePage.EP_ProgressBar
 import it.uniupo.ktt.ui.components.homePage.ModalShowAvatars
 import it.uniupo.ktt.ui.components.homePage.TargetButton
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.model.Task
+import it.uniupo.ktt.ui.taskstatus.TaskStatus
+import it.uniupo.ktt.viewmodel.TaskViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -87,15 +92,12 @@ fun HomeScreen(navController: NavController) {
     val avatarRef by userViewModelRef.avatarUrl.collectAsState()
 
     val userUid = BaseRepository.currentUid()
+    val viewModel: TaskViewModel = viewModel()
+    var taskId by remember { mutableStateOf("") }
 
-    // targetButton visibility
-    var showTargetButton by remember { mutableStateOf(false) }
-
-    if(userRef == null){
-        LaunchedEffect (userUid){
-            if(userUid!= null) {
-                userViewModelRef.loadUserByUid(userUid)
-            }
+    LaunchedEffect(userUid) {
+        if (userUid != null && userRef == null) {
+            userViewModelRef.loadUserByUid(userUid)
         }
 
         // caso ELiminazione Utente mentre è Loggato
@@ -280,6 +282,15 @@ fun HomeScreen(navController: NavController) {
                         }
                         // EMPLOYEE HOME-SCREEN
                         else{
+                            LaunchedEffect(userUid) {
+                                if (userRef?.role == "EMPLOYEE" && userUid != null) {
+                                    val todayTasks = viewModel.getTasksByEmployeeId(userUid).filter { isToday(it.timeStampStart) }
+                                    Log.e("TODAY-TASK", "todayTasks: $todayTasks")
+                                    val ongoingTask = todayTasks.filter { it.active }
+
+                                    taskId = ongoingTask.firstOrNull()?.id.toString()
+                                }
+                            }
                             // 1) call DB per in cerca di SUBTASK ongoing by UserId
                             // 2) IF(CurrentSubTask Ongoing esiste) -> SHOW TARGET-BUTTON
                             // rendi visibile il TargetButton
@@ -328,7 +339,7 @@ fun HomeScreen(navController: NavController) {
                             // EP_DAILYTASKS
                             MenuLabel(
                                 navController = navController,
-                                navPage = "task manager",
+                                navPage = "daily task",
                                 title = "Daily Tasks",
                                 description = "Today's activities in a smart list",
                                 image = R.drawable.menu_task_list,
@@ -359,32 +370,31 @@ fun HomeScreen(navController: NavController) {
                                 imageDescription = "Statistics Icon"
                             )
                         }
-
                     }
                 }
             }
         }
 
-        // TARGET-BUTTON
-        Box(
-            modifier = Modifier
-                .size(width = 70.dp, height = 60.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = -(40).dp, y = 30.dp)
-        ){
-            TargetButton(
+        if (taskId != "" && taskId != "null") // più esplicito
+        {
+            Box(
                 modifier = Modifier
-                    .scale(1.15f)
-                    .alpha(if (showTargetButton) 1f else 0f),
-                onClick = {
-                    navController.navigate("current subtask")
-                }
-            )
+                    .size(width = 70.dp, height = 60.dp)
+                    .align(Alignment.TopEnd)
+                    .offset(x = -(40).dp, y = 30.dp)
+            ) {
+                TargetButton(
+                    modifier = Modifier
+                        .scale(1.15f)
+                        .alpha(1f),
+                    onClick = {
+                        navController.navigate("current_subtask/${taskId}",)
+                    }
+                )
+            }
         }
 
     }
-
-
 }
 
 @Preview
