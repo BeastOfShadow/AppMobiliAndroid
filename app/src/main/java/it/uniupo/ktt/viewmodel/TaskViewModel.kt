@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
+import it.uniupo.ktt.ui.firebase.TaskRepository
 
 
 class TaskViewModel : ViewModel() {
@@ -28,48 +30,76 @@ class TaskViewModel : ViewModel() {
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
 
-    fun addTaskAndSubtasks(task: Task, subtasks: List<SubTask>) {
-        viewModelScope.launch {
-            try {
-                Log.d("DEBUG_FIRESTORE", "Salvo task ${task.id}")
-                db.collection("tasks")
-                    .document(task.id)
-                    .set(task)
-                    .await()
 
-                for (sub in subtasks) {
-                    Log.d("DEBUG_SUBTASK", "Processing subtask ${sub.id}, imgPath=${sub.descriptionImgStorageLocation}")
+        // OK
+    fun addTaskAndSubtasks(
+        task: Task,
+        subtasks: List<SubTask>
+    ) {
+        TaskRepository.saveTask(
+            task = task,
+            onSuccess = {
 
-                    var updated = sub
-                    if (sub.descriptionImgStorageLocation.isNotBlank()) {
-                        try {
-                            uploadImageToStorage(sub.descriptionImgStorageLocation, "${ImageLocationFolders.DESCRIPTION}/${sub.id}")
-                            updated = sub.copy(descriptionImgStorageLocation = "${ImageLocationFolders.DESCRIPTION}/${sub.id}")
-                        } catch (e: Exception) {
-                            Log.e("DEBUG_FIRESTORE", "Upload fallito per subtask ${sub.id}", e)
-                            throw e  // temporaneamente rilancio per debug
-                        }
+                subtasks.forEach { subTask ->
+                    var updated = subTask
+
+                    // SubTask con Foto
+                    if (subTask.descriptionImgStorageLocation.isNotBlank()) {
+
+                        val path = "subtaskImages/${task.id}/${subTask.id}.jpg"
+
+                        uploadImageToStorage(
+                            localPath = subTask.descriptionImgStorageLocation,
+                            storagePath = path,
+                            onSuccess = {
+                                updated = subTask.copy(descriptionImgStorageLocation = path)
+                                TaskRepository.saveSubtask(task.id, updated, {}, {
+                                    Log.e("DEBUG", "Errore salvataggio subtask ${updated.id}: ${it.message}")
+                                })
+                            },
+                            onError = {
+                                Log.e("DEBUG", "Errore upload img subtask ${subTask.id}: ${it.message}")
+                                TaskRepository.saveSubtask(task.id, updated.copy(descriptionImgStorageLocation = ""), {}, {
+                                    Log.e("DEBUG", "Errore salvataggio subtask ${updated.id} (dopo upload fallito): ${it.message}")
+                                })
+                            }
+                        )
                     }
-
-                    try {
-                        Log.d("DEBUG_FIRESTORE", "Salvo subtasks/${updated.id}")
-                        db.collection("tasks")
-                            .document(task.id)
-                            .collection("subtasks")
-                            .document(updated.id)
-                            .set(updated)
-                            .await()
-                    } catch (e: Exception) {
-                        Log.e("DEBUG_FIRESTORE", "Errore salvataggio subtask ${updated.id}", e)
-                        throw e
+                    // SubTask senza Foto
+                    else {
+                        TaskRepository.saveSubtask(task.id, updated, {}, {
+                            Log.e("DEBUG", "Errore salvataggio subtask ${updated.id}: ${it.message}")
+                        })
                     }
                 }
-
-            } catch (e: Exception) {
-                Log.e("TaskViewModel", "Errore generale", e)
-                // Qui puoi anche mostrarti un toast o un snackbar per avvertire l'utente
+            },
+            onError = {
+                Log.e("DEBUG", "Errore salvataggio Task: ${it.message}")
             }
+        )
+    }
+
+        //  DATO un Subtask, ritorna la sua ImgUrl pronta
+    fun getSubtaskImageUrl(
+        subtask: SubTask,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val path = subtask.descriptionImgStorageLocation
+
+        if (path.isBlank()) {
+            onError(Exception("Path immagine vuoto"))
+            return
         }
+
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        storageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+            .addOnFailureListener { exception ->
+                onError(exception)
+            }
     }
 
 
