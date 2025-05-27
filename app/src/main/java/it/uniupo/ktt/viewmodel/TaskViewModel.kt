@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import it.uniupo.ktt.imagelocation.ImageLocationFolders
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.BaseRepository.db
@@ -195,6 +196,21 @@ class TaskViewModel : ViewModel() {
                 taskRef.update("overallComment", comment).await()
                 taskRef.update("overallRating", rating).await()
                 taskRef.update("status", TaskStatus.RATED).await()
+                Log.d("TaskViewModel", "Task $taskId rating and comment updated")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error updating task rating and comment: ${e.message}")
+            }
+        }
+    }
+
+    fun updateLocation(taskId: String, selectedLatLng: LatLng) {
+        viewModelScope.launch {
+            try {
+                val taskRef = db.collection("tasks").document(taskId)
+                val firestoreGeoPoint = com.google.firebase.firestore.GeoPoint(selectedLatLng.latitude, selectedLatLng.longitude)
+
+                taskRef.update("location", firestoreGeoPoint).await()
+
                 Log.d("TaskViewModel", "Task $taskId rating and comment updated")
             } catch (e: Exception) {
                 Log.e("TaskViewModel", "Error updating task rating and comment: ${e.message}")
