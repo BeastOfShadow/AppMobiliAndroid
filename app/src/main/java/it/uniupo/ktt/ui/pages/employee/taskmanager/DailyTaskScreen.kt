@@ -179,14 +179,14 @@ fun DailyTaskScreen(navController: NavController) {
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 Text(
-                                    text = "Description:",
+                                    text = "Task name:",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = titleColor,
                                 )
 
                                 Text(
-                                    text = task.description,
+                                    text = task.title,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.Center,
