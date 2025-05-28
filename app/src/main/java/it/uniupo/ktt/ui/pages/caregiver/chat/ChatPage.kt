@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.chats.ChatContactLable
@@ -45,10 +43,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.navigation.compose.hiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.firebase.ChatRepository
-import it.uniupo.ktt.ui.model.Chat
-import it.uniupo.ktt.viewmodel.ChatViewModel
-import it.uniupo.ktt.viewmodel.UserViewModel
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 
 @Composable
 fun ChatPage(navController: NavController) {
@@ -63,20 +58,17 @@ fun ChatPage(navController: NavController) {
 
     val currentUid = BaseRepository.currentUid()
 
-    // collegamento con ChatViewModel
-    val chatViewModelRefHilt = hiltViewModel<ChatViewModel>()
-    // proprietà osservabili del ChatViewModel (Only Read)
-    val chatsRef by chatViewModelRefHilt.enrichedChatList.collectAsState()
-    val isLoadingRef by chatViewModelRefHilt.isLoading.collectAsState()
-    val errorRef by chatViewModelRefHilt.errorMessage.collectAsState()
-
-    // ogni volta che entro nella page viene lanciato per update
-    LaunchedEffect (currentUid){
-        if(currentUid != null){
-            chatViewModelRefHilt.loadChats(currentUid)
-        }
-
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
+    val parentEntry = remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry("home")
     }
+    val homeVMH = hiltViewModel<HomeScreenViewModel>(parentEntry) // ENRICHED CHATS -> homeScreenViewModel
+
+    // Observable
+    val enrichedChats by homeVMH.enrichedUserChatsList.collectAsState()
+    val isLoadindEnrichedChats by homeVMH.isLoadingEnrichedChats.collectAsState()
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
+
 
     Box(
         modifier = Modifier
@@ -108,15 +100,11 @@ fun ChatPage(navController: NavController) {
                 // UI-> ModelView Behaviour
                 when {
                     // wait to build PageUI (DB data not delivered yet)
-                    isLoadingRef -> {
+                    isLoadindEnrichedChats -> {
                         CircularProgressIndicator(Modifier.align(Alignment.Center))
                     }
-                    // query error
-                    errorRef != null -> {
-                        Log.e("DEBUG-ModelView", "Errore delivery Lista Chats")
-                    }
                     // lista Chat recieved vuota (0 Chat al momento)
-                    chatsRef.isEmpty() ->{
+                    enrichedChats.isEmpty() ->{
                         Text(
                             text = buildAnnotatedString {
                                 append("Press ")
@@ -160,7 +148,7 @@ fun ChatPage(navController: NavController) {
                         )
 
                         // ordina la lista in base alla data dell'ultimo messaggio
-                        val sortedChatList = chatsRef.sortedBy { it.chat.lastTimeStamp }
+                        val sortedChatList = enrichedChats.sortedBy { it.chat.lastTimeStamp }
 
                         Box(
                             modifier = Modifier

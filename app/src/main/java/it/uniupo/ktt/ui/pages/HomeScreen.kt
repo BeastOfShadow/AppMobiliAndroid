@@ -63,8 +63,8 @@ import it.uniupo.ktt.ui.components.homePage.EP_ProgressBar
 import it.uniupo.ktt.ui.components.homePage.ModalShowAvatars
 import it.uniupo.ktt.ui.components.homePage.TargetButton
 import it.uniupo.ktt.ui.firebase.BaseRepository
-import it.uniupo.ktt.ui.model.Task
-import it.uniupo.ktt.ui.taskstatus.TaskStatus
+import it.uniupo.ktt.viewmodel.ChatViewModel
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 
 
@@ -80,27 +80,37 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    //Stato Dialog (visibilità del del ModalAddContact (ON/OFF)) reattiva ai cambiamenti
+    val userUid = BaseRepository.currentUid()
+
+    // Stato Dialog (visibilità del dello SHOW AVATAR MODAL -> (ON/OFF)) reattiva ai cambiamenti
     var showDialog by remember { mutableStateOf(false) }
 
-    // istanza + collegamento
-    val userViewModelRef = hiltViewModel<UserViewModel>()
-    // osservabili
+    // TaskID Ongoing Daily Task (SOLO EMPLOYEE)
+    var taskId by remember { mutableStateOf("") }
+
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
+    val userViewModelRef = hiltViewModel<UserViewModel>() // USER
+    val homeScreenViewModelRefHilt = hiltViewModel<HomeScreenViewModel>() // ENRICHED CHATS
+    val viewModel: TaskViewModel = viewModel() // ONGING TASK
+
+    // Observable
     val userRef by userViewModelRef.user.collectAsState()
     val isLoadingUserRef by userViewModelRef.isLoadingUser.collectAsState()
     val errorRef by userViewModelRef.errorMessage.collectAsState()
     val avatarRef by userViewModelRef.avatarUrl.collectAsState()
+    val isLoadindEnrichedChats by homeScreenViewModelRefHilt.isLoadingEnrichedChats.collectAsState()
+    val enrichedUserChatsList by homeScreenViewModelRefHilt.enrichedUserChatsList.collectAsState()
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
 
-    val userUid = BaseRepository.currentUid()
-    val viewModel: TaskViewModel = viewModel()
-    var taskId by remember { mutableStateOf("") }
 
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
+    // GET USER
     LaunchedEffect(userUid) {
         if (userUid != null && userRef == null) {
             userViewModelRef.loadUserByUid(userUid)
         }
 
-        // caso ELiminazione Utente mentre è Loggato
+        // caso extra -> DELETE USER in DB,  mentre l'utente è Loggato
         if (!isLoadingUserRef && errorRef != null) {
             FirebaseAuth.getInstance().signOut()
             navController.navigate("login") {
@@ -110,12 +120,21 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    // GET ALL USERCHATS (Enriched)
+    LaunchedEffect(userUid) {
+        if(userUid!= null) {
+            homeScreenViewModelRefHilt.observeUserChats(userUid)
+        }
+    }
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
+
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ){
         when {
-            // wait to build PageUI ... (DB data not delivered yet)
-            isLoadingUserRef -> {
+            // Wait User & Enrichedchats Loading before composing UI
+            isLoadingUserRef || isLoadindEnrichedChats ->{
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
             // query error
@@ -128,6 +147,10 @@ fun HomeScreen(navController: NavController) {
             }
             // USER FOUND
             else -> {
+
+                Log.d("DEBUG-HOME-CHATS", "EnrichedChatList:\n" + enrichedUserChatsList.joinToString("\n") {
+                    "chatId=${it.chat.chatId}, name=${it.name}, surname=${it.surname}, lastMsg= ${it.chat.lastMsg}"
+                })
 
                 /*
                  *  copia in locale per smart cast sicuro (Kotlin non può garantire che non muti il suo

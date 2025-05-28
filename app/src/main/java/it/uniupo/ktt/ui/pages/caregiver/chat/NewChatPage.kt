@@ -48,6 +48,7 @@ import it.uniupo.ktt.ui.components.chats.ChatContactLable
 import it.uniupo.ktt.ui.components.chats.ModalAddContact
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.viewmodel.ChatViewModel
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.NewChatViewModel
 
 @Composable
@@ -64,27 +65,28 @@ fun NewChatPage(navController: NavController) {
 
     val currentUid = BaseRepository.currentUid()
 
-
-    // collegamento al ChatViewModel "old" della pagina padre (ChatPage)
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
     val parentEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry("chat")
+        navController.getBackStackEntry("home")
     }
-    val chatViewModelRefHilt = hiltViewModel<ChatViewModel>(parentEntry)
+    val homeVMH = hiltViewModel<HomeScreenViewModel>(parentEntry) // ENRICHED CHATS -> homeScreenViewModel
 
+    val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>() // ENRICHED CONTACTS
 
-    // collegamento ad un "new" NewChatViewModel (con Hilt)
-    val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>()
-    // properties observable
+    // Observable
     val enrichedContactRef by newChatViewModelRefHilt.enrichedContactList.collectAsState()
     val isLoadingRef by newChatViewModelRefHilt.isLoading.collectAsState()
     val errorRef by newChatViewModelRefHilt.errorMessage.collectAsState()
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
 
-    // lancio metodo per Init OR Update
+
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
     LaunchedEffect (currentUid){
         if(currentUid != null){
             newChatViewModelRefHilt.loadContacts(currentUid)
         }
     }
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
 
 
     Box(
@@ -216,7 +218,7 @@ fun NewChatPage(navController: NavController) {
                                         onClick = {
 
                                             // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato
-                                            val chatFound = chatViewModelRefHilt.searchChatByUid(contact.contact.uidContact)
+                                            val chatFound = homeVMH.searchChatByUid(contact.contact.uidContact)
 
 
                                             // CHAT già esistente

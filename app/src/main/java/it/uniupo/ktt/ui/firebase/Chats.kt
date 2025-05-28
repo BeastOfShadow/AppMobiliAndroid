@@ -3,6 +3,7 @@ package it.uniupo.ktt.ui.firebase
 import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.firestore.ListenerRegistration
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.Message
@@ -168,7 +169,31 @@ object ChatRepository {
     }
 
 
-                                            // REAL-TIME-DB FUNCTION
+                                            // LISTENER CHATS GLOBALE (app Aperta)
+        // OK -> Crea un Listener sulla Lista Chats anche se vuota (dato che in futuro potrebbe popolarsi)
+    fun listenToUserChatsChanges(
+        userId: String,
+        onChatChanged: (List<Chat>) -> Unit,
+        onError: (Exception) -> Unit
+    ): ListenerRegistration {
+
+        return BaseRepository.db.collection("chats")
+            .whereArrayContains("members", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                    onChatChanged(chats)
+                }
+            }
+    }
+
+
+                                            // REAL-TIME-DB FUNCTION (app Aperta: solo "ChatOpen")
         // OK
     fun sendMessageRealtime(
             chatId: String,
