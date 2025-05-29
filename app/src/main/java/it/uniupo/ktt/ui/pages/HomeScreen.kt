@@ -120,7 +120,7 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // GET ALL USERCHATS (Enriched)
+    // GET ALL USERCHATS (Enriched) + GENERATE CHAT LISTENER
     LaunchedEffect(userUid) {
         if(userUid!= null) {
             homeScreenViewModelRefHilt.observeUserChats(userUid)
@@ -398,7 +398,9 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
-        if (taskId != "" && taskId != "null") // più esplicito
+
+        // --------------- BUTTON CURRENT TASK ---------------
+        if (taskId != "" && taskId != "null")
         {
             Box(
                 modifier = Modifier
@@ -416,6 +418,8 @@ fun HomeScreen(navController: NavController) {
                 )
             }
         }
+        // --------------- BUTTON CURRENT TASK ---------------
+
 
     }
 }

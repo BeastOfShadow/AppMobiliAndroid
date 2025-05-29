@@ -170,27 +170,51 @@ object ChatRepository {
 
 
                                             // LISTENER CHATS GLOBALE (app Aperta)
-        // OK -> Crea un Listener sulla Lista Chats anche se vuota (dato che in futuro potrebbe popolarsi)
-    fun listenToUserChatsChanges(
-        userId: String,
-        onChatChanged: (List<Chat>) -> Unit,
-        onError: (Exception) -> Unit
-    ): ListenerRegistration {
 
-        return BaseRepository.db.collection("chats")
-            .whereArrayContains("members", userId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    onError(error)
-                    return@addSnapshotListener
-                }
+        // OK -> Add ChatListener + return updated Chats
+        /*
+        *   1) Crea un Listener PERMANENTE sulla Lista Chats anche se vuota (dato che in futuro potrebbe popolarsi)
+        *      per ricevere update in tempo reale sulle CHATs.
+        *      ATTENZIONE: il Listener salva i dati al suo interno come la lista "previousChats" etc
+        *
+        *   2) Ad ogni aggiornamento di una o + chat del DB , il Listener confronta la OLDCHatList con la newChatList
+        *      ovvero la Lista delle nuove Chat appena arrivate
+        *      con la NEWChatList per scovare le chat modificate, così da poter ritornare solo le Chat cambiate.
+        */
+        fun listenToUserChatsChanges(
+            userId: String,
+            onChatChanged: (List<Chat>, List<Chat>) -> Unit, // oldList + changedList
+            onError: (Exception) -> Unit
+        ): ListenerRegistration {
 
-                if (snapshot != null) {
-                    val chats = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
-                    onChatChanged(chats)
+            var oldChatList: List<Chat> = emptyList()
+
+            return BaseRepository.db.collection("chats")
+                .whereArrayContains("members", userId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        onError(error)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null) {
+                        // Liste Updated Fresche Fresche di Listener
+                        val newChatList = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+
+                        // CONFRONTO: oldCHatList VS newChatList
+                        val changedChats = newChatList.filter { newChat ->
+                            val old = oldChatList.find { it.chatId == newChat.chatId }
+                            old == null || old.lastMsg != newChat.lastMsg
+                        }
+
+                        // CALLBACK di aggiornamento per arricchire in Base al Caso in cui siamo
+                        onChatChanged(newChatList, changedChats)
+
+                        // SALVO la nuovaChatList come quella attuale (oldChatList)
+                        oldChatList = newChatList
+                    }
                 }
-            }
-    }
+        }
 
 
                                             // REAL-TIME-DB FUNCTION (app Aperta: solo "ChatOpen")

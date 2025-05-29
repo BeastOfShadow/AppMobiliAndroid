@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.ui.pages.caregiver.chat.ChatPage
 import it.uniupo.ktt.ui.pages.caregiver.statistics.CG_StatisticPage
 import it.uniupo.ktt.ui.pages.HomeScreen
@@ -37,11 +36,24 @@ import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
 import android.Manifest
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
 import it.uniupo.ktt.ui.pages.employee.currentTask.SubTaskViewScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
-import it.uniupo.ktt.viewmodel.TaskViewModel
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
+
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MarkChatUnread
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,10 +70,65 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            val startDestination by remember { mutableStateOf(if (FirebaseAuth.getInstance().currentUser == null) "login" else "home") }
+            val startDestination by remember { mutableStateOf(if (BaseRepository.currentUser() == null) "login" else "home") }
+
+
+            // -------------------- VIEWMODEL GLOBALE (lifetime = MainActivity) ---------------------
+
+            /*
+            *       APP in FOREGROUND:
+            *
+            *       Istanzio qui il ViewModel per permettere che sia disponibile e attivo navigando in tutte le
+            *       Page dell'app, in questo modo la EnrichedChatList sarà sempre attiva e pronta ad aggiornamenti
+            *       così che lutente abbia sempre il Badge Dispo ovunque si trovi.
+            *
+            *       Nel momento in cui l'app va in BackGround il Listener Cade per dare spazio al meccanismo
+            *       PUSH notify + FCM.
+            *
+            * */
+            val currentEntry by navController.currentBackStackEntryAsState()
+
+            // (solo se è istanziato l'HomeScreenViewModel)
+            val homeVM = if (currentEntry?.destination?.route == "home") {
+                hiltViewModel<HomeScreenViewModel>()
+            } else null
+
+            val highlightedChat = homeVM?.highlightedChat?.collectAsState()?.value
+            // -------------------- VIEWMODEL GLOBALE (lifetime = MainActivity) ---------------------
+
 
             KTTTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+
+                    // ------------- BADGE NEW MESSAGE ------------- (elemento UI Globale)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        if (highlightedChat != null) {
+                            val currentUid = BaseRepository.currentUid()
+                            val otherUid = if (highlightedChat.chat.caregiver == currentUid)
+                                highlightedChat.chat.employee
+                            else
+                                highlightedChat.chat.caregiver
+
+                            FloatingActionButton(
+                                onClick = {
+                                    navController.navigate("chat open/${highlightedChat.chat.chatId}/$otherUid")
+                                    homeVM.clearHighlightedChat()
+                                },
+                                containerColor = Color(0xFF9C27B0),
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(end = 24.dp, top = 32.dp)
+                            ) {
+                                Icon(Icons.Default.MarkChatUnread, contentDescription = "New Message")
+                            }
+                        }
+                    }
+                    // ------------- BADGE NEW MESSAGE  -------------
+
+
+                    // -------------------------- NAVIGATION --------------------------
                     NavHost(
                         navController = navController,
                         startDestination = startDestination,
@@ -151,6 +218,8 @@ class MainActivity : ComponentActivity() {
                             ChatOpen(navController, chatId, uidContact) // Passaggio dei  PARAM
                         }
                     }
+                    // -------------------------- NAVIGATION --------------------------
+
                 }
             }
         }
