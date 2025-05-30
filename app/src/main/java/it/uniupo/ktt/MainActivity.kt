@@ -37,26 +37,8 @@ import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
 import android.Manifest
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
@@ -64,7 +46,6 @@ import it.uniupo.ktt.ui.pages.employee.currentTask.SubTaskViewScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
-
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
@@ -72,6 +53,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.compose.currentBackStackEntryAsState
 import it.uniupo.ktt.ui.components.global.foregroundBadge
 
 
@@ -111,8 +93,13 @@ class MainActivity : ComponentActivity() {
 
             val lifecycleOwner = LocalLifecycleOwner.current
 
-            // ------ *** LIFE-CYCLE -> LISTENER CHAT *** ------
+            // verifica del "CurrentBackStack" -> DON'T SHOW BADGE quando sono in "ChatOpen"
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            val isInChatOpen = currentRoute?.startsWith("chat open/") == true
 
+
+            // ------ *** LIFE-CYCLE -> LISTENER CHAT *** ------
             /*
             *                       DISPOSABLE-EFFECT & CALL-OCCORRENZA (MIX):
             *
@@ -166,43 +153,43 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     // ------------- BADGE NEW MESSAGE ------------- (elemento UI Globale)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .zIndex(10f) // Primo Piano
-                    ) {
-                        foregroundBadge(
-                            highlightedChat = highlightedChat,
-                            onDismiss = { homeVM.clearHighlightedChat() },
-                            onClick = { chatId, otherUid ->
+                    if (!isInChatOpen && highlightedChat != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(10f) // Primo Piano
+                        ) {
+                            foregroundBadge(
+                                highlightedChat = highlightedChat,
+                                onDismiss = { homeVM.clearHighlightedChat() },
+                                onClick = { chatId, otherUid ->
 
-                                /*
-                                *     LOGICA:
-                                *       dato che tornando indietro dalla "ChatOpen" viene ricercato nello
-                                *       NavStackBackEntry "ChatPage", se non esiste lo creo al volo senza
-                                *       mostrarlo all'utente.
-                                *
-                                *       In questo modo lo Stack viene mantenuto coerente e anche la navigazione
-                                *       in ritorno
-                                *
-                                *     PULIZIA BADGE:
-                                *       così dopo il Press del Badge viene subito tolto
-                                */
-                                // 1) inserimento "ChatPage" nello Stack (se non esistente)
-                                navController.navigate("chat") {
-                                    launchSingleTop = true // evita duplicati
-                                }
+                                    /*
+                                    *     LOGICA:
+                                    *       dato che tornando indietro dalla "ChatOpen" viene ricercato nello
+                                    *       NavStackBackEntry "ChatPage", se non esiste lo creo al volo senza
+                                    *       mostrarlo all'utente.
+                                    *
+                                    *       In questo modo lo Stack viene mantenuto coerente e anche la navigazione
+                                    *       in ritorno
+                                    *
+                                    *     PULIZIA BADGE:
+                                    *       così dopo il Press del Badge viene subito tolto
+                                    */
+                                    // 1) inserimento "ChatPage" nello Stack (se non esistente)
+                                    navController.navigate("chat") {
+                                        launchSingleTop = true // evita duplicati
+                                    }
 
-                                // 2) goto "ChatOpen"
-                                navController.navigate("chat open/$chatId/$otherUid")
+                                    // 2) goto "ChatOpen"
+                                    navController.navigate("chat open/$chatId/$otherUid")
 
-                                // 3) pulizia Badge
-                                homeVM.clearHighlightedChat()
-
-                                //navController.navigate("chat open/$chatId/$otherUid")
-                            },
-                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
-                        )
+                                    // 3) pulizia Badge
+                                    homeVM.clearHighlightedChat()
+                                },
+                                modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+                            )
+                        }
                     }
                     // ------------- BADGE NEW MESSAGE  -------------
 
