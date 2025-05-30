@@ -63,6 +63,7 @@ import it.uniupo.ktt.ui.components.task.taskmanager.TextSection
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.firebase.UserRepository.getEmployeeName
 import it.uniupo.ktt.ui.model.Task
+import it.uniupo.ktt.ui.subtaskstatus.SubtaskStatus
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.lightGray
@@ -70,6 +71,7 @@ import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
@@ -83,6 +85,7 @@ fun DailyTaskScreen(navController: NavController) {
     }
 
     val taskViewModel : TaskViewModel = viewModel()
+    val subTaskViewModel : SubTaskViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
 
     var tasks by remember { mutableStateOf(emptyList<Task>()) }
@@ -92,8 +95,8 @@ fun DailyTaskScreen(navController: NavController) {
         if (uid != null) {
             val allTasks = taskViewModel.getTasksByEmployeeId(uid)
             tasks = allTasks
-                .filter { isToday(it.timeStampStart) }
-                .sortedBy { it.timeStampStart }
+                .filter { isToday(it.createdAt) }
+                .sortedBy { it.createdAt }
         }
     }
 
@@ -195,9 +198,12 @@ fun DailyTaskScreen(navController: NavController) {
 
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                val canStart = !task.active && tasks.subList(0, index).all { !it.active && it.status == TaskStatus.COMPLETED.toString() }
+                                val canStart = !(task.status == TaskStatus.COMPLETED.toString() || task.status == TaskStatus.RATED.toString())
+                                        && tasks.subList(0, index).all {
+                                            it.status == TaskStatus.COMPLETED.toString() || it.status == TaskStatus.RATED.toString()
+                                        }
 
-                                if(task.active && task.completionTimeActual != 0){
+                                if(task.status == TaskStatus.COMPLETED.toString() || task.status == TaskStatus.RATED.toString()){
                                     Image(
                                         painter = painterResource(id = R.drawable.task_done),
                                         contentDescription = "Task Completed",
@@ -214,6 +220,8 @@ fun DailyTaskScreen(navController: NavController) {
                                             .padding(top = 8.dp)
                                     )
                                 } else if (canStart) {
+                                    val subTasks = taskViewModel.getSubtasksByTaskId(task.id)
+
                                     Box(
                                         modifier = Modifier
                                             .size(44.dp)
@@ -221,11 +229,14 @@ fun DailyTaskScreen(navController: NavController) {
                                             .clickable {
                                                 coroutineScope.launch {
                                                     taskViewModel.startTaskEmployee(task.id)
-                                                    // Dopo aver avviato il task, ricarica la lista
+
+                                                    if(subTasks.isNotEmpty())
+                                                        subTaskViewModel.updateSubtaskStatus(task.id, subTasks.first().id, SubtaskStatus.RUNNING.toString())
+
                                                     val uid = currentUid()
                                                     if (uid != null) {
                                                         val allTasks = taskViewModel.getTasksByEmployeeId(uid)
-                                                        tasks = allTasks.filter { isToday(it.timeStampStart) }
+                                                        tasks = allTasks.filter { isToday(it.createdAt) }.sortedBy { it.createdAt }
                                                     }
                                                 }
                                             }
