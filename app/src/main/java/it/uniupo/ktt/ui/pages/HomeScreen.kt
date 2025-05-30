@@ -70,7 +70,7 @@ import it.uniupo.ktt.viewmodel.TaskViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
 
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("login")
@@ -90,7 +90,6 @@ fun HomeScreen(navController: NavController) {
 
     // -------------------------------- VIEW MODEL REF -------------------------------------------
     val userViewModelRef = hiltViewModel<UserViewModel>() // USER
-    val homeScreenViewModelRefHilt = hiltViewModel<HomeScreenViewModel>() // ENRICHED CHATS
     val viewModel: TaskViewModel = viewModel() // ONGING TASK
 
     // Observable
@@ -98,8 +97,8 @@ fun HomeScreen(navController: NavController) {
     val isLoadingUserRef by userViewModelRef.isLoadingUser.collectAsState()
     val errorRef by userViewModelRef.errorMessage.collectAsState()
     val avatarRef by userViewModelRef.avatarUrl.collectAsState()
-    val isLoadindEnrichedChats by homeScreenViewModelRefHilt.isLoadingEnrichedChats.collectAsState()
-    val enrichedUserChatsList by homeScreenViewModelRefHilt.enrichedUserChatsList.collectAsState()
+    val isLoadindEnrichedChats by homeVM.isLoadingEnrichedChats.collectAsState()
+    val enrichedUserChatsList by homeVM.enrichedUserChatsList.collectAsState()
     // -------------------------------- VIEW MODEL REF -------------------------------------------
 
 
@@ -123,7 +122,7 @@ fun HomeScreen(navController: NavController) {
     // GET ALL USERCHATS (Enriched) + GENERATE CHAT LISTENER
     LaunchedEffect(userUid) {
         if(userUid!= null) {
-            homeScreenViewModelRefHilt.observeUserChats(userUid)
+            homeVM.observeUserChats(userUid)
         }
     }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
@@ -148,7 +147,7 @@ fun HomeScreen(navController: NavController) {
             // USER FOUND
             else -> {
 
-                Log.d("DEBUG-HOME-CHATS", "EnrichedChatList:\n" + enrichedUserChatsList.joinToString("\n") {
+                Log.d("_enrichedCHats", "EnrichedChatList:\n" + enrichedUserChatsList.joinToString("\n") {
                     "chatId=${it.chat.chatId}, name=${it.name}, surname=${it.surname}, lastMsg= ${it.chat.lastMsg}"
                 })
 
@@ -178,7 +177,10 @@ fun HomeScreen(navController: NavController) {
                         ) {
                             FilledIconButton(
                                 onClick = {
-                                    // navController.popBackStack()
+                                    // DELETE-LISTENER (Chats) on LOGOUT
+                                    homeVM.stopObservingChats()
+                                    Log.d("Lifecycle", "LOGOUT-> Listener Eliminato.")
+
                                     FirebaseAuth.getInstance().signOut()
                                     navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
@@ -424,8 +426,4 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
-@Preview
-@Composable
-fun HomeScreenPreview() {
-   HomeScreen(navController = NavController(context = LocalContext.current))
-}
+

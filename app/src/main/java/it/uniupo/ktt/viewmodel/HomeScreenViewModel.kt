@@ -43,8 +43,15 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
 
         // OK
     fun observeUserChats(uid: String) {
+
+        // Evito creazione multipla del Listener
+        if (chatListener != null) {
+            Log.d("Lifecycle", "GIA LOGGATO-> Listener già attivo (non creato nuovamente).")
+            return
+        }
+
+        Log.d("Lifecycle", "LOGIN-> Listener creato.")
         _isLoadingEnrichedChats.value = true
-        chatListener?.remove() // Delete Listener (Good Practice)
 
         chatListener = ChatRepository.listenToUserChatsChanges(
             userId = uid,
@@ -77,6 +84,10 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                         // 2.1) Primo Caricamento (Lista Locale EMPTY, NewCHatList NOT EMPTY)
                         if(_enrichedUserChatsList.value.isEmpty()){
                             enrichAllChats(newChatList, currentUid)
+
+                            Log.d("globalChats", "PRIMO CARICAMENTO (totale):\n" + newChatList.joinToString("\n") {
+                                "chatId=${it.chatId}, members=${it.members}, lastMsg=${it.lastMsg}"
+                            })
                         }
                         // 2.2.) Post Primo Caricamento, UPDATE MIRATO (Lista Locale e NewCHatList NOT EMPTY)
                         else{
@@ -115,11 +126,14 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
 
                                             // aggiornamento
                                             _enrichedUserChatsList.value = currentList
+                                            Log.d("globalChats", "UPDATE MIRATO:\n" + currentList.joinToString("\n") {
+                                                "chatId=${it.chat.chatId}, members=${it.chat.members}, lastMsg=${it.chat.lastMsg}"
+                                            })
 
                                             // 3) NOTIFICA UPDATE BADGE (FOREGROUND)
-                                            notifyNewMessage(
-                                                newEnrichedChat
-                                            )
+                                            if (changedChat.uidLastSender != currentUid) {
+                                                notifyNewMessage(newEnrichedChat)
+                                            }
 
                                             _isLoadingEnrichedChats.value = false
                                         }

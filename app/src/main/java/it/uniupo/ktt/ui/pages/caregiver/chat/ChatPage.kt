@@ -46,7 +46,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 
 @Composable
-fun ChatPage(navController: NavController) {
+fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
     //Controllo Login
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("login")
@@ -59,14 +59,9 @@ fun ChatPage(navController: NavController) {
     val currentUid = BaseRepository.currentUid()
 
     // -------------------------------- VIEW MODEL REF -------------------------------------------
-    val parentEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry("home")
-    }
-    val homeVMH = hiltViewModel<HomeScreenViewModel>(parentEntry) // ENRICHED CHATS -> homeScreenViewModel
-
     // Observable
-    val enrichedChats by homeVMH.enrichedUserChatsList.collectAsState()
-    val isLoadindEnrichedChats by homeVMH.isLoadingEnrichedChats.collectAsState()
+    val enrichedChats by homeVM.enrichedUserChatsList.collectAsState()
+    val isLoadindEnrichedChats by homeVM.isLoadingEnrichedChats.collectAsState()
     // -------------------------------- VIEW MODEL REF -------------------------------------------
 
 
@@ -222,8 +217,3 @@ fun ChatPage(navController: NavController) {
     }
 }
 
-@Preview
-@Composable
-fun ChatPagePreview() {
-    ChatPage(navController = NavController(context = LocalContext.current))
-}

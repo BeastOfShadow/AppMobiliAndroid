@@ -52,7 +52,7 @@ import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.NewChatViewModel
 
 @Composable
-fun NewChatPage(navController: NavController) {
+fun NewChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
     if (!LocalInspectionMode.current && !BaseRepository.isUserLoggedIn()) {
         navController.navigate("login") {
             popUpTo("login") { inclusive = false } // rimuovi tutte le Page nello Stack fino a Landing senza eliminare quest'ultima
@@ -66,11 +66,6 @@ fun NewChatPage(navController: NavController) {
     val currentUid = BaseRepository.currentUid()
 
     // -------------------------------- VIEW MODEL REF -------------------------------------------
-    val parentEntry = remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry("home")
-    }
-    val homeVMH = hiltViewModel<HomeScreenViewModel>(parentEntry) // ENRICHED CHATS -> homeScreenViewModel
-
     val newChatViewModelRefHilt = hiltViewModel<NewChatViewModel>() // ENRICHED CONTACTS
 
     // Observable
@@ -218,7 +213,7 @@ fun NewChatPage(navController: NavController) {
                                         onClick = {
 
                                             // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato
-                                            val chatFound = homeVMH.searchChatByUid(contact.contact.uidContact)
+                                            val chatFound = homeVM.searchChatByUid(contact.contact.uidContact)
 
 
                                             // CHAT già esistente

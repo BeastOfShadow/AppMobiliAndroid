@@ -36,7 +36,25 @@ import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
 import android.Manifest
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,13 +65,15 @@ import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MarkChatUnread
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import it.uniupo.ktt.ui.components.global.foregroundBadge
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -82,18 +102,61 @@ class MainActivity : ComponentActivity() {
             *       Page dell'app, in questo modo la EnrichedChatList sarà sempre attiva e pronta ad aggiornamenti
             *       così che lutente abbia sempre il Badge Dispo ovunque si trovi.
             *
-            *       Nel momento in cui l'app va in BackGround il Listener Cade per dare spazio al meccanismo
+            *       Nel momento in cui l'app va in BACKGROUND Or LOGOUT il Listener Cade per dare spazio al meccanismo
             *       PUSH notify + FCM.
             *
-            * */
-            val currentEntry by navController.currentBackStackEntryAsState()
+            */
+            val homeVM: HomeScreenViewModel = hiltViewModel() // -> ENRICHED CHATS (globalmente dispo nell'APP)
+            val highlightedChat by homeVM.highlightedChat.collectAsState()
 
-            // (solo se è istanziato l'HomeScreenViewModel)
-            val homeVM = if (currentEntry?.destination?.route == "home") {
-                hiltViewModel<HomeScreenViewModel>()
-            } else null
+            val lifecycleOwner = LocalLifecycleOwner.current
 
-            val highlightedChat = homeVM?.highlightedChat?.collectAsState()?.value
+            // ------ *** LIFE-CYCLE -> LISTENER CHAT *** ------
+
+            /*
+            *                       DISPOSABLE-EFFECT & CALL-OCCORRENZA (MIX):
+            *
+            *       Combiniamo 2 Logiche per permettere...
+            *
+            *               1) GENERAZIONE-LISTENER con (APP-FOREGROUNG(ON_START) && uid!=NULL) or
+            *                  (APP-FOREGROUNG(ON_START) && uid==NULL) se ne occupa dopo il Login
+            *                  la HomeScreen.
+            *
+            *               2) DELETE-LISTENER dopo LOGOUT(se ne occupa direttamente la HomeScreen all'onClick)
+            *                  or APP-BACKGROUND(ON_STOP)
+            *
+            *
+            *       EXTRA: "DisposableEffect" viene usato per registrare un OSSERVATORE "LifecycleEventObserver"
+            *              che permette di monitorare gli eventi "ON_START(entrata in APP)" e "ON_STOP(uscita dall'APP)"
+            *
+            *              In questo modo "ON_START" -> genero Listener, "ON_STOP" -> elimino Listener
+            *
+            */
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    val uid = BaseRepository.currentUid()
+                    if (uid != null) {
+                        when (event) {
+                            Lifecycle.Event.ON_START -> {
+                                Log.d("Lifecycle", "ON_START: Listener acceso")
+                                homeVM.observeUserChats(uid)
+                            }
+                            Lifecycle.Event.ON_STOP -> {
+                                Log.d("Lifecycle", "ON_STOP: Listener spento")
+                                homeVM.stopObservingChats()
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
+                }
+            }
+            // ------ *** LYFE-CYCLE -> LISTENER CHAT *** ------
+
             // -------------------- VIEWMODEL GLOBALE (lifetime = MainActivity) ---------------------
 
 
@@ -103,27 +166,43 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     // ------------- BADGE NEW MESSAGE ------------- (elemento UI Globale)
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        if (highlightedChat != null) {
-                            val currentUid = BaseRepository.currentUid()
-                            val otherUid = if (highlightedChat.chat.caregiver == currentUid)
-                                highlightedChat.chat.employee
-                            else
-                                highlightedChat.chat.caregiver
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .zIndex(10f) // Primo Piano
+                    ) {
+                        foregroundBadge(
+                            highlightedChat = highlightedChat,
+                            onDismiss = { homeVM.clearHighlightedChat() },
+                            onClick = { chatId, otherUid ->
 
-                            FloatingActionButton(
-                                onClick = {
-                                    navController.navigate("chat open/${highlightedChat.chat.chatId}/$otherUid")
-                                    homeVM.clearHighlightedChat()
-                                },
-                                containerColor = Color(0xFF9C27B0),
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(end = 24.dp, top = 32.dp)
-                            ) {
-                                Icon(Icons.Default.MarkChatUnread, contentDescription = "New Message")
-                            }
-                        }
+                                /*
+                                *     LOGICA:
+                                *       dato che tornando indietro dalla "ChatOpen" viene ricercato nello
+                                *       NavStackBackEntry "ChatPage", se non esiste lo creo al volo senza
+                                *       mostrarlo all'utente.
+                                *
+                                *       In questo modo lo Stack viene mantenuto coerente e anche la navigazione
+                                *       in ritorno
+                                *
+                                *     PULIZIA BADGE:
+                                *       così dopo il Press del Badge viene subito tolto
+                                */
+                                // 1) inserimento "ChatPage" nello Stack (se non esistente)
+                                navController.navigate("chat") {
+                                    launchSingleTop = true // evita duplicati
+                                }
+
+                                // 2) goto "ChatOpen"
+                                navController.navigate("chat open/$chatId/$otherUid")
+
+                                // 3) pulizia Badge
+                                homeVM.clearHighlightedChat()
+
+                                //navController.navigate("chat open/$chatId/$otherUid")
+                            },
+                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+                        )
                     }
                     // ------------- BADGE NEW MESSAGE  -------------
 
@@ -137,7 +216,7 @@ class MainActivity : ComponentActivity() {
                         // REWORKED
                         composable("login") { LoginScreen(navController) }
                         composable("register") { RegisterScreen(navController) }
-                        composable("home") { HomeScreen(navController) }
+                        composable("home") { HomeScreen(navController, homeVM) }
 
                         composable("task manager") { TaskManagerScreen(navController) }
                         composable("new task") { NewTaskScreen(navController) }
@@ -202,8 +281,8 @@ class MainActivity : ComponentActivity() {
                         composable("CareGiver Statistic") { CG_StatisticPage(navController) }
                         composable("Employee Statistic") { EP_StatisticPage(navController) }
                         //Chats
-                        composable("chat") { ChatPage(navController) }
-                        composable("new chat") { NewChatPage(navController) }
+                        composable("chat") { ChatPage(navController, homeVM) }
+                        composable("new chat") { NewChatPage(navController, homeVM) }
                         composable(
                             "chat open/{chatId}/{uidContact}", // Route che accetta 2 PARAM
                             arguments = listOf(
