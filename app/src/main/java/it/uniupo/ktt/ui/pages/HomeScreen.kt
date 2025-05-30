@@ -110,6 +110,16 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    var ongoingTaskId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(userUid) {
+        if (userUid != null) {
+            val todayTasks = viewModel.getTasksByEmployeeId(userUid).filter { isToday(it.timeStampStart) }
+            val ongoingTask = todayTasks.firstOrNull { it.status == TaskStatus.ONGOING.toString() && it.active }
+            ongoingTaskId = ongoingTask?.id
+        }
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ){
@@ -375,7 +385,9 @@ fun HomeScreen(navController: NavController) {
             }
         }
 
-        if (taskId != "" && taskId != "null") // più esplicito
+
+
+        if (!ongoingTaskId.isNullOrEmpty()) // più esplicito
         {
             Box(
                 modifier = Modifier
@@ -388,7 +400,7 @@ fun HomeScreen(navController: NavController) {
                         .scale(1.15f)
                         .alpha(1f),
                     onClick = {
-                        navController.navigate("current_subtask/${taskId}",)
+                        navController.navigate("current_subtask/${ongoingTaskId}",)
                     }
                 )
             }
