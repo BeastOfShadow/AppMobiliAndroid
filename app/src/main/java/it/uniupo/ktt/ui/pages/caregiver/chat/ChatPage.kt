@@ -68,7 +68,7 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFFFFF))
+            .background(Color.Transparent)
             .padding(20.dp)
     ) {
         Column() {
@@ -79,7 +79,7 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // PAGE (NO PAGE-TITLE)
+            // PAGE (without PAGE-TITLE)
             Box(
                 modifier = Modifier
                     .padding(4.dp)
