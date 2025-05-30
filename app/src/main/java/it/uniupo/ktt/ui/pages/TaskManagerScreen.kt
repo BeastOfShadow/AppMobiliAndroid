@@ -251,26 +251,18 @@ fun TaskManagerScreen(navController: NavController) {
 
                                                         val uid = currentUid()
                                                         if (uid != null) {
-                                                            readyTasks =
-                                                                taskViewModel.getTasksByStatus(
-                                                                    uid,
-                                                                    TaskStatus.READY.toString()
-                                                                )
-                                                            ongoingTasks =
-                                                                taskViewModel.getTasksByStatus(
-                                                                    uid,
-                                                                    TaskStatus.ONGOING.toString()
-                                                                )
-                                                            completedTasks =
-                                                                taskViewModel.getTasksByStatus(
-                                                                    uid,
-                                                                    TaskStatus.COMPLETED.toString()
-                                                                )
-                                                            ratedTasks =
-                                                                taskViewModel.getTasksByStatus(
-                                                                    uid,
-                                                                    TaskStatus.RATED.toString()
-                                                                )
+                                                            readyTasks = taskViewModel
+                                                                .getTasksByStatus(uid, TaskStatus.READY.toString())
+                                                                .filter { isToday(it.createdAt) }
+                                                            ongoingTasks = taskViewModel
+                                                                .getTasksByStatus(uid, TaskStatus.ONGOING.toString())
+                                                                .filter { isToday(it.createdAt) }
+                                                            completedTasks = taskViewModel
+                                                                .getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
+                                                                .filter { isToday(it.createdAt) }
+                                                            ratedTasks = taskViewModel
+                                                                .getTasksByStatus(uid, TaskStatus.RATED.toString())
+                                                                .filter { isToday(it.createdAt) }
                                                         }
                                                     }
                                                 }
