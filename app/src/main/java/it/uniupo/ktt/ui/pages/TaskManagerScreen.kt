@@ -212,6 +212,9 @@ fun TaskManagerScreen(navController: NavController) {
                                             primary,
                                             shape = MaterialTheme.shapes.extraLarge
                                         )
+                                        .clickable{
+                                            navController.navigate("update_ready_task/${task.id}")
+                                        }
                                         .padding(16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -315,6 +318,9 @@ fun TaskManagerScreen(navController: NavController) {
                                             primary,
                                             shape = MaterialTheme.shapes.extraLarge
                                         )
+                                        .clickable{
+                                            navController.navigate("update_ongoing_task/${task.id}")
+                                        }
                                         .padding(16.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
