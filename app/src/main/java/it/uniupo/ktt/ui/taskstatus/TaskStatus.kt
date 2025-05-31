@@ -4,5 +4,5 @@ enum class TaskStatus(s: String) {
     READY("Ready"),
     ONGOING("On Going"),
     COMPLETED("Completed"),
-    RATED("Rated")
+    RATED("Rated"),
 }
