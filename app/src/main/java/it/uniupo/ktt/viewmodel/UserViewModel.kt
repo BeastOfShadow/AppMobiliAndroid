@@ -211,7 +211,7 @@ class UserViewModel @Inject constructor() : ViewModel() {
                         .child(user.avatar)
                         .downloadUrl
                         .addOnSuccessListener { uri ->
-                            Log.d("DEBUG-AVATAR", "Url Avatar non trovato: $uri")
+                            Log.d("DEBUG-AVATAR", "Url Avatar trovato: $uri")
                             _avatarUrl.value = uri.toString()
                             _isLoadingUser.value = false
                         }

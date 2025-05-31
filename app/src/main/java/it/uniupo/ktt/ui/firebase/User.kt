@@ -7,9 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.User
 import kotlinx.coroutines.tasks.await
 

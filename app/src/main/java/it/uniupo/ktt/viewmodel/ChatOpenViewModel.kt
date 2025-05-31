@@ -239,12 +239,21 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
             // chat non esistente in generale, devo fare tutto -> OK
             else{
 
-                // crea newChat (in base al Role), updateChatId
+                // crea newChat (in base al Role) poi updateChatId
                 val currentUid = BaseRepository.currentUid()!!
+
                 val newChat = if (userRole.lowercase() == "caregiver") {
-                    Chat(caregiver = currentUid, employee = uidContact)
+                    Chat(
+                        caregiver = currentUid,
+                        employee = uidContact,
+                        members = listOf(currentUid, uidContact)
+                    )
                 } else {
-                    Chat(caregiver = uidContact, employee = currentUid)
+                    Chat(
+                        caregiver = uidContact,
+                        employee = currentUid,
+                        members = listOf(currentUid, uidContact)
+                    )
                 }
 
                 // NEW CHAT + ...

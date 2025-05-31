@@ -82,6 +82,7 @@ dependencies {
     implementation(libs.coil.compose.v240)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.androidx.compose.testing)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -93,7 +94,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:2.11.4")
 
     implementation("androidx.compose.material3:material3:1.2.0")
-
+    implementation("androidx.compose.material:material-icons-extended")
     //implementation("androidx.compose.ui:ui-graphics:1.3.0") //blurred background effect
 
     // Hilt

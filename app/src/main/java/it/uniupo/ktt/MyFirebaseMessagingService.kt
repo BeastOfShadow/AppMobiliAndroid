@@ -1,5 +1,6 @@
 package it.uniupo.ktt
 
+import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.media.RingtoneManager
@@ -23,10 +24,23 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             Log.d("FCM", "Data: ${remoteMessage.data}")
         }
 
+
+        // FILTRO
+        val appIsInForeground = isAppInForeground(applicationContext)
+
         remoteMessage.notification?.let {
             Log.d("FCM", "Notification: ${it.body}")
-            sendNotification(it.title ?: "Nuovo messaggio", it.body ?: "")
+            if (!appIsInForeground) {
+                // Solo se in background o chiusa
+                sendNotification(it.title ?: "Nuovo messaggio", it.body ?: "")
+            }
+            else {
+                Log.d("FCM", "App in foreground -> no system notification mostrata")
+                // Qui potresti opzionalmente aggiornare un badge o loggare qualcosa
+            }
         }
+
+
     }
 
     private fun sendNotification(title: String, messageBody: String) {
@@ -86,5 +100,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     Log.e("FCM", "Errore aggiornamento token: ${it.message}")
                 }
         }
+    }
+
+    // Filtro per evitare di mostrare le PushNotification quando "APP==FOREGROUND"
+    fun isAppInForeground(context: Context): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val appProcesses = activityManager.runningAppProcesses ?: return false
+
+        val packageName = context.packageName
+        for (appProcess in appProcesses) {
+            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                appProcess.processName == packageName
+            ) {
+                return true
+            }
+        }
+        return false
     }
 }
