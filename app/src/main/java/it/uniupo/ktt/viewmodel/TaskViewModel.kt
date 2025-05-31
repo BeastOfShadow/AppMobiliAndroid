@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import it.uniupo.ktt.imagelocation.ImageLocationFolders
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.BaseRepository.db
@@ -45,7 +46,7 @@ class TaskViewModel : ViewModel() {
                     // SubTask con Foto
                     if (subTask.descriptionImgStorageLocation.isNotBlank()) {
 
-                        val path = "subtaskImages/${task.id}/${subTask.id}.jpg"
+                        val path = "subtaskImages/${task.id}_${subTask.id}.jpg"
 
                         uploadImageToStorage(
                             localPath = subTask.descriptionImgStorageLocation,
@@ -85,6 +86,50 @@ class TaskViewModel : ViewModel() {
         onError: (Exception) -> Unit
     ) {
         val path = subtask.descriptionImgStorageLocation
+
+        if (path.isBlank()) {
+            onError(Exception("Path immagine vuoto"))
+            return
+        }
+
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        storageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+            .addOnFailureListener { exception ->
+                onError(exception)
+            }
+    }
+
+    fun getEmployeeImageUrl(
+        subtask: SubTask,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val path = subtask.employeeImgStorageLocation
+
+        if (path.isBlank()) {
+            onError(Exception("Path immagine vuoto"))
+            return
+        }
+
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        storageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+            .addOnFailureListener { exception ->
+                onError(exception)
+            }
+    }
+
+    fun getCaregiverImageUrl(
+        subtask: SubTask,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val path = subtask.caregiverImgStorageLocation
 
         if (path.isBlank()) {
             onError(Exception("Path immagine vuoto"))
@@ -231,4 +276,54 @@ class TaskViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateLocation(taskId: String, selectedLatLng: LatLng) {
+        viewModelScope.launch {
+            try {
+                val taskRef = db.collection("tasks").document(taskId)
+                val firestoreGeoPoint = com.google.firebase.firestore.GeoPoint(selectedLatLng.latitude, selectedLatLng.longitude)
+
+                taskRef.update("location", firestoreGeoPoint).await()
+
+                Log.d("TaskViewModel", "Task $taskId rating and comment updated")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "Error updating task rating and comment: ${e.message}")
+            }
+        }
+    }
+
+    fun updateTaskStatus(taskId: String, newStatus: TaskStatus) {
+        viewModelScope.launch {
+            try {
+                val taskRef = db.collection("tasks").document(taskId)
+                val snapshot = taskRef.get().await()
+                val task = snapshot.toObject(Task::class.java)
+
+                val startTimestamp = task?.timeStampStart
+                val endTimestamp = com.google.firebase.Timestamp.now()
+
+                val completionTimeActual = if (startTimestamp != null) {
+                    (endTimestamp.seconds - startTimestamp.seconds) // differenza in secondi
+                } else {
+                    null
+                }
+
+                val updates = mutableMapOf<String, Any>(
+                    "status" to newStatus.toString(),
+                    "timeStampEnd" to endTimestamp,
+                )
+                completionTimeActual?.let {
+                    updates["completionTimeActual"] = it
+                }
+
+                // Aggiorna il documento
+                taskRef.update(updates).await()
+
+                Log.d("TaskViewModel", "✅ Task $taskId status updated to ${newStatus.name} with completion time $completionTimeActual seconds")
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "❌ Error updating task status: ${e.message}")
+            }
+        }
+    }
+
 }

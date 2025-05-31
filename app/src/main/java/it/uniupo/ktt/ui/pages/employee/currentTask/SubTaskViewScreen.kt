@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Expand
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.RateReview
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -82,6 +83,7 @@ import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: String) {
@@ -93,7 +95,12 @@ fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: S
     }
 
     val viewModel: SubTaskViewModel = viewModel()
+    val taskViewModel: TaskViewModel = viewModel()
     var subTask by remember { mutableStateOf<SubTask?>(null) }
+
+    var visibleImage by remember { mutableStateOf(false) }
+    var visibleEmployeeImage by remember { mutableStateOf(false) }
+    var visibleCaregiverImage by remember { mutableStateOf(false) }
 
     LaunchedEffect(subtaskId) {
         subTask = viewModel.getSubtaskById(taskId, subtaskId)
@@ -188,58 +195,423 @@ fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: S
                             )
                         }
 
-                        if(subTask!!.employeeImgStorageLocation != "")
-                        {
-                            Spacer(modifier = Modifier.height(20.dp))
+                        var subTaskImgUrl by remember { mutableStateOf("") }
+                        var isLoading by remember { mutableStateOf(true) }
+
+                        LaunchedEffect(subTask) {
+                            isLoading = true
+
+                            taskViewModel.getSubtaskImageUrl(
+                                subTask!!,
+                                onSuccess = { imageUrl ->
+                                    subTaskImgUrl = imageUrl
+                                    isLoading = false
+                                    Log.d("Image URL", imageUrl)
+                                },
+                                onError = { exception ->
+                                    Log.e(
+                                        "Image Error",
+                                        "Errore nel caricamento immagine",
+                                        exception
+                                    )
+                                    isLoading = false
+                                }
+                            )
+                        }
+
+                        when {
+                            isLoading -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+
+                            subTaskImgUrl.isNotEmpty() -> {
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
+                                        )
+                                        .background(
+                                            color = Color.White,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .clickable {
+                                            visibleImage = !visibleImage
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .shadow(
+                                                    4.dp,
+                                                    shape = CircleShape,
+                                                    clip = false
+                                                )
+                                                .background(
+                                                    color = tertiary,
+                                                    shape = CircleShape
+                                                )
+                                                .size(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.image_see),
+                                                contentDescription = "Toggle Image Visibility",
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (visibleImage) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(subTaskImgUrl)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Task Completed",
+                                        modifier = Modifier
+                                            .size(200.dp)
+                                            .padding(top = 8.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+
+
+                    if(subTask?.employeeComment != "")
+                    {
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = "Your comment:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = titleColor,
+                        )
+
+                        Spacer(modifier = Modifier.height(15.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(
+                                    4.dp,
+                                    shape = MaterialTheme.shapes.extraLarge,
+                                    clip = false
+                                )
+                                .background(Color.White, shape = MaterialTheme.shapes.extraLarge)
+                                .padding(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            subTask?.let {
+                                Text(
+                                    text = it.employeeComment,
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier.fillMaxWidth(0.8f)
+                                )
+                            }
+                        }
+                    }
+
+                    var subTaskEmployeeImgUrl by remember { mutableStateOf("") }
+                    var isLoadingEmployee by remember { mutableStateOf(true) }
+
+                    LaunchedEffect(subTask) {
+                        isLoadingEmployee = true
+
+                        taskViewModel.getEmployeeImageUrl(
+                            subTask!!,
+                            onSuccess = { imageUrl ->
+                                subTaskEmployeeImgUrl = imageUrl
+                                isLoadingEmployee = false
+                                Log.d("Image URL", imageUrl)
+                            },
+                            onError = { exception ->
+                                Log.e(
+                                    "Image Error",
+                                    "Errore nel caricamento immagine",
+                                    exception
+                                )
+                                isLoadingEmployee = false
+                            }
+                        )
+                    }
+
+                    when {
+                        isLoadingEmployee -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+
+                        subTaskEmployeeImgUrl.isNotEmpty() -> {
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
-                                text = "Photo:",
+                                text = "Your Comment Image:",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = titleColor,
                             )
 
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(subTask!!.caregiverImgStorageLocation)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "Task Completed",
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Box(
                                 modifier = Modifier
-                                    .size(200.dp)
-                                    .padding(top = 8.dp),
-                                contentScale = ContentScale.Crop
-                            )
+                                    .size(44.dp)
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
+                                    .background(
+                                        color = Color.White,
+                                        shape = MaterialTheme.shapes.extraLarge
+                                    )
+                                    .clickable {
+                                        visibleEmployeeImage = !visibleEmployeeImage
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .shadow(
+                                                4.dp,
+                                                shape = CircleShape,
+                                                clip = false
+                                            )
+                                            .background(
+                                                color = tertiary,
+                                                shape = CircleShape
+                                            )
+                                            .size(32.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.image_see),
+                                            contentDescription = "Toggle Image Visibility",
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (visibleEmployeeImage) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(subTaskEmployeeImgUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Task Completed",
+                                    modifier = Modifier
+                                        .size(200.dp)
+                                        .padding(top = 8.dp),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                     }
 
+                        if(subTask?.caregiverComment != "")
+                        {
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Your comment:",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = titleColor,
+                            )
 
-                    Box(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(45.dp)
-                            .shadow(
-                                4.dp,
-                                shape = MaterialTheme.shapes.large,
-                                clip = false
+                            Spacer(modifier = Modifier.height(15.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        4.dp,
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        clip = false
+                                    )
+                                    .background(Color.White, shape = MaterialTheme.shapes.extraLarge)
+                                    .padding(12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                subTask?.let {
+                                    Text(
+                                        text = it.caregiverComment,
+                                        fontWeight = FontWeight.Light,
+                                        fontSize = 16.sp,
+                                        textAlign = TextAlign.Start,
+                                        modifier = Modifier.fillMaxWidth(0.8f)
+                                    )
+                                }
+                            }
+                        }
+
+                        var subTaskCareGiverImgUrl by remember { mutableStateOf("") }
+                        var isLoadingCareGiver by remember { mutableStateOf(true) }
+
+                        LaunchedEffect(subTask) {
+                            isLoadingCareGiver = true
+
+                            taskViewModel.getCaregiverImageUrl(
+                                subTask!!,
+                                onSuccess = { imageUrl ->
+                                    subTaskCareGiverImgUrl = imageUrl
+                                    isLoadingCareGiver = false
+                                    Log.d("Image URL", imageUrl)
+                                },
+                                onError = { exception ->
+                                    Log.e(
+                                        "Image Error",
+                                        "Errore nel caricamento immagine",
+                                        exception
+                                    )
+                                    isLoadingCareGiver = false
+                                }
                             )
-                            .background(
-                                color = tertiary,
-                                shape = MaterialTheme.shapes.large
+                        }
+
+                        when {
+                            isLoadingCareGiver -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+
+                            subTaskCareGiverImgUrl.isNotEmpty() -> {
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    text = "Caregiver Comment Image:",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = titleColor,
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .shadow(
+                                            4.dp,
+                                            shape = MaterialTheme.shapes.extraLarge,
+                                            clip = false
+                                        )
+                                        .background(
+                                            color = Color.White,
+                                            shape = MaterialTheme.shapes.extraLarge
+                                        )
+                                        .clickable {
+                                            visibleCaregiverImage = !visibleCaregiverImage
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .shadow(
+                                                    4.dp,
+                                                    shape = CircleShape,
+                                                    clip = false
+                                                )
+                                                .background(
+                                                    color = tertiary,
+                                                    shape = CircleShape
+                                                )
+                                                .size(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.image_see),
+                                                contentDescription = "Toggle Image Visibility",
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (visibleCaregiverImage) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(subTaskCareGiverImgUrl)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "Task Completed",
+                                        modifier = Modifier
+                                            .size(200.dp)
+                                            .padding(top = 8.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(45.dp)
+                                .shadow(
+                                    4.dp,
+                                    shape = MaterialTheme.shapes.large,
+                                    clip = false
+                                )
+                                .background(
+                                    color = tertiary,
+                                    shape = MaterialTheme.shapes.large
+                                )
+                                .clickable {
+                                    navController.popBackStack()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Return",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
                             )
-                            .clickable {
-                               navController.popBackStack()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "Return",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        }
                     }
                 }
             }

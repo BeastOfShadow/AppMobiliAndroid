@@ -127,6 +127,15 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
     }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
 
+    var ongoingTaskId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(userUid) {
+        if (userUid != null) {
+            val todayTasks = viewModel.getTasksByEmployeeId(userUid).filter { isToday(it.timeStampStart) }
+            val ongoingTask = todayTasks.firstOrNull { it.status == TaskStatus.ONGOING.toString() && it.active }
+            ongoingTaskId = ongoingTask?.id
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -400,9 +409,8 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
             }
         }
 
+        if (!ongoingTaskId.isNullOrEmpty())
 
-        // --------------- BUTTON CURRENT TASK ---------------
-        if (taskId != "" && taskId != "null")
         {
             Box(
                 modifier = Modifier
@@ -415,7 +423,7 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
                         .scale(1.15f)
                         .alpha(1f),
                     onClick = {
-                        navController.navigate("current_subtask/${taskId}",)
+                        navController.navigate("current_subtask/${ongoingTaskId}",)
                     }
                 )
             }

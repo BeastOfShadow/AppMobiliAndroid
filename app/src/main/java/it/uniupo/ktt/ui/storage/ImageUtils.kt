@@ -15,15 +15,23 @@ fun uploadImageToStorage(
 ) {
 
     val uri = Uri.parse(localPath)
+    Log.d("commitSubtask", "▶️ Inizio upload: uri=$uri -> storagePath=$storagePath")
     val storageRef = FirebaseStorage.getInstance().reference.child(storagePath)
 
     storageRef.putFile(uri)
         .addOnSuccessListener {
-            Log.d("FirebaseUpload", "Upload completato con successo: $storagePath")
+            Log.d("commitSubtask", "✅ Upload completato con successo: $storagePath")
             onSuccess()
         }
         .addOnFailureListener { e ->
-            Log.e("FirebaseUpload", "Errore durante upload: ${e.message}", e)
+            Log.e("commitSubtask", "❌ Errore durante upload: ${e.message}", e)
             onError(e)
+        }
+        .addOnProgressListener { taskSnapshot ->
+            val progress = (100.0 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
+            Log.d("commitSubtask", "⏳ Upload in corso: ${"%.2f".format(progress)}%")
+        }
+        .addOnPausedListener {
+            Log.d("commitSubtask", "⏸ Upload messo in pausa")
         }
 }

@@ -41,6 +41,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.pages.caregiver.taskmanager.UpdateOngoingTaskScreen
+import it.uniupo.ktt.ui.pages.caregiver.taskmanager.UpdateReadyTaskScreen
 import it.uniupo.ktt.ui.pages.caregiver.taskmanager.VisualizeRatedTaskScreen
 import it.uniupo.ktt.ui.pages.employee.currentTask.SubTaskViewScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
@@ -247,6 +249,24 @@ class MainActivity : ComponentActivity() {
                                 taskId = taskId,
                                 subtaskId = subtaskId
                             )
+                        }
+
+                        composable(
+                            route = "update_ready_task/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+
+                            UpdateReadyTaskScreen(navController = navController, taskId = taskId)
+                        }
+
+                        composable(
+                            route = "update_ongoing_task/{taskId}",
+                            arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+
+                            UpdateOngoingTaskScreen(navController = navController, taskId = taskId)
                         }
 
                         //new ROUTE
