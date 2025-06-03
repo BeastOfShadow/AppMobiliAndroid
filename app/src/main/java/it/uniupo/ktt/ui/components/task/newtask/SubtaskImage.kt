@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,11 +37,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.google.firebase.storage.FirebaseStorage
 import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.components.CustomTextField
 import it.uniupo.ktt.ui.theme.lightGray
 import it.uniupo.ktt.ui.theme.tertiary
+import it.uniupo.ktt.viewmodel.TaskViewModel
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun SubtaskImage(
@@ -55,6 +60,8 @@ fun SubtaskImage(
     val selectedImageUri = remember { mutableStateOf(initialImageUri) }
     val visibleImage = remember { mutableStateOf(selectedImageUri.value != null) }
     var showDescriptionError by remember { mutableStateOf(false) }
+
+    val taskViewModel : TaskViewModel = viewModel()
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
@@ -274,13 +281,39 @@ fun SubtaskImage(
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         ) {
                             selectedImageUri.value?.let { uri ->
-                                AsyncImage(
-                                    model = uri,
-                                    contentDescription = "Anteprima immagine",
-                                    modifier = Modifier
-                                        .size(200.dp)
-                                        .clip(RoundedCornerShape(16.dp))
-                                )
+                                var firebaseImageUrl by remember { mutableStateOf<String?>(null) }
+
+                                if(selectedImageUri.value.toString().startsWith("content://")) {
+                                    AsyncImage(
+                                        model = uri,
+                                        contentDescription = "Anteprima immagine",
+                                        modifier = Modifier
+                                            .size(200.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                    )
+                                } else
+                                {
+                                    val storageRef = FirebaseStorage.getInstance().reference.child(uri.toString())
+
+                                    LaunchedEffect(uri) {
+                                        try {
+                                            val url = storageRef.downloadUrl.await()
+                                            firebaseImageUrl = url.toString()
+                                        } catch (e: Exception) {
+                                            firebaseImageUrl = null
+                                        }
+                                    }
+
+                                    firebaseImageUrl?.let { imageUrl ->
+                                        AsyncImage(
+                                            model = imageUrl,
+                                            contentDescription = "Anteprima immagine",
+                                            modifier = Modifier
+                                                .size(200.dp)
+                                                .clip(RoundedCornerShape(16.dp))
+                                        )
+                                    } ?: Text("Caricamento immagine...")
+                                }
                             }
                         }
                     }
