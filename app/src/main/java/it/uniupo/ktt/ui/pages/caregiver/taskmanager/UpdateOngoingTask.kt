@@ -1,6 +1,7 @@
 package it.uniupo.ktt.ui.pages.caregiver.taskmanager
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,7 +24,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.RateReview
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -70,14 +74,17 @@ import it.uniupo.ktt.ui.components.task.taskmanager.NullMessage
 import it.uniupo.ktt.ui.components.task.taskmanager.TextSection
 import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.firebase.UserRepository.getEmployeeName
+import it.uniupo.ktt.ui.model.SubTask
 import it.uniupo.ktt.ui.model.Task
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
+import it.uniupo.ktt.ui.theme.lightGray
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
@@ -91,9 +98,17 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
     }
 
     val taskViewModel : TaskViewModel = viewModel()
+    val subTaskViewModel : SubTaskViewModel = viewModel()
     val task = taskViewModel.getTaskById(taskId)
 
-    val subTasks = taskViewModel.getSubtasksByTaskId(taskId)
+    var subTasks by remember { mutableStateOf<List<SubTask>>(emptyList()) }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var subtaskToDelete by remember { mutableStateOf<SubTask?>(null) }
+
+    LaunchedEffect(taskId) {
+        subTasks = subTaskViewModel.fetchSubtask(taskId)
+    }
 
     Box(
         modifier = Modifier
@@ -195,7 +210,32 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                 verticalArrangement = Arrangement.SpaceBetween,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Subtask ${subtask.listNumber}", fontWeight = FontWeight.Bold)
+                                Box(
+                                    modifier = Modifier
+                                        .size(27.dp)
+                                        .background(
+                                            color = lightGray,
+                                            shape = CircleShape
+                                        )
+                                        .align(Alignment.End)
+                                ) {
+                                    Text(
+                                        text = subtask.listNumber.toString(),
+                                        fontSize = 14.sp,
+                                        color = buttonTextColor,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.size(10.dp))
+
+                                Text(
+                                    text = "Description:",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = titleColor,
+                                    textAlign = TextAlign.Start
+                                )
 
                                 Text(
                                     text = subtask.description,
@@ -204,27 +244,45 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                     fontSize = 14.sp
                                 )
 
-                                Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                                Spacer(modifier = Modifier.size(10.dp))
+
+                                Row {
+                                    Text(
+                                        text = "Photo: ",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = titleColor,
+                                        textAlign = TextAlign.Start
+                                    )
+
+                                    Icon(
+                                        if(subtask.descriptionImgStorageLocation != "") {Icons.Outlined.Check} else {
+                                            Icons.Outlined.Clear
+                                        },
+                                        "Large floating action button",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.size(10.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.chat_delete),
                                         contentDescription = "Delete",
                                         modifier = Modifier
                                             .size(24.dp)
                                             .clickable {
-                                                /*coroutineScope.launch {
-                                                    taskViewModel.deleteSubtask(taskId, subtask.id)
-
-                                                    // Ricrea l'indice corretto (listNumber)
-                                                    val updatedList = taskViewModel.getSubtasksByTaskId(taskId)
-                                                        .sortedBy { it.listNumber }
-                                                        .mapIndexed { i, s ->
-                                                            s.copy(listNumber = i + 1)
-                                                        }
-
-                                                    updatedList.forEach {
-                                                        taskViewModel.updateSubtask(it)
-                                                    }
-                                                }*/
+                                                Log.d(
+                                                    "UI",
+                                                    "Clicked delete on subtask id=${subtask.id}, description=${subtask.description}"
+                                                )
+                                                subtaskToDelete = subtask
+                                                showDeleteDialog = true
                                             }
                                     )
 
@@ -236,9 +294,10 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                             .clickable {
                                                 editSubtaskIndex = index
                                                 editSubtaskDescription = subtask.description
-                                                editSelectedImageUri.value = if (subtask.descriptionImgStorageLocation != "null")
-                                                    Uri.parse(subtask.descriptionImgStorageLocation)
-                                                else null
+                                                editSelectedImageUri.value =
+                                                    if (subtask.descriptionImgStorageLocation != "")
+                                                        Uri.parse(subtask.descriptionImgStorageLocation)
+                                                    else null
                                                 showEditDialog = true
                                             }
                                     )
@@ -261,6 +320,41 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Add", modifier = Modifier.align(Alignment.Center))
                     }
+                }
+
+                if (showDeleteDialog && subtaskToDelete != null) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteDialog = false },
+                        title = { Text("Confirm Delete") },
+                        text = { Text("Are you sure you want to delete this subtask?") },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    val subToDel = subtaskToDelete!!
+                                    coroutineScope.launch {
+                                        Log.d("UI", "Delete requested for subtask ${subtaskToDelete?.id}")
+                                        subTaskViewModel.deleteTaskById(taskId, subToDel.id)
+                                        Log.d("UI", "Deleted subtask, fetching updated list")
+                                        subTasks = subTaskViewModel.fetchSubtask(taskId)
+                                    }
+                                    showDeleteDialog = false
+                                    subtaskToDelete = null
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        },
+                        dismissButton = {
+                            Button(
+                                onClick = {
+                                    showDeleteDialog = false
+                                    subtaskToDelete = null
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
 
                 if (showDialog) {
@@ -300,12 +394,22 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                         },
                         onSave = { description, imageUri ->
                             coroutineScope.launch {
-                                /*taskViewModel.updateSubtask(
+                                subTaskViewModel.updateSubtask(
+                                    taskId,
                                     subtask.copy(
+                                        id = subtask.id,
                                         description = description,
-                                        descriptionImgStorageLocation = imageUri.toString()
-                                    )
-                                )*/
+                                        descriptionImgStorageLocation = imageUri?.toString() ?: ""
+                                    ),
+                                    onSuccess = {
+                                        coroutineScope.launch {
+                                            subTasks = subTaskViewModel.fetchSubtask(taskId)
+                                        }
+                                    },
+                                    onError = {
+                                        Log.e("UpdateSubtask", "Errore durante l'aggiornamento del subtask")
+                                    }
+                                )
                             }
                             showEditDialog = false
                             editSubtaskIndex = -1
