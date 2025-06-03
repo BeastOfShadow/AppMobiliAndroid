@@ -63,6 +63,7 @@ import it.uniupo.ktt.ui.components.homePage.EP_ProgressBar
 import it.uniupo.ktt.ui.components.homePage.ModalShowAvatars
 import it.uniupo.ktt.ui.components.homePage.TargetButton
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.viewmodel.ChatViewModel
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
