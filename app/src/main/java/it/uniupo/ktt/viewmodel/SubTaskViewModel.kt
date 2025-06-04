@@ -206,6 +206,7 @@ class SubTaskViewModel : ViewModel() {
     fun updateSubtask(
         taskId: String,
         updatedSubtask: SubTask,
+        storageLocation: String,
         onSuccess: () -> Unit,
         onError: (Exception) -> Unit
     ) {
@@ -283,7 +284,7 @@ class SubTaskViewModel : ViewModel() {
 
                     deleteOldImageTask?.addOnCompleteListener {
                         Log.d("updateSubtask", "Vecchia immagine cancellata o non esisteva, upload nuova immagine")
-                        val storagePath = "descriptionSubtaskImages/${taskId}_${updatedSubtask.id}.jpg"
+                        val storagePath = "${storageLocation}/${taskId}_${updatedSubtask.id}.jpg"
 
                         uploadImageToStorage(
                             localPath = newImagePath,
@@ -308,7 +309,7 @@ class SubTaskViewModel : ViewModel() {
                         )
                     } ?: run {
                         Log.d("updateSubtask", "Nessuna vecchia immagine da cancellare, procedo con upload")
-                        val storagePath = "descriptionSubtaskImages/${taskId}_${updatedSubtask.id}.jpg"
+                        val storagePath = "${storageLocation}/${taskId}_${updatedSubtask.id}.jpg"
                         uploadImageToStorage(
                             localPath = newImagePath,
                             storagePath = storagePath,
@@ -344,4 +345,199 @@ class SubTaskViewModel : ViewModel() {
                 onError(e)
             }
     }
+
+    fun addSubtask(
+        taskId: String,
+        description: String,
+        imageUri: String?, // può essere null o content:// URI
+        listNumber: Int,
+        storageLocation: String,
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val db = BaseRepository.db
+        val storage = FirebaseStorage.getInstance()
+        val subtasksRef = db.collection("tasks").document(taskId).collection("subtasks")
+        val newSubtaskId = subtasksRef.document().id
+
+        val subtaskDoc = subtasksRef.document(newSubtaskId)
+
+        if (imageUri.isNullOrBlank() || !imageUri.startsWith("content://")) {
+            // Nessuna immagine da caricare o è già un path Firebase
+            val newSubtask = SubTask(
+                id = newSubtaskId,
+                description = description,
+                descriptionImgStorageLocation = imageUri ?: "",
+                listNumber = listNumber
+            )
+
+            subtaskDoc.set(newSubtask)
+                .addOnSuccessListener { onSuccess() }
+                .addOnFailureListener { onError(it) }
+        } else {
+            // È un URI locale, carica su Firebase e poi salva
+            val storagePath = "${storageLocation}/${taskId}_${newSubtaskId}.jpg"
+
+            uploadImageToStorage(
+                localPath = imageUri,
+                storagePath = storagePath,
+                onSuccess = {
+                    val newSubtask = SubTask(
+                        id = newSubtaskId,
+                        description = description,
+                        descriptionImgStorageLocation = storagePath,
+                        listNumber = listNumber
+                    )
+
+                    subtaskDoc.set(newSubtask)
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { onError(it) }
+                },
+                onError = { e ->
+                    onError(e)
+                }
+            )
+        }
+    }
+
+    fun commentSubtask(
+        taskId: String,
+        subtaskId: String,
+        newComment: String,
+        newImg: String?,              // immagine selezionata, può essere null
+        removeImg: Boolean,           // se true, rimuovere immagine esistente
+        storageLocation: String,      // percorso Firebase Storage
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val db = BaseRepository.db
+        val storage = FirebaseStorage.getInstance()
+        val subtaskRef = db.collection("tasks").document(taskId).collection("subtasks").document(subtaskId)
+
+        Log.d("commentSubtask", "Fetching subtask...")
+
+        subtaskRef.get().addOnSuccessListener { doc ->
+            if (!doc.exists()) {
+                Log.e("commentSubtask", "Subtask non trovato.")
+                onError(Exception("Subtask non trovato"))
+                return@addOnSuccessListener
+            }
+
+            val subtask = doc.toObject(SubTask::class.java)
+            if (subtask == null) {
+                Log.e("commentSubtask", "Errore parsing subtask.")
+                onError(Exception("Errore parsing subtask"))
+                return@addOnSuccessListener
+            }
+
+            Log.d("commentSubtask", "Subtask trovato: $subtask")
+
+            var updatedSubtask = subtask.copy(caregiverComment = newComment)
+
+            val oldImg = subtask.caregiverImgStorageLocation ?: ""
+            val newUri = newImg ?: ""
+
+            Log.d("commentSubtask", "Old image: $oldImg")
+            Log.d("commentSubtask", "New image: $newUri")
+            Log.d("commentSubtask", "Remove image? $removeImg")
+
+            when {
+                // CASE 1: Rimozione immagine
+                oldImg.isNotBlank() && removeImg -> {
+                    Log.d("commentSubtask", "→ Removing old image from storage: $oldImg")
+
+                    storage.getReference(oldImg).delete().addOnSuccessListener {
+                        Log.d("commentSubtask", "Image deleted successfully.")
+                        updatedSubtask = updatedSubtask.copy(caregiverImgStorageLocation = "")
+                        subtaskRef.set(updatedSubtask)
+                            .addOnSuccessListener {
+                                Log.d("commentSubtask", "Subtask updated (image removed).")
+                                onSuccess()
+                            }
+                            .addOnFailureListener {
+                                Log.e("commentSubtask", "Error saving subtask after image removal", it)
+                                onError(it)
+                            }
+                    }.addOnFailureListener {
+                        Log.e("commentSubtask", "Error deleting image", it)
+                        onError(it)
+                    }
+                }
+
+                // CASE 2: Aggiunta nuova immagine
+                oldImg.isBlank() && newUri.isNotBlank() -> {
+                    val newPath = "$storageLocation/${taskId}_${subtaskId}_caregiver.jpg"
+                    Log.d("commentSubtask", "→ Uploading new image to $newPath")
+
+                    uploadImageToStorage(newUri, newPath,
+                        onSuccess = {
+                            Log.d("commentSubtask", "Image uploaded successfully.")
+                            updatedSubtask = updatedSubtask.copy(caregiverImgStorageLocation = newPath)
+                            subtaskRef.set(updatedSubtask)
+                                .addOnSuccessListener {
+                                    Log.d("commentSubtask", "Subtask updated with new image.")
+                                    onSuccess()
+                                }
+                                .addOnFailureListener {
+                                    Log.e("commentSubtask", "Error saving subtask with new image", it)
+                                    onError(it)
+                                }
+                        },
+                        onError = {
+                            Log.e("commentSubtask", "Upload image failed", it)
+                            onError(it)
+                        }
+                    )
+                }
+
+                // CASE 3: Sostituzione immagine
+                oldImg.isNotBlank() && newUri.isNotBlank() && newUri != oldImg -> {
+                    Log.d("commentSubtask", "→ Replacing image. Deleting old image first.")
+
+                    storage.getReference(oldImg).delete().addOnCompleteListener {
+                        val newPath = "$storageLocation/${taskId}_${subtaskId}_caregiver.jpg"
+                        Log.d("commentSubtask", "Uploading new image to: $newPath")
+
+                        uploadImageToStorage(newUri, newPath,
+                            onSuccess = {
+                                Log.d("commentSubtask", "New image uploaded. Updating subtask.")
+                                updatedSubtask = updatedSubtask.copy(caregiverImgStorageLocation = newPath)
+                                subtaskRef.set(updatedSubtask)
+                                    .addOnSuccessListener {
+                                        Log.d("commentSubtask", "Subtask updated with replaced image.")
+                                        onSuccess()
+                                    }
+                                    .addOnFailureListener {
+                                        Log.e("commentSubtask", "Error saving updated subtask", it)
+                                        onError(it)
+                                    }
+                            },
+                            onError = {
+                                Log.e("commentSubtask", "Upload failed after deletion", it)
+                                onError(it)
+                            }
+                        )
+                    }
+                }
+
+                // CASE 4: Solo commento aggiornato
+                else -> {
+                    Log.d("commentSubtask", "→ No image changes. Updating only comment.")
+                    subtaskRef.set(updatedSubtask)
+                        .addOnSuccessListener {
+                            Log.d("commentSubtask", "Subtask updated (only comment).")
+                            onSuccess()
+                        }
+                        .addOnFailureListener {
+                            Log.e("commentSubtask", "Error saving comment-only update", it)
+                            onError(it)
+                        }
+                }
+            }
+        }.addOnFailureListener {
+            Log.e("commentSubtask", "Error fetching subtask", it)
+            onError(it)
+        }
+    }
+
 }
