@@ -13,7 +13,7 @@ data class SubTask(
     // GUARDA -> CARICAMENTO FOTO SU FIREBASE STORAGE + OTTENIMENTO STRINGA DESTINAZIONE
     var descriptionImgStorageLocation: String = "",
     val employeeImgStorageLocation: String = "",
-    val caregiverImgStorageLocation: String = "",
+    var caregiverImgStorageLocation: String = "",
 
     val status: String = "", //avilable, ready, running, completed
 ) {
