@@ -22,7 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Clear
@@ -76,6 +79,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository.currentUid
 import it.uniupo.ktt.ui.firebase.UserRepository.getEmployeeName
 import it.uniupo.ktt.ui.model.SubTask
 import it.uniupo.ktt.ui.model.Task
+import it.uniupo.ktt.ui.subtaskstatus.SubtaskStatus
 import it.uniupo.ktt.ui.taskstatus.TaskStatus
 import it.uniupo.ktt.ui.theme.buttonTextColor
 import it.uniupo.ktt.ui.theme.lightGray
@@ -87,6 +91,7 @@ import it.uniupo.ktt.ui.theme.titleColor
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Composable
 fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
@@ -212,19 +217,40 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(27.dp)
-                                        .background(
-                                            color = lightGray,
-                                            shape = CircleShape
-                                        )
-                                        .align(Alignment.End)
+                                        .fillMaxWidth()
+                                        .height(34.dp),  // altezza uguale all'immagine per allineamento
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = subtask.listNumber.toString(),
-                                        fontSize = 14.sp,
-                                        color = buttonTextColor,
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
+                                    if (subtask.status == SubtaskStatus.RUNNING.toString()) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.task_running),
+                                            contentDescription = "SubTask Running",
+                                            modifier = Modifier.size(34.dp)
+                                        )
+                                    } else if (subtask.status == SubtaskStatus.COMPLETED.toString()) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.task_done),
+                                            contentDescription = "SubTask Done",
+                                            modifier = Modifier.size(34.dp)
+                                        )
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(27.dp)
+                                            .background(
+                                                color = lightGray,
+                                                shape = CircleShape
+                                            )
+                                            .align(Alignment.CenterEnd)
+                                    ) {
+                                        Text(
+                                            text = subtask.listNumber.toString(),
+                                            fontSize = 14.sp,
+                                            color = buttonTextColor,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.size(10.dp))
@@ -269,38 +295,89 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.chat_delete),
-                                        contentDescription = "Delete",
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clickable {
-                                                Log.d(
-                                                    "UI",
-                                                    "Clicked delete on subtask id=${subtask.id}, description=${subtask.description}"
-                                                )
-                                                subtaskToDelete = subtask
-                                                showDeleteDialog = true
-                                            }
-                                    )
+                                    if(subtask.status == SubtaskStatus.AVAILABLE.toString()) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.chat_delete),
+                                            contentDescription = "Delete",
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clickable {
+                                                    Log.d(
+                                                        "UI",
+                                                        "Clicked delete on subtask id=${subtask.id}, description=${subtask.description}"
+                                                    )
+                                                    subtaskToDelete = subtask
+                                                    showDeleteDialog = true
+                                                }
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(24.dp))
+                                    }
 
-                                    Image(
-                                        painter = painterResource(id = R.drawable.edit_rewrite),
-                                        contentDescription = "Edit",
+                                    Box(
                                         modifier = Modifier
-                                            .size(24.dp)
+                                            .shadow(
+                                                4.dp,
+                                                shape = MaterialTheme.shapes.extraLarge,
+                                                clip = false
+                                            )
+                                            .background(
+                                                color = tertiary,
+                                                shape = CircleShape
+                                            )
+                                            .padding(8.dp)
                                             .clickable {
-                                                editSubtaskIndex = index
-                                                editSubtaskDescription = subtask.description
-                                                editSelectedImageUri.value =
-                                                    if (subtask.descriptionImgStorageLocation != "")
-                                                        Uri.parse(subtask.descriptionImgStorageLocation)
-                                                    else null
-                                                showEditDialog = true
+                                                navController.navigate("comment_subtask/${taskId}/${subtask.id}")
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Outlined.Chat,
+                                                contentDescription = "Review Icon",
+                                                tint = Color.White,
+                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                            )
+
+                                            if(subtask.employeeImgStorageLocation != "" ||
+                                                subtask.caregiverImgStorageLocation != "" ||
+                                                subtask.caregiverComment.isNotBlank() ||
+                                                    subtask.employeeComment.isNotBlank()
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Check,
+                                                    contentDescription = "Review Icon",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                                )
                                             }
-                                    )
+                                        }
+                                    }
+
+                                    if(subtask.status == SubtaskStatus.AVAILABLE.toString()) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.edit_rewrite),
+                                            contentDescription = "Edit",
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clickable {
+                                                    editSubtaskIndex = index
+                                                    editSubtaskDescription = subtask.description
+                                                    editSelectedImageUri.value =
+                                                        if (subtask.descriptionImgStorageLocation != "")
+                                                            Uri.parse(subtask.descriptionImgStorageLocation)
+                                                        else null
+                                                    showEditDialog = true
+                                                }
+                                        )
+                                    } else {
+                                        Spacer(modifier = Modifier.size(24.dp))
+                                    }
                                 }
                             }
                         }
@@ -312,13 +389,34 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                             .padding(start = 10.dp)
                             .width(100.dp)
                             .height(100.dp)
-                            .clickable { showDialog = true }
-                            .shadow(4.dp, shape = MaterialTheme.shapes.extraLarge)
+                            .clickable {
+                                showDialog = true
+                            }
+                            .shadow(
+                                4.dp,
+                                shape = MaterialTheme.shapes.extraLarge,
+                                clip = false)
                             .background(primary, shape = MaterialTheme.shapes.extraLarge)
                             .padding(16.dp)
                             .align(Alignment.CenterVertically)
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add", modifier = Modifier.align(Alignment.Center))
+                        Box(
+                            modifier = Modifier
+                                .size(90.dp)
+                                .background(
+                                    color = tertiary,
+                                    shape = CircleShape
+                                )
+                                .align(Alignment.Center)
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                "Large floating action button",
+                                tint = buttonTextColor,
+                                modifier = Modifier.size(55.dp)
+                                    .align(Alignment.Center)
+                            )
+                        }
                     }
                 }
 
@@ -367,15 +465,24 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                             showDialog = false
                         },
                         onSave = { description, imageUri ->
-                            /*coroutineScope.launch {
+                            coroutineScope.launch {
                                 val nextIndex = subTasks.maxOfOrNull { it.listNumber }?.plus(1) ?: 1
-                                taskViewModel.addSubtask(
+                                subTaskViewModel.addSubtask(
                                     taskId = taskId,
                                     description = description,
-                                    descriptionImgStorageLocation = imageUri.toString(),
-                                    listNumber = nextIndex
+                                    imageUri = imageUri?.toString() ?: "",
+                                    listNumber = nextIndex,
+                                    storageLocation = "descriptionSubtaskImages",
+                                    onSuccess = {
+                                        coroutineScope.launch {
+                                            subTasks = subTaskViewModel.fetchSubtask(taskId)
+                                        }
+                                    },
+                                    onError = {
+                                        Log.e("UpdateSubtask", "Errore durante l'aggiunta del subtask")
+                                    }
                                 )
-                            }*/
+                            }
                             showDialog = false
                         }
                     )
@@ -401,6 +508,7 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                         description = description,
                                         descriptionImgStorageLocation = imageUri?.toString() ?: ""
                                     ),
+                                    storageLocation = "descriptionSubtaskImages",
                                     onSuccess = {
                                         coroutineScope.launch {
                                             subTasks = subTaskViewModel.fetchSubtask(taskId)
