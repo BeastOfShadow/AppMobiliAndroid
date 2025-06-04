@@ -252,6 +252,23 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
+                            route = "comment_subtask/{taskId}/{subtaskId}",
+                            arguments = listOf(
+                                navArgument("taskId") { type = NavType.StringType },
+                                navArgument("subtaskId") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                            val subtaskId = backStackEntry.arguments?.getString("subtaskId") ?: ""
+
+                            CommentSubtaskScreen(
+                                navController = navController,
+                                taskId = taskId,
+                                subtaskId = subtaskId
+                            )
+                        }
+
+                        composable(
                             route = "update_ready_task/{taskId}",
                             arguments = listOf(navArgument("taskId") { type = NavType.StringType })
                         ) { backStackEntry ->
@@ -271,7 +288,6 @@ class MainActivity : ComponentActivity() {
 
                         //new ROUTE
                         composable("update subtask") { UpdateSubtaskScreen(navController) }
-                        composable("comment subtask") { CommentSubtaskScreen(navController) }
 
 
                         //CurrentSubtask (Target)
