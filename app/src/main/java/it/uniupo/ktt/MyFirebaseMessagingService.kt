@@ -25,19 +25,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
 
 
-        // FILTRO
+        // FILTRO: APP NOT IN FOREGROUND
         val appIsInForeground = isAppInForeground(applicationContext)
 
-        remoteMessage.notification?.let {
-            Log.d("FCM", "Notification: ${it.body}")
+        remoteMessage.data.let { data ->
+
             if (!appIsInForeground) {
-                // Solo se in background o chiusa
-                sendNotification(it.title ?: "Nuovo messaggio", it.body ?: "")
+                val title = data["title"] ?: "Titolo di default"
+                val body = data["body"] ?: "Messaggio di default"
+                sendNotification(title, body)
             }
-            else {
-                Log.d("FCM", "App in foreground -> no system notification mostrata")
-                // Qui potresti opzionalmente aggiornare un badge o loggare qualcosa
-            }
+
         }
 
 
@@ -56,7 +54,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.main_icon_push_notify) // svg- image nell'Assets
+
             .setContentTitle(title)
             .setContentText(messageBody)
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageBody))

@@ -27,7 +27,7 @@ exports.sendFCM = functions.https.onRequest(async (req, res) => {
   }
 
   const message = {
-    notification: {
+    data: {
       title: title,
       body: body,
     },

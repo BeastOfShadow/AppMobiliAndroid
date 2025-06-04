@@ -319,7 +319,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     ) {
         val json = JSONObject().apply {
             put("token", deviceToken)
-            put("title", "Nuovo messaggio da $senderName")
+            put("title", "Message from $senderName")
             put("body", text)
         }
 

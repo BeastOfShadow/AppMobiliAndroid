@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.pages.caregiver.chat
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -32,8 +33,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import it.uniupo.ktt.ui.components.chats.ChatMsgBubble
 import androidx.compose.foundation.lazy.rememberLazyListState
+import it.uniupo.ktt.viewmodel.UserViewModel
 
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun ChatOpen(
     navController: NavController,
@@ -49,6 +52,14 @@ fun ChatOpen(
 
 
     val currentUid = BaseRepository.currentUid()
+
+    // ref Istanza UserViewModel creato nella HomeScreen
+    val routeKeyHome = "home"
+    val parentEntry = remember(routeKeyHome) {
+        navController.getBackStackEntry(routeKeyHome)
+    }
+    val userViewModel: UserViewModel = hiltViewModel(parentEntry)
+    val userRef by userViewModel.user.collectAsState()
 
     // Istanza chatOpenViewModel + OBSERVABLEs
     val viewModel: ChatOpenViewModel = hiltViewModel()
@@ -145,28 +156,10 @@ fun ChatOpen(
                                     timeStamp = message.timeStamp,
                                     seen = message.seen
                                 )
-                                //Spacer(modifier = Modifier.height(5.dp))
+
                             }
                         }
 
-//                        ChatInputBar(
-//                            text = messageText,
-//                            onTextChange = { messageText = it },
-//                            onSendClick = {
-//                                if (messageText.isNotBlank()) {
-//                                    viewModel.sendMessage(
-//                                        chatId = chatId,
-//                                        text = messageText,
-//                                        deviceToken = contactUser?.deviceToken ?: "error",
-//                                        senderName = "Prova"
-//                                    )
-//                                    messageText = ""
-//                                }
-//                            },
-//                            modifier = Modifier
-//                                .padding(horizontal = 8.dp, vertical = 4.dp)
-//                                .align(Alignment.CenterHorizontally)
-//                        )
 
                     }
                 }
@@ -180,7 +173,7 @@ fun ChatOpen(
                                 chatId = chatId,
                                 text = messageText,
                                 deviceToken = contactUser?.deviceToken ?: "error",
-                                senderName = "Prova"
+                                senderName = " ${userRef?.name} ${userRef?.surname}",
                             )
                             messageText = ""
                         }
