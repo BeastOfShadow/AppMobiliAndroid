@@ -102,6 +102,28 @@ class TaskViewModel : ViewModel() {
             }
     }
 
+    fun getCaregiverCommentImageUrl(
+        subtask: SubTask,
+        onSuccess: (String) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val path = subtask.caregiverImgStorageLocation
+
+        if (path.isBlank()) {
+            onError(Exception("Path immagine vuoto"))
+            return
+        }
+
+        val storageRef = FirebaseStorage.getInstance().reference.child(path)
+        storageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+            .addOnFailureListener { exception ->
+                onError(exception)
+            }
+    }
+
     fun getEmployeeImageUrl(
         subtask: SubTask,
         onSuccess: (String) -> Unit,
