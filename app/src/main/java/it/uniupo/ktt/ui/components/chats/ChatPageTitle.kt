@@ -66,10 +66,12 @@ fun ChatPageTitle(
         ) {
             FilledIconButton(
                 onClick = {
-                    if(chatId != "notFound"){ // UPDATE SESSION pre-existent Chat
+                    // CASO 1) update SESSION (pre-existent Chat)
+                    if(chatId != "notFound"){
                         viewModel.updateChatSession(chatId)
                     }
-                    else if(viewModel.savedChatId.value != "notFound"){ // UPDATE SESSION New Chat
+                    // CASO 2) update SESSION (chat created after entering ChatOpen)
+                    else if(viewModel.savedChatId.value != "notFound"){
                         viewModel.updateChatSession(viewModel.savedChatId.value)
                     }
                     navController.popBackStack("chat", inclusive = false) //return

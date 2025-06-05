@@ -33,6 +33,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import it.uniupo.ktt.ui.components.chats.ChatMsgBubble
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import it.uniupo.ktt.viewmodel.UserViewModel
 
 
@@ -76,6 +79,35 @@ fun ChatOpen(
     // Unified Waiter (attende Messages & User)
     val isLoading by viewModel.isLoading
     // -------------------------------- VIEW MODEL REF -------------------------------------------
+
+
+    // ---------------------------------- LYFE CYCLE ---------------------------------------------
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (currentUid != null) {
+                if (event == Lifecycle.Event.ON_STOP) {
+
+                    // CASO 1) update SESSION (pre-existent Chat)
+                    if(chatId != "notFound"){
+                        viewModel.updateChatSession(chatId)
+                    }
+                    // CASO 2) update SESSION (chat created after entering ChatOpen)
+                    else if(viewModel.savedChatId.value != "notFound"){
+                        viewModel.updateChatSession(viewModel.savedChatId.value)
+                    }
+
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    // ---------------------------------- LYFE CYCLE ---------------------------------------------
 
 
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
