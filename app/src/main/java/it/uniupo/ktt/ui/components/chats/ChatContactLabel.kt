@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +40,7 @@ fun ChatContactLable(
     nome: String,
     lastMessage: String,
     imgUrl: String,   // UrlDownload
+    showBadge: Boolean,
     modifier: Modifier,
     onClick: () -> Unit
 ) {
@@ -51,11 +53,14 @@ fun ChatContactLable(
             .background(Color(0xFFF5DFFA))
             .width(220.dp)
     ) {
+
         Row (
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .fillMaxWidth()
 
         ) {
+
             IconButton(onClick = { /* zoom foto */ },
                 modifier = Modifier
                     .shadow(4.dp, shape = CircleShape, clip = false)
@@ -76,11 +81,14 @@ fun ChatContactLable(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Column {
-                val msgPreview= if (lastMessage.length <= 15) {
+            Column (
+                modifier= Modifier
+                    .width(140.dp)
+            ){
+                val msgPreview= if (lastMessage.length <= 13) {
                 lastMessage }
                 else
-                { lastMessage.take(25) + "..." }
+                { lastMessage.take(13) + "..." }
 
                 Text(
                     text = nome,
@@ -92,6 +100,16 @@ fun ChatContactLable(
                     fontFamily = FontFamily(Font(R.font.poppins_regular)),
                     fontWeight = FontWeight(500),
                     color = Color(0xFF615252)
+                )
+            }
+
+            // show ureadBadge
+            if (showBadge) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(Color(0xFF9A63F9), shape = CircleShape)
+
                 )
             }
         }

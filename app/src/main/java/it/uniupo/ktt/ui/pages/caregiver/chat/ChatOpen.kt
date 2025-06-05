@@ -94,10 +94,11 @@ fun ChatOpen(
         viewModel.setUidContact(uidContact)
     }
 
-    // Creazione Listener (IF "chatId != notFound")
+    // Creazione Listener (IF "chatId != notFound") + Update Sessione
     LaunchedEffect(chatId) {
         if (chatId != "notFound") {
-            viewModel.loadMessages(chatId)
+            viewModel.loadMessages(chatId) // -> LOAD MESSAGE + LISTENER REAL-TIME
+            viewModel.updateChatSession(chatId) // -> UPDATE SESSIONE
         }
     }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
@@ -121,8 +122,10 @@ fun ChatOpen(
             // ----*****  HEADER-FISSO  *****----
             ChatPageTitle(
                 navController = navController,
+                chatId = chatId,
                 nome = "${contactUser?.name} ${contactUser?.surname}",
                 avatarUrl = avatarUrl ?: "",
+                viewModel = viewModel,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .background(Color.Transparent)

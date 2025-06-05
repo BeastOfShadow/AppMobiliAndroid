@@ -16,7 +16,7 @@ fun parseDurationToSeconds(duration: String): Int {
 
 fun isToday(timestamp: Timestamp): Boolean {
     val localDateTime = timestamp.toDate().toInstant()
-        .atZone(ZoneId.systemDefault()) // 🔁 Fuso orario del dispositivo
+        .atZone(ZoneId.systemDefault())
 
     val now = ZonedDateTime.now(ZoneId.systemDefault())
 

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.firebase.Timestamp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -25,6 +26,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Date
 
 
 @HiltViewModel
@@ -83,6 +85,13 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
             }
         )
     }
+
+    fun updateChatSession(chatId: String) {
+
+        val uid = BaseRepository.currentUid()!!
+        ChatRepository.updateChatLastOpened(chatId, uid, Timestamp.now())
+    }
+
 
     /*
         la Fun effettua la CREAZIONE DI UN LISTENER al DB REALTIME:
@@ -242,17 +251,28 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                 // crea newChat (in base al Role) poi updateChatId
                 val currentUid = BaseRepository.currentUid()!!
 
+                // UnreadMessage Manager
+                val now = Timestamp.now() // -> mio
+                val oneSecondBefore = Timestamp(Date(now.toDate().time - 1000)) // -> contatto
+
+                val lastOpenedMap = mapOf(
+                    currentUid to now,  // my lastOpenedChat
+                    uidContact to oneSecondBefore   // contact lastOpenedChat
+                )
+
                 val newChat = if (userRole.lowercase() == "caregiver") {
                     Chat(
                         caregiver = currentUid,
                         employee = uidContact,
-                        members = listOf(currentUid, uidContact)
+                        members = listOf(currentUid, uidContact),
+                        lastOpenedBy = lastOpenedMap
                     )
                 } else {
                     Chat(
                         caregiver = uidContact,
                         employee = currentUid,
-                        members = listOf(currentUid, uidContact)
+                        members = listOf(currentUid, uidContact),
+                        lastOpenedBy = lastOpenedMap
                     )
                 }
 
