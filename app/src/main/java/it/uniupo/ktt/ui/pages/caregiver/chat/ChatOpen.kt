@@ -53,12 +53,17 @@ fun ChatOpen(
 
     val currentUid = BaseRepository.currentUid()
 
-    // ref Istanza UserViewModel creato nella HomeScreen
+    // Stato MessageText + scorrimento lista
+    var messageText by rememberSaveable { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
+    // ref UserViewModel istanziato in HomeScreen
     val routeKeyHome = "home"
     val parentEntry = remember(routeKeyHome) {
         navController.getBackStackEntry(routeKeyHome)
     }
-    val userViewModel: UserViewModel = hiltViewModel(parentEntry)
+    val userViewModel: UserViewModel = hiltViewModel(parentEntry) // USER
     val userRef by userViewModel.user.collectAsState()
 
     // Istanza chatOpenViewModel + OBSERVABLEs
@@ -70,12 +75,10 @@ fun ChatOpen(
     val contactUser by viewModel.contactUser
     // Unified Waiter (attende Messages & User)
     val isLoading by viewModel.isLoading
-
-    // Stato MessageText + scorrimento lista
-    var messageText by rememberSaveable { mutableStateOf("") }
-    val listState = rememberLazyListState()
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
 
 
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
     // Scroll automatico all'ultimo messaggio
     LaunchedEffect(messages.size) {
         listState.animateScrollToItem(0)
@@ -97,6 +100,8 @@ fun ChatOpen(
             viewModel.loadMessages(chatId)
         }
     }
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
+
 
     Box(
         modifier = Modifier
