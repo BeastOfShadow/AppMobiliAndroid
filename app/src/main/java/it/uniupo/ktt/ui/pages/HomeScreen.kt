@@ -135,7 +135,7 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
         val myLastOpened = chat.chat.lastOpenedBy[userUid]?.toDate()
         val lastMsgTime = chat.chat.lastTimeStamp.toDate()
 
-        lastMsgTime.after(myLastOpened)
+        myLastOpened != null && lastMsgTime.after(myLastOpened)
     }
     // ------------------------------- COUNTER CHAT BADGE ------------------------------------------
 
