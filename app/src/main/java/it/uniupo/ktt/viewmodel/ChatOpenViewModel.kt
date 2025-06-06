@@ -369,15 +369,36 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
 
     // OK
+    /*
+    *   ONCLEARED() :
+    *
+    *       Il metodo è pensato per essere gestito dal FrameWork Android/Jetpack
+    *       in modo che venga chiamata ogni volta che il viewModel viene distrutto.
+    *
+    *       NB: non posso chiamarla direttamente.
+    *
+    */
     override fun onCleared() {
         super.onCleared()
         // Distruzione del Listener in seguito all'uscita dalla pagina
         if (chatIdInUse != null && messageListener != null) {
             val dbRef = BaseRepository.dbRealTime.child("messages").child(chatIdInUse!!)
             dbRef.removeEventListener(messageListener as ValueEventListener)
-            Log.d("DEBUG", "Listener ELIMINATO!.")
+            Log.d("DEBUG-LISTENER-RT", "Listener ELIMINATO!.")
         }
     }
+
+        // sostitutiva alla "onCleared()", elimina il RT-Listener manualmente quando Esco dall'app e sono in ChatOpen
+    fun deleteRealTimeListener() {
+        if (chatIdInUse != null && messageListener != null) {
+            val dbRef = BaseRepository.dbRealTime.child("messages").child(chatIdInUse!!)
+            dbRef.removeEventListener(messageListener as ValueEventListener)
+            Log.d("DEBUG-LISTENER-RT", "Listener ELIMINATO manualmente.")
+            messageListener = null
+            chatIdInUse = null
+        }
+    }
+
 
         // OK (setta uidContact + get User&AvatarUserUrl)
     fun setUidContact(uid: String){

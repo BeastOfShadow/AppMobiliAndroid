@@ -97,6 +97,7 @@ fun ChatOpen(
             if (currentUid != null) {
                 if (event == Lifecycle.Event.ON_STOP) {
 
+                    // ---------------------- UPDATE SESSIONE ----------------------
                     // CASO 1) update SESSION (pre-existent Chat)
                     if(chatId != "notFound"){
                         viewModel.updateChatSession(chatId)
@@ -105,6 +106,12 @@ fun ChatOpen(
                     else if(viewModel.savedChatId.value != "notFound"){
                         viewModel.updateChatSession(viewModel.savedChatId.value)
                     }
+                    // ---------------------- UPDATE SESSIONE ----------------------
+
+
+                    // ----------------- DELETE REALTIME-LISTENER ------------------
+                    viewModel.deleteRealTimeListener()
+                    // ----------------- DELETE REALTIME-LISTENER ------------------
 
                 }
             }
