@@ -60,6 +60,7 @@ import it.uniupo.ktt.R
 import it.uniupo.ktt.time.isToday
 import it.uniupo.ktt.ui.components.homePage.AvatarSticker
 import it.uniupo.ktt.ui.components.homePage.EP_ProgressBar
+import it.uniupo.ktt.ui.components.homePage.MenuLabelChat
 import it.uniupo.ktt.ui.components.homePage.ModalShowAvatars
 import it.uniupo.ktt.ui.components.homePage.TargetButton
 import it.uniupo.ktt.ui.firebase.BaseRepository
@@ -127,6 +128,17 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
         }
     }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
+
+
+    // ------------------------------- COUNTER CHAT BADGE ------------------------------------------
+    val unreadCount = enrichedUserChatsList.count { chat ->
+        val myLastOpened = chat.chat.lastOpenedBy[userUid]?.toDate()
+        val lastMsgTime = chat.chat.lastTimeStamp.toDate()
+
+        lastMsgTime.after(myLastOpened)
+    }
+    // ------------------------------- COUNTER CHAT BADGE ------------------------------------------
+
 
     var ongoingTaskId by remember { mutableStateOf<String?>(null) }
 
@@ -232,7 +244,7 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // CAREGIVER HOME-SCREEN
+                        // CASO 1) -> CAREGIVER HOME-SCREEN
                         if(userVal?.role == "CAREGIVER"){
                             // Title
                             Text(
@@ -294,13 +306,14 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
                             Spacer(modifier = Modifier.height(10.dp))
 
                             // CG_CHATS
-                            MenuLabel(
+                            MenuLabelChat(
                                 navController = navController,
                                 navPage = "chat",
                                 title = "Chat",
                                 description = "Direct messages to your employees",
                                 image = R.drawable.menu_chat,
-                                imageDescription = "Chat Icon"
+                                imageDescription = "Chat Icon",
+                                badgeCount = unreadCount
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -315,7 +328,7 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
                                 imageDescription = "Statistics Icon"
                             )
                         }
-                        // EMPLOYEE HOME-SCREEN
+                        // CASO 2) -> EMPLOYEE HOME-SCREEN
                         else{
                             LaunchedEffect(userUid) {
                                 if (userRef?.role == "EMPLOYEE" && userUid != null) {
@@ -384,13 +397,14 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
                             Spacer(modifier = Modifier.height(10.dp))
 
                             // EP_CHAT
-                            MenuLabel(
+                            MenuLabelChat(
                                 navController = navController,
                                 navPage = "chat",
                                 title = "Chat",
                                 description = "Direct messages to your Supervisors",
                                 image = R.drawable.menu_chat,
-                                imageDescription = "Chat Icon"
+                                imageDescription = "Chat Icon",
+                                badgeCount = unreadCount
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))

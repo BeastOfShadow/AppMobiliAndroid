@@ -82,6 +82,14 @@ fun ChatOpen(
 
 
     // ---------------------------------- LYFE CYCLE ---------------------------------------------
+    /*
+    *       UTILIZZO E FUNZIONE:
+    *
+    *           Serve per gestire il caso in cui l'utente non esce dalla ChatOpen
+    *           ed esce o chiuse l'app (APP in BackGround or Closed). si preoccupa di
+    *           rilevare l'evento "ON_STOP" ed effettua l'update
+    *
+    */
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
