@@ -270,4 +270,18 @@ class UserViewModel @Inject constructor() : ViewModel() {
         UserRepository.updateUserAvatar(path)
     }
 
+    suspend fun getUserEmailByUuid(uid: String): String? {
+        return try {
+            val snapshot = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .await()
+
+            snapshot.getString("email")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 }
