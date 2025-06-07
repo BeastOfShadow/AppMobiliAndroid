@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.ListenerRegistration
 import it.uniupo.ktt.imagelocation.ImageLocationFolders
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.BaseRepository.db
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
+import it.uniupo.ktt.time.isToday
 import it.uniupo.ktt.ui.firebase.TaskRepository
 
 
@@ -29,9 +31,17 @@ class TaskViewModel : ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
+    fun loadTodayTasksForEmployee(uid: String) {
+        viewModelScope.launch {
+            val allTasks = getTasksByEmployeeId(uid)
+            val todayTasks = allTasks.filter { isToday(it.createdAt) }
+                .sortedBy { it.createdAt }
+            _tasks.value = todayTasks
+        }
+    }
 
 
-        // OK
+    // OK
     fun addTaskAndSubtasks(
         task: Task,
         subtasks: List<SubTask>
@@ -348,4 +358,38 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    fun updateTask(taskId: String, updatedTask: Task, onSuccess: () -> Unit = {}, onError: (Exception) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val taskRef = db.collection("tasks").document(taskId)
+                val snapshot = taskRef.get().await()
+                val currentTask = snapshot.toObject(Task::class.java)
+
+                if (currentTask == null) {
+                    onError(Exception("Task non trovato"))
+                    return@launch
+                }
+
+                val updates = mutableMapOf<String, Any>()
+
+                // Confronta ogni campo con quello attuale
+                if (updatedTask.title != currentTask.title) updates["title"] = updatedTask.title
+                if (updatedTask.employee != currentTask.employee) updates["employee"] = updatedTask.employee
+                if (updatedTask.description != currentTask.description) updates["description"] = updatedTask.description
+                if (updatedTask.completionTimeEstimate != currentTask.completionTimeEstimate) updates["completionTimeEstimate"] = updatedTask.completionTimeEstimate
+
+                if (updates.isNotEmpty()) {
+                    taskRef.update(updates).await()
+                    Log.d("TaskViewModel", "✅ Task $taskId aggiornato con ${updates.keys}")
+                } else {
+                    Log.d("TaskViewModel", "⚠️ Nessuna modifica rilevata per il task $taskId")
+                }
+
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("TaskViewModel", "❌ Error updating task: ${e.message}")
+                onError(e)
+            }
+        }
+    }
 }
