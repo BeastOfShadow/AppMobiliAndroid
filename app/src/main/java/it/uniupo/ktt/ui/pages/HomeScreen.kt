@@ -124,6 +124,7 @@ fun HomeScreen(navController: NavController, homeVM: HomeScreenViewModel) {
     LaunchedEffect(userUid) {
         if(userUid!= null) {
             homeVM.observeUserChats(userUid)
+            homeVM.observeUserTasks(userUid)
         }
     }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------

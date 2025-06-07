@@ -7,8 +7,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.firebase.ChatUtils
+import it.uniupo.ktt.ui.firebase.TaskRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.EnrichedChat
+import it.uniupo.ktt.ui.model.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -246,6 +248,43 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
         }
     }
 
+    private val _isLoadingTasks = MutableStateFlow(false)     // Wait Flag (caricamento EnrichedChats)
+    val isLoadingTasks: StateFlow<Boolean> = _isLoadingTasks.asStateFlow()
 
+    private val _userTasksList = MutableStateFlow<List<Task>>(emptyList())
+    val userTasksList: StateFlow<List<Task>> = _userTasksList.asStateFlow()
 
+    private var taskListener: ListenerRegistration? = null
+
+    fun observeUserTasks(userId: String) {
+        if (taskListener != null) {
+            Log.d("LifecycleTask", "GIA LOGGATO-> Listener già attivo (non creato nuovamente).")
+            return
+        }
+
+        Log.d("LifecycleTask", "LOGIN-> Listener creato.")
+
+        _isLoadingTasks.value = true
+
+        taskListener = TaskRepository.listenToUserTasksChanges(
+            userId = userId,
+            onTasksChanged = { tasks ->
+                _userTasksList.value = tasks
+                _isLoadingTasks.value = false
+            },
+            onError = {
+                Log.e("HomeScreenViewModel", "Errore nel listener dei task: ${it.message}")
+            }
+        )
+    }
+
+    fun stopObservingTasks() {
+        taskListener?.remove()
+        taskListener = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopObservingTasks()
+    }
 }

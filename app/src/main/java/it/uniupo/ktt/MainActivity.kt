@@ -129,10 +129,12 @@ class MainActivity : ComponentActivity() {
                             Lifecycle.Event.ON_START -> {
                                 Log.d("Lifecycle", "ON_START: Listener acceso")
                                 homeVM.observeUserChats(uid)
+                                homeVM.observeUserTasks(uid)
                             }
                             Lifecycle.Event.ON_STOP -> {
                                 Log.d("Lifecycle", "ON_STOP: Listener spento")
                                 homeVM.stopObservingChats()
+                                homeVM.stopObservingTasks()
                             }
                             else -> {}
                         }
@@ -225,7 +227,7 @@ class MainActivity : ComponentActivity() {
 
                             VisualizeRatedTaskScreen(navController = navController, taskId = taskId)
                         }
-                        composable("daily task") { DailyTaskScreen(navController) }
+                        composable("daily task") { DailyTaskScreen(navController, homeVM) }
                         composable(
                             route = "view_task/{taskId}",
                             arguments = listOf(navArgument("taskId") { type = NavType.StringType })
