@@ -275,6 +275,16 @@ fun CommentSubtaskScreen(navController: NavController, taskId: String, subtaskId
             Spacer(modifier = Modifier.height(10.dp))
 
             firebaseImageUrlEmployee.value?.let { imageUrl ->
+              Text(
+                text = "Employee Image Comment:",
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                color = titleColor,
+                textAlign = TextAlign.Start
+              )
+
+              Spacer(modifier = Modifier.height(10.dp))
+
               AsyncImage(
                 model = imageUrl,
                 contentDescription = "Anteprima immagine",
