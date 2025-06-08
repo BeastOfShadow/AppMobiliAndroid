@@ -70,8 +70,9 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                 // Salva NewCHatList (SEMPLICI)
                 _userChatsList.value = newChatList
 
-                // ARRICCHIMENTO MIRATO
-                // 1) NewCHatList EMPTY -> Svuota tutto
+                                            // ARRICCHIMENTO MIRATO
+
+                // 1) NewCHatList EMPTY -> Svuota tutto (tutte le chat sono state cancellate o non esistono)
                 if(newChatList.isEmpty()){
                     _enrichedUserChatsList.value = emptyList()
                     _isLoadingEnrichedChats.value = false
@@ -81,7 +82,7 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                     val currentUid = BaseRepository.currentUid()
                     if(currentUid != null){
 
-                        // 2.1) Primo Caricamento (Lista Locale EMPTY, NewCHatList NOT EMPTY)
+                        // 2.1) Primo Caricamento (Lista Locale EMPTY, NewCHatList NOT EMPTY) -> (prima volta che compongo il listener o listener svuotato)
                         if(_enrichedUserChatsList.value.isEmpty()){
                             enrichAllChats(newChatList, currentUid)
 
@@ -131,9 +132,13 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                             })
 
                                             // 3) NOTIFICA UPDATE BADGE (FOREGROUND)
-                                            if (changedChat.uidLastSender != currentUid) {
+                                            val lastOpenedTime = changedChat.lastOpenedBy[currentUid]?.toDate()
+                                            val lastMessageTime = changedChat.lastTimeStamp.toDate()
+                                            // notifica se: "sono il destinatario" && "non ho ancora aperto la chat"
+                                            if (changedChat.uidLastSender != currentUid && (lastOpenedTime == null || lastMessageTime.after(lastOpenedTime))) {
                                                 notifyNewMessage(newEnrichedChat)
                                             }
+
 
                                             _isLoadingEnrichedChats.value = false
                                         }
