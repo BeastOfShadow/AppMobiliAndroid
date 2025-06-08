@@ -17,6 +17,10 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor() : ViewModel(){
 
+    // -------------------------------- CACHE MSG GLOBALE (Foregoround Notify) ---------------------------------
+    private val shownNotifications = mutableSetOf<String>() // cacheNotificationId = chatId + timestamp
+    // -------------------------------- CACHE MSG GLOBALE (Foregoround Notify) ---------------------------------
+
 
     // -------------------------------- ASCOLTO GLOBALE (updated CHAT) ---------------------------------
     private val _highlightedChat = MutableStateFlow<EnrichedChat?>(null)
@@ -131,13 +135,46 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                                 "chatId=${it.chat.chatId}, members=${it.chat.members}, lastMsg=${it.chat.lastMsg}"
                                             })
 
+
+                                            // -------------------------------- NOTIFICA UPDATE BADGE (FOREGROUND) ---------------------------------
                                             // 3) NOTIFICA UPDATE BADGE (FOREGROUND)
+                                            /*
+                                            *           MOSTRA LA NOTIFICA SOLO SE:
+                                            *
+                                            *           1 - BASE : l'utente corrente è il destinatario
+                                            *           2 - VISUALIZZAZIONE CHAT :
+                                            *               il destinatario non ha ancora mai aperto la chat (nuovo msg da nuova chat) OR
+                                            *               il destinatario ha aperto l'ultima volta la chat prima dell'arrivo del messaggio
+                                            *           3 - CACHE MESSAGGI :
+                                            *               il destinatario se non vuole aprire la chat con il nuovo messaggio, non vuole ri-
+                                            *               ricevere la notifica se il mandante riapre la chat (viene aggiornata la sessione
+                                            *               che triggera l'update delle chat).
+                                            *                                       ----> SOLUZIONE: Controllo CACHE messaggi
+                                            *
+                                            *               Funzionamento CACHE MESSAGES: ad ogni nuovo cambiamento della chat viene triggerato
+                                            *               l'update della chat, che triggera poi la notifica, questa volta salviamo in una KEY
+                                            *               <ChatID, LastTimeStamp> dell'ultimo change.. e se "!shownNotifications.contains(key)"
+                                            *               ovvero la KEY non è ancora presente nella cache allora mostra notifica e aggiungi
+                                            *               la KEY alla CACHE.
+                                            *
+                                            *               NB: non salvo il messaggio ma una KEY ASSOCIATA all'ultimo messaggio il quale ha un
+                                            *                   UNIVOCO TIMESTAMP! :)
+                                            *
+                                            */
                                             val lastOpenedTime = changedChat.lastOpenedBy[currentUid]?.toDate()
                                             val lastMessageTime = changedChat.lastTimeStamp.toDate()
-                                            // notifica se: "sono il destinatario" && "non ho ancora aperto la chat"
-                                            if (changedChat.uidLastSender != currentUid && (lastOpenedTime == null || lastMessageTime.after(lastOpenedTime))) {
+
+                                            val key = "${changedChat.chatId}_${changedChat.lastTimeStamp.seconds}" // KEY
+
+                                            if (
+                                                changedChat.uidLastSender != currentUid &&
+                                                (lastOpenedTime == null || lastMessageTime.after(lastOpenedTime)) &&
+                                                !shownNotifications.contains(key) // check se la KEY appena generata non è nella cache messages
+                                            ) {
+                                                shownNotifications.add(key)
                                                 notifyNewMessage(newEnrichedChat)
                                             }
+                                            // -------------------------------- NOTIFICA UPDATE BADGE (FOREGROUND) ---------------------------------
 
 
                                             _isLoadingEnrichedChats.value = false
@@ -181,10 +218,52 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
             if (completedCalls == chats.size) {
                 _enrichedUserChatsList.value = chatsListEnriched.toList()
                 _isLoadingEnrichedChats.value = false
+
+
+                // ------------------------ NOTIFY FIRST CHAT MSG ------------------------
+                val currentUid = BaseRepository.currentUid()
+
+                // Trova la newChat con il NewMsg unread
+                val firstUnreadChat = chatsListEnriched.firstOrNull { enrichedChat ->
+                    val chat = enrichedChat.chat
+                    val lastOpened = chat.lastOpenedBy[currentUid]?.toDate()
+                    val lastMessage = chat.lastTimeStamp.toDate()
+                    val key = "${chat.chatId}_${chat.lastTimeStamp.seconds}"
+
+                    chat.uidLastSender != currentUid &&
+                            (lastOpened == null || lastMessage.after(lastOpened)) &&
+                            !shownNotifications.contains(key)
+                }
+                // Se c'è mostralo e aggiungilo alla cache
+                firstUnreadChat?.let {
+                    val key = "${it.chat.chatId}_${it.chat.lastTimeStamp.seconds}"
+                    shownNotifications.add(key)
+                    notifyNewMessage(it)
+                }
+                // ------------------------ NOTIFY FIRST CHAT MSG ------------------------
+
             }
         }
 
         chats.forEach { chat ->
+
+            /*
+             *     SAFE GUARD:
+             *
+             *       dato che la FIRST sendMessage è un operazione lunga con più call
+             *       (postNewChat(con LastMsg=NULL) + loadMessage + sendMessageRT + updateChatByChatId)
+             *       e invece il LISTENER reagisce direttamente alla "postNewChat", viene passata una
+             *       Chat da arricchire che non è ancora pronta..
+             *
+             *       Questa SAFE GUARD serve ad ignorare questi primi aggiornamenti laddove riconosce
+             *       una Chat ancora prematura (1 operazione su 4 fatte), evitando così la creazione
+             *       di Badge Vuoti.
+             *
+             */
+            if (chat.lastMsg.isBlank()) {
+                checkIfAllDone()
+                return@forEach
+            }
 
             // arricchisco con le info dell'altro utente
             val otherUid = if (uid == chat.caregiver) chat.employee else chat.caregiver
@@ -234,6 +313,16 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
     }
 
     fun notifyNewMessage(chat: EnrichedChat) {
+        Log.d("DEBUG-NOTIFY", "EnrichedChat ricevuta:\nchatId = ${chat.chat.chatId}\n" +
+                "uidLastSender = ${chat.chat.uidLastSender}\n" +
+                "lastMsg = ${chat.chat.lastMsg}\n" +
+                "timestamp = ${chat.chat.lastTimeStamp}\n" +
+                "lastOpenedBy = ${chat.chat.lastOpenedBy}\n" +
+                "name = ${chat.name}\n" +
+                "surname = ${chat.surname}\n" +
+                "avatarUrl = ${chat.avatarUrl}"
+        )
+
         _highlightedChat.value = chat
     }
 
@@ -241,6 +330,13 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
         _highlightedChat.value = null
     }
     // -------------------------------- LISTENER CHAT GLOBALE  -----------------------------------------
+
+
+    // ------------------------------------- PULIZIA CACHE ---------------------------------------------
+    fun clearNotificationCache() {
+        shownNotifications.clear()
+    }
+    // ------------------------------------- PULIZIA CACHE ---------------------------------------------
 
 
     // OK
