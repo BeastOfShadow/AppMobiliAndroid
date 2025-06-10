@@ -76,8 +76,12 @@ fun ChatOpen(
     // Contact + Contact AvatarUrl
     val avatarUrl by viewModel.avatarUrl
     val contactUser by viewModel.contactUser
-    // Unified Waiter (attende Messages & User)
-    val isLoading by viewModel.isLoading
+    // Waiters (attende Messages & User)
+    val isLoadingContact by remember { viewModel.isLoadingContact }
+    val isLoadingMessages by viewModel.isLoadingMessages.collectAsState()
+
+    //  // LOADING UNIFICATO (loadMessages + setUidContact -> (Derivato dai 2 Waiter Osservabili: Messages & User)
+    val isLoading = isLoadingContact || isLoadingMessages
     // -------------------------------- VIEW MODEL REF -------------------------------------------
 
 
