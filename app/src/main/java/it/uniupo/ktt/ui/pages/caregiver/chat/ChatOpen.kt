@@ -99,25 +99,56 @@ fun ChatOpen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (currentUid != null) {
-                if (event == Lifecycle.Event.ON_STOP) {
+                when (event) {
+                    Lifecycle.Event.ON_STOP -> {
 
-                    // ---------------------- UPDATE SESSIONE ----------------------
-                    // CASO 1) update SESSION (pre-existent Chat)
-                    if(chatId != "notFound"){
-                        viewModel.updateChatSession(chatId)
+                        // ---------------------- UPDATE SESSIONE ----------------------
+                        // CASO 1) update SESSION (pre-existent Chat)
+                        if(chatId != "notFound"){
+                            viewModel.updateChatSession(chatId)
+                        }
+                        // CASO 2) update SESSION (chat created after entering ChatOpen)
+                        else if(viewModel.savedChatId.value != "notFound"){
+                            viewModel.updateChatSession(viewModel.savedChatId.value)
+                        }
+                        // ---------------------- UPDATE SESSIONE ----------------------
+
+
+                        // ----------------- DELETE REALTIME-LISTENER ------------------
+                        viewModel.deleteRealTimeListener()
+                        // ----------------- DELETE REALTIME-LISTENER ------------------
+
                     }
-                    // CASO 2) update SESSION (chat created after entering ChatOpen)
-                    else if(viewModel.savedChatId.value != "notFound"){
-                        viewModel.updateChatSession(viewModel.savedChatId.value)
+
+                    Lifecycle.Event.ON_START -> {
+
+                        /*
+                        *   LOGICA:
+                        *
+                        *       RIATTIVO IL LISTENER  se esisteva una Chat:
+                        *           1) Arrivo in ChatOpen con ChatID
+                        *           2) trovo savedChatId nel ViewMOdel quindi chat creata nella permanenza in ChatOpen)
+                        *
+                        *       ELSE evito
+                        *
+                        */
+                        val currentChatId = if (chatId != "notFound") chatId else viewModel.savedChatId.value
+
+                        if (currentChatId != "notFound" && !viewModel.isRealTimeListenerOn()) {
+                            Log.d("DEBUG-CHATOPEN-LIFECYCLE", "Listener mancante in ON_START → Ricreazione")
+
+                            // ---------- CREATE RT-LISTENER + UPDATE SESSION ------------
+                            viewModel.loadMessages(currentChatId)               // -> LOAD MESSAGE + LISTENER REAL-TIME
+                            viewModel.updateChatSession(currentChatId)          // -> UPDATE SESSIONE
+                            // ---------- CREATE RT-LISTENER + UPDATE SESSION ------------
+
+                        }
+
                     }
-                    // ---------------------- UPDATE SESSIONE ----------------------
 
-
-                    // ----------------- DELETE REALTIME-LISTENER ------------------
-                    viewModel.deleteRealTimeListener()
-                    // ----------------- DELETE REALTIME-LISTENER ------------------
-
+                    else -> Unit
                 }
+
             }
         }
 
@@ -146,12 +177,12 @@ fun ChatOpen(
     }
 
     // Creazione Listener (IF "chatId != notFound") + Update Sessione
-    LaunchedEffect(chatId) {
-        if (chatId != "notFound") {
-            viewModel.loadMessages(chatId) // -> LOAD MESSAGE + LISTENER REAL-TIME
-            viewModel.updateChatSession(chatId) // -> UPDATE SESSIONE
-        }
-    }
+//    LaunchedEffect(chatId) {
+//        if (chatId != "notFound") {
+//            viewModel.loadMessages(chatId) // -> LOAD MESSAGE + LISTENER REAL-TIME
+//            viewModel.updateChatSession(chatId) // -> UPDATE SESSIONE
+//        }
+//    }
     // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
 
 

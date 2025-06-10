@@ -409,6 +409,11 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    fun isRealTimeListenerOn(): Boolean {
+        if(messageListener != null) return true
+        else return false
+    }
+
 
         // OK (setta uidContact + get User&AvatarUserUrl)
     fun setUidContact(uid: String){
