@@ -132,7 +132,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
                 // IMPORTANTE : Se il nodo non esiste ancora, set lista vuota e chiudi loading altrimenti ciclo wait infinito
                 if (!snapshot.exists()) {
-                    Log.d("DEBUG", "Nessun nodo messaggi esistente per questa chat.")
+                    Log.d("DEBUG-LOAD-MESSAGE", "Nessun nodo messaggi esistente per questa chat.")
                     _messageList.value = emptyList()
                     _isLoadingMessages.value = false
                     return
@@ -146,7 +146,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                             messages.add(message)
                         }
                     } catch (e: Exception) {
-                        Log.e("DEBUG", "Errore nella deserializzazione del messaggio: ${e.message}")
+                        Log.e("DEBUG-LOAD-MESSAGE", "Errore nella deserializzazione del messaggio: ${e.message}")
                     }
                 }
                 _messageList.value = messages.sortedBy { it.timeStamp }
@@ -417,7 +417,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                 isLoadingContact.value = false
             },
             onError = {
-                Log.e("DEBUG", "Errore nel recupero avatar/user", it)
+                Log.e("DEBUG-LOAD-MESSAGE", "Errore nel recupero avatar/user", it)
 
                 isLoadingContact.value = false
             }

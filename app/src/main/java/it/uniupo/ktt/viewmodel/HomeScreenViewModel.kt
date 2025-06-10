@@ -76,7 +76,10 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
              */
             onChatChanged = { newChatList, changedChats, shouldNotify ->
 
-                // Salva NewCHatList (SEMPLICI)
+                Log.d("globalChats DEBUG-TEMP", "onChatChanged(): changedChats.size = ${changedChats.size}, enrichedListEmpty = ${_enrichedUserChatsList.value.isEmpty()}")
+
+
+                // Salva NewCHatList (SEMPLICI-> not Enriched)
                 _userChatsList.value = newChatList
 
                                             // ARRICCHIMENTO MIRATO
@@ -102,8 +105,27 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                         // 2.2.) Post Primo Caricamento, UPDATE MIRATO (Lista Locale e NewCHatList NOT EMPTY)
                         else{
 
+                            // ------------------ MANAGMENT "_isLoadingEnrichedChats" ------------------
+                            val total = changedChats.size
+                            var completed = 0
+
+                            fun checkIfAllDone() {
+                                completed++
+                                Log.e("globalChats", "UPDATE checkIfAllDone counter, Counter: $completed")
+
+
+                                if (completed == total) {
+                                    _isLoadingEnrichedChats.value = false
+                                    Log.e("globalChats", "UPDATE isLoadingEnrichedChats to false")
+
+                                }
+                            }
+                            // ------------------ MANAGMENT "_isLoadingEnrichedChats" ------------------
+
+
                             // Scorro Lista UpdatedChats -> Arricchisco, immetto nella EnrichedChatList, poi mando UpdateBadge
                             changedChats.forEach { changedChat ->
+
 
                                 val otherUid = changedChat.members.firstOrNull { it != currentUid } ?: return@forEach
 
@@ -111,6 +133,7 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                     uidUser = otherUid,
                                     onSuccess = { user, avatar ->
                                         if (user != null) {
+                                            //Log.e("globalChats USER", "User OK")
 
                                             // 1) ARRICCHISCI CHAT
                                             val newEnrichedChat = EnrichedChat(
@@ -198,11 +221,16 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                             // -------------------------------- NOTIFICA UPDATE BADGE (FOREGROUND) ---------------------------------
 
 
-                                            _isLoadingEnrichedChats.value = false
+                                            checkIfAllDone()        // _isLoadingEnrichedChats MANAGMENT
+                                        }
+                                        else{
+                                            Log.e("globalChats USER", "User ERROR")
                                         }
                                     },
                                     onError = { e ->
-                                        Log.e("DEBUG", "Errore arricchimento chat aggiornata: ${e.message}")
+                                        Log.e("globalChats DEBUG", "Errore arricchimento chat aggiornata: ${e.message}")
+
+                                        checkIfAllDone()           // _isLoadingEnrichedChats MANAGMENT
                                     }
                                 )
                             }
@@ -331,6 +359,10 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
     fun stopObservingChats() {
         chatListener?.remove()
         chatListener = null
+
+        // Pulisco
+        _enrichedUserChatsList.value = emptyList()
+        _isLoadingEnrichedChats.value = false
     }
 
     fun notifyNewMessage(chat: EnrichedChat) {
@@ -350,6 +382,7 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
     fun clearHighlightedChat() {
         _highlightedChat.value = null
     }
+
     // -------------------------------- LISTENER CHAT GLOBALE  -----------------------------------------
 
 
