@@ -21,6 +21,11 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
     private val shownNotifications = mutableSetOf<String>() // cacheNotificationId = chatId + timestamp
     // -------------------------------- CACHE MSG GLOBALE (Foregoround Notify) ---------------------------------
 
+    // --------------------------------- CHAT OPEN STATUS (Foregoround Notify) ---------------------------------
+    private val _isInChatOpen = MutableStateFlow(false)
+    val isInChatOpen: StateFlow<Boolean> get() = _isInChatOpen
+    // --------------------------------- CHAT OPEN STATUS (Foregoround Notify) ---------------------------------
+
 
     // -------------------------------- ASCOLTO GLOBALE (updated CHAT) ---------------------------------
     private val _highlightedChat = MutableStateFlow<EnrichedChat?>(null)
@@ -69,7 +74,7 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
              *      che punta al risparmio di risorse, quindi aggiorno & arricchisco esclusivamente
              *      le Liste modificate nel DB
              */
-            onChatChanged = { newChatList, changedChats ->
+            onChatChanged = { newChatList, changedChats, shouldNotify ->
 
                 // Salva NewCHatList (SEMPLICI)
                 _userChatsList.value = newChatList
@@ -143,12 +148,16 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                             *
                                             *           1 - BASE : l'utente corrente è il destinatario
                                             *           2 - VISUALIZZAZIONE CHAT :
-                                            *               il destinatario non ha ancora mai aperto la chat (nuovo msg da nuova chat) OR
-                                            *               il destinatario ha aperto l'ultima volta la chat prima dell'arrivo del messaggio
+                                            *                   il destinatario non ha ancora mai aperto la chat (nuovo msg da nuova chat) OR
+                                            *                   il destinatario ha aperto l'ultima volta la chat prima dell'arrivo del messaggio
+                                            *           3 - SHOULD-NOTIFY :
+                                            *                   flag sfruttabile, ci dice se il change è avvenuto solo su Sessione (false)
+                                            *                   quindi NON notifica OR altrimenti notifica (change su LastMessage)
                                             *           3 - CACHE MESSAGGI :
-                                            *               il destinatario se non vuole aprire la chat con il nuovo messaggio, non vuole ri-
-                                            *               ricevere la notifica se il mandante riapre la chat (viene aggiornata la sessione
-                                            *               che triggera l'update delle chat).
+                                            *                   il destinatario se non vuole aprire la chat con il nuovo messaggio, non vuole ri-
+                                            *                   ricevere la notifica se il mandante riapre la chat (viene aggiornata la sessione
+                                            *                   che triggera l'update delle chat).
+                                            *
                                             *                                       ----> SOLUZIONE: Controllo CACHE messaggi
                                             *
                                             *               Funzionamento CACHE MESSAGES: ad ogni nuovo cambiamento della chat viene triggerato
@@ -165,6 +174,18 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                                             val lastMessageTime = changedChat.lastTimeStamp.toDate()
 
                                             val key = "${changedChat.chatId}_${changedChat.lastTimeStamp.seconds}" // KEY
+
+                                            // GUARD only "lastOpenedBy" List changes -> (don't generate notify)
+                                            if (!shouldNotify) {
+                                                Log.d("DEBUG-FLAG", "Cambio solo sessione, niente notify.")
+                                                return@getUserAndAndAvatarByUid
+                                            }
+
+                                            // GUARD se sono in CatOpen -> (don't generate notify)
+                                            if (isInChatOpen.value) {
+                                                Log.d("DEBUG-FLAG", "Sono in ChatOpen, niente notify.")
+                                                return@getUserAndAndAvatarByUid
+                                            }
 
                                             if (
                                                 changedChat.uidLastSender != currentUid &&
@@ -332,11 +353,15 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
     // -------------------------------- LISTENER CHAT GLOBALE  -----------------------------------------
 
 
-    // ------------------------------------- PULIZIA CACHE ---------------------------------------------
+    // ------------------------------------ CACHE && STATUS --------------------------------------------
     fun clearNotificationCache() {
         shownNotifications.clear()
     }
-    // ------------------------------------- PULIZIA CACHE ---------------------------------------------
+
+    fun setChatOpen(isOpen: Boolean) {
+        _isInChatOpen.value = isOpen
+    }
+    // ------------------------------------ CACHE && STATUS --------------------------------------------
 
 
     // OK

@@ -49,6 +49,7 @@ import it.uniupo.ktt.ui.pages.employee.taskmanager.DailyTaskScreen
 import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -95,11 +96,14 @@ class MainActivity : ComponentActivity() {
 
             val lifecycleOwner = LocalLifecycleOwner.current
 
-            // verifica del "CurrentBackStack" -> DON'T SHOW BADGE quando sono in "ChatOpen"
+            // Verifica del "CurrentBackStack" -> DON'T SHOW BADGE quando sono in "ChatOpen"
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
             val isInChatOpen = currentRoute?.startsWith("chat open/") == true
-
+            // Comunica variazione (sono/non sono in ChatOpen)
+            LaunchedEffect(isInChatOpen) {
+                homeVM.setChatOpen(isInChatOpen)
+            }
 
             // ------ *** LIFE-CYCLE -> LISTENER CHAT *** ------
             /*
@@ -155,7 +159,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     // ------------- BADGE NEW MESSAGE ------------- (elemento UI Globale)
-                    if (!isInChatOpen && highlightedChat != null) {
+                    if (highlightedChat != null) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()

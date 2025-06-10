@@ -184,7 +184,7 @@ object ChatRepository {
     */
     fun listenToUserChatsChanges(
         userId: String,
-        onChatChanged: (List<Chat>, List<Chat>) -> Unit, // oldList + changedList
+        onChatChanged: (List<Chat>, List<Chat>, Boolean) -> Unit, // oldList + changedList
         onError: (Exception) -> Unit
     ): ListenerRegistration {
 
@@ -201,25 +201,62 @@ object ChatRepository {
                 if (snapshot != null) {
                     // Liste Updated Fresche Fresche di Listener
                     val newChatList = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                    // Show Notify (only if "LastMassage subisce dei cambiamenti")
+                    var notify = false
 
                     // CONFRONTO: oldCHatList VS newChatList
+                    /*
+                    *       LOGICA CONFRONTO:
+                    *
+                    *           1) Creazione di una FLAG `notify` inizialmente `false`, mostra se almeno 1 chat "changed"
+                    *              subisce una variazione nel campo `lastMsg`.
+                    *
+                    *           2) Filtro -> CRITERI DI CONFRONTO (pretendo update al mutare di: "lastMsg", "lastOpenedBy", o quando istanzio il Listener e ha la lista vuota):
+                    *
+                    *               - "old == null"                          -> quando ho la lista attuale(old) vuota, faccio sempre Update
+                    *               - "old.lastMsg != newChat.lastMsg"       -> LastMessage diverso (nuovo messaggio arrivato)
+                    *               - "lastOpenedBy cambiato"                -> aggiornamento della sessione
+                    *
+                    *               - EXTRA :
+                    *                    SOLO se `lastMsg` è cambiato(arrivo di un newMessage), settiamo la FLAG `notify = true`
+                    *                    così da poter distinguere un "vero nuovo messaggio" da un semplice "update session".
+                    *
+                    *           3) Alla fine del filtro, ritorniamo:
+                    *               → la lista delle changedChats
+                    *               → il valore booleano `notify`, per decidere se notificare o meno
+                    */
                     val changedChats = newChatList.filter { newChat ->
+
                         val old = oldChatList.find { it.chatId == newChat.chatId }
 
-                        // CRITERI DI CONFRONTO (pretendo update al mutare di: "lastMsg", "lastOpenedBy")
-                        old == null ||                                              // 1 -> lista attuale(old) empty
-                        old.lastMsg != newChat.lastMsg ||                           // 2 -> lastMessage differente
-                        !areMapsEqual(old.lastOpenedBy, newChat.lastOpenedBy)       // 3 -> timeStamp ultima visione della Chat (UPDATE SESSION)
+                        val changed = old == null ||                                      // 1 -> chat nuova o non ancora salvata
+                                old.lastMsg != newChat.lastMsg ||                         // 2 -> nuovo messaggio ricevuto
+                                !areMapsEqual(old.lastOpenedBy, newChat.lastOpenedBy)     // 3 -> aggiornamento sessione lettura
+
+                        // se LastMessage è cambiato -> segna che c'è da notificare
+                        if (changed && old != null && old.lastMsg != newChat.lastMsg) {
+                            notify = true
+                        }
+
+                        changed
+
+//                        val old = oldChatList.find { it.chatId == newChat.chatId }
+//
+//                        // CRITERI DI CONFRONTO (pretendo update al mutare di: "lastMsg", "lastOpenedBy")
+//                        old == null ||                                              // 1 -> lista attuale(old) empty
+//                        old.lastMsg != newChat.lastMsg ||                           // 2 -> lastMessage differente
+//                        !areMapsEqual(old.lastOpenedBy, newChat.lastOpenedBy)       // 3 -> timeStamp ultima visione della Chat (UPDATE SESSION)
                     }
 
                     // CALLBACK di aggiornamento per arricchire in Base al Caso in cui siamo
-                    onChatChanged(newChatList, changedChats)
+                    onChatChanged(newChatList, changedChats, notify)
 
                     // SALVO la nuovaChatList come quella attuale (oldChatList)
                     oldChatList = newChatList
                 }
             }
     }
+
 
 
                                             // REAL-TIME-DB FUNCTION (app Aperta: solo "ChatOpen")

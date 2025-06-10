@@ -188,8 +188,10 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                         imgUrl = enrichedChat.avatarUrl,
                                         showBadge = showBadge,
                                         onClick = {
-                                            // GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
+                                            // 1) Close Badge
+                                            homeVM.clearHighlightedChat()
 
+                                            // 2) GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
                                             Log.d("DEBUG-CHAT OPEN", "INPUT -> chatId : ${chat.chatId}, contactUid: $otherParticipantUid ")
                                             navController.navigate("chat open/${chat.chatId}/$otherParticipantUid")
                                         }
