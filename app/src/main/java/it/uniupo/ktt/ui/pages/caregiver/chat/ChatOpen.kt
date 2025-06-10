@@ -1,5 +1,6 @@
 package it.uniupo.ktt.ui.pages.caregiver.chat
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -32,8 +33,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import it.uniupo.ktt.ui.components.chats.ChatMsgBubble
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import it.uniupo.ktt.viewmodel.UserViewModel
 
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun ChatOpen(
     navController: NavController,
@@ -50,6 +56,19 @@ fun ChatOpen(
 
     val currentUid = BaseRepository.currentUid()
 
+    // Stato MessageText + scorrimento lista
+    var messageText by rememberSaveable { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
+    // ref UserViewModel istanziato in HomeScreen
+    val routeKeyHome = "home"
+    val parentEntry = remember(routeKeyHome) {
+        navController.getBackStackEntry(routeKeyHome)
+    }
+    val userViewModel: UserViewModel = hiltViewModel(parentEntry) // USER
+    val userRef by userViewModel.user.collectAsState()
+
     // Istanza chatOpenViewModel + OBSERVABLEs
     val viewModel: ChatOpenViewModel = hiltViewModel()
     val messages by viewModel.messageList.collectAsState()
@@ -57,14 +76,91 @@ fun ChatOpen(
     // Contact + Contact AvatarUrl
     val avatarUrl by viewModel.avatarUrl
     val contactUser by viewModel.contactUser
-    // Unified Waiter (attende Messages & User)
-    val isLoading by viewModel.isLoading
+    // Waiters (attende Messages & User)
+    val isLoadingContact by remember { viewModel.isLoadingContact }
+    val isLoadingMessages by viewModel.isLoadingMessages.collectAsState()
 
-    // Stato MessageText + scorrimento lista
-    var messageText by rememberSaveable { mutableStateOf("") }
-    val listState = rememberLazyListState()
+    //  // LOADING UNIFICATO (loadMessages + setUidContact -> (Derivato dai 2 Waiter Osservabili: Messages & User)
+    val isLoading = isLoadingContact || isLoadingMessages
+    // -------------------------------- VIEW MODEL REF -------------------------------------------
 
 
+    // ---------------------------------- LYFE CYCLE ---------------------------------------------
+    /*
+    *       UTILIZZO E FUNZIONE:
+    *
+    *           Serve per gestire il caso in cui l'utente non esce dalla ChatOpen
+    *           ed esce o chiuse l'app (APP in BackGround or Closed). si preoccupa di
+    *           rilevare l'evento "ON_STOP" ed effettua l'update
+    *
+    */
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (currentUid != null) {
+                when (event) {
+                    Lifecycle.Event.ON_STOP -> {
+
+                        // ---------------------- UPDATE SESSIONE ----------------------
+                        // CASO 1) update SESSION (pre-existent Chat)
+                        if(chatId != "notFound"){
+                            viewModel.updateChatSession(chatId)
+                        }
+                        // CASO 2) update SESSION (chat created after entering ChatOpen)
+                        else if(viewModel.savedChatId.value != "notFound"){
+                            viewModel.updateChatSession(viewModel.savedChatId.value)
+                        }
+                        // ---------------------- UPDATE SESSIONE ----------------------
+
+
+                        // ----------------- DELETE REALTIME-LISTENER ------------------
+                        viewModel.deleteRealTimeListener()
+                        // ----------------- DELETE REALTIME-LISTENER ------------------
+
+                    }
+
+                    Lifecycle.Event.ON_START -> {
+
+                        /*
+                        *   LOGICA:
+                        *
+                        *       RIATTIVO IL LISTENER  se esisteva una Chat:
+                        *           1) Arrivo in ChatOpen con ChatID
+                        *           2) trovo savedChatId nel ViewMOdel quindi chat creata nella permanenza in ChatOpen)
+                        *
+                        *       ELSE evito
+                        *
+                        */
+                        val currentChatId = if (chatId != "notFound") chatId else viewModel.savedChatId.value
+
+                        if (currentChatId != "notFound" && !viewModel.isRealTimeListenerOn()) {
+                            Log.d("DEBUG-CHATOPEN-LIFECYCLE", "Listener mancante in ON_START → Ricreazione")
+
+                            // ---------- CREATE RT-LISTENER + UPDATE SESSION ------------
+                            viewModel.loadMessages(currentChatId)               // -> LOAD MESSAGE + LISTENER REAL-TIME
+                            viewModel.updateChatSession(currentChatId)          // -> UPDATE SESSIONE
+                            // ---------- CREATE RT-LISTENER + UPDATE SESSION ------------
+
+                        }
+
+                    }
+
+                    else -> Unit
+                }
+
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    // ---------------------------------- LYFE CYCLE ---------------------------------------------
+
+
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
     // Scroll automatico all'ultimo messaggio
     LaunchedEffect(messages.size) {
         listState.animateScrollToItem(0)
@@ -80,12 +176,15 @@ fun ChatOpen(
         viewModel.setUidContact(uidContact)
     }
 
-    // Creazione Listener (IF "chatId != notFound")
-    LaunchedEffect(chatId) {
-        if (chatId != "notFound") {
-            viewModel.loadMessages(chatId)
-        }
-    }
+    // Creazione Listener (IF "chatId != notFound") + Update Sessione
+//    LaunchedEffect(chatId) {
+//        if (chatId != "notFound") {
+//            viewModel.loadMessages(chatId) // -> LOAD MESSAGE + LISTENER REAL-TIME
+//            viewModel.updateChatSession(chatId) // -> UPDATE SESSIONE
+//        }
+//    }
+    // -------------------------------- LAUNCHED EFFECTS -------------------------------------------
+
 
     Box(
         modifier = Modifier
@@ -105,8 +204,10 @@ fun ChatOpen(
             // ----*****  HEADER-FISSO  *****----
             ChatPageTitle(
                 navController = navController,
+                chatId = chatId,
                 nome = "${contactUser?.name} ${contactUser?.surname}",
                 avatarUrl = avatarUrl ?: "",
+                viewModel = viewModel,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .background(Color.Transparent)
@@ -145,28 +246,10 @@ fun ChatOpen(
                                     timeStamp = message.timeStamp,
                                     seen = message.seen
                                 )
-                                //Spacer(modifier = Modifier.height(5.dp))
+
                             }
                         }
 
-//                        ChatInputBar(
-//                            text = messageText,
-//                            onTextChange = { messageText = it },
-//                            onSendClick = {
-//                                if (messageText.isNotBlank()) {
-//                                    viewModel.sendMessage(
-//                                        chatId = chatId,
-//                                        text = messageText,
-//                                        deviceToken = contactUser?.deviceToken ?: "error",
-//                                        senderName = "Prova"
-//                                    )
-//                                    messageText = ""
-//                                }
-//                            },
-//                            modifier = Modifier
-//                                .padding(horizontal = 8.dp, vertical = 4.dp)
-//                                .align(Alignment.CenterHorizontally)
-//                        )
 
                     }
                 }
@@ -180,7 +263,7 @@ fun ChatOpen(
                                 chatId = chatId,
                                 text = messageText,
                                 deviceToken = contactUser?.deviceToken ?: "error",
-                                senderName = "Prova"
+                                senderName = " ${userRef?.name} ${userRef?.surname}",
                             )
                             messageText = ""
                         }

@@ -210,6 +210,7 @@ fun NewChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                         modifier = Modifier
                                             .scale(1.3f),
                                         imgUrl = contact.avatarUrl,
+                                        showBadge = false,
                                         onClick = {
 
                                             // "searchChatByUidEmployee" non è una Async Call, ma controlla se nel "ChatViewModel" (generato nella ChatPage precedente) nella lista di Chat è già presente una chat con l'uid del contatto selezionato

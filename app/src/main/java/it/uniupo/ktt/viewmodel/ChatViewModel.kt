@@ -17,7 +17,9 @@ import it.uniupo.ktt.ui.firebase.UserRepository
 import it.uniupo.ktt.ui.model.EnrichedChat
 import javax.inject.Inject
 
+// ---------------------------------------- DEPRECATED ----------------------------------------
 @HiltViewModel
 class ChatViewModel @Inject constructor() : ViewModel(){
 
 }
+// ---------------------------------------- DEPRECATED ----------------------------------------

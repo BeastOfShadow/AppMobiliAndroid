@@ -11,9 +11,13 @@ object ChatUtils{
         onSuccess: (User?, String?) -> Unit,
         onError: (Exception) -> Unit
     ){
+        Log.d("DEBUG-AVATAR", "Chiamata a getUserByUid per $uidUser")
+
         UserRepository.getUserByUid(
             uid = uidUser,
             onSuccess = { user ->
+                Log.d("DEBUG-AVATAR", "Utente ricevuto: ${user?.uid}")
+
                 if (user != null && user.avatar.isNotBlank()) {
 
                     // Ottieni DownloadUrl da Firebase Storage
@@ -21,6 +25,7 @@ object ChatUtils{
                         .child(user.avatar)
                         .downloadUrl
                         .addOnSuccessListener { uri ->
+                            Log.d("DEBUG-AVATAR", "Download avatar riuscito")
                             onSuccess(user, uri.toString())
                         }
                         .addOnFailureListener { e ->
@@ -29,10 +34,14 @@ object ChatUtils{
                         }
                 }
                 else {
+                    Log.d("DEBUG-AVATAR", "Utente nullo o avatar assente")
                     onSuccess(user, null) // user null o avatar non presente
                 }
             },
-            onError = onError
+            onError = {
+                Log.e("DEBUG-AVATAR", "Errore getUserByUid", it)
+                onError(it)
+            }
         )
 
     }

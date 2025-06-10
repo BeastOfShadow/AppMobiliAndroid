@@ -36,7 +36,7 @@ fun foregroundBadge(
     LaunchedEffect(highlightedChat) {
         if (highlightedChat != null) {
             showBadge.value = true
-            delay(5000)
+            delay(2000)
             showBadge.value = false
         }
     }
@@ -69,8 +69,9 @@ fun foregroundBadge(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF0E6F6)),
             modifier = Modifier
                 .clickable {
-                    onClick(highlightedChat!!.chat.chatId, otherUid)
                     showBadge.value = false
+                    onDismiss()                 // pulizia forzata dello Stato
+                    onClick(highlightedChat!!.chat.chatId, otherUid)
                 }
                 .widthIn(max = 300.dp)
         ) {

@@ -4,6 +4,7 @@ import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.firestore.ListenerRegistration
+import it.uniupo.ktt.ui.common.areMapsEqual
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.Contact
 import it.uniupo.ktt.ui.model.Message
@@ -172,49 +173,90 @@ object ChatRepository {
                                             // LISTENER CHATS GLOBALE (app Aperta)
 
         // OK -> Add ChatListener + return updated Chats
-        /*
-        *   1) Crea un Listener PERMANENTE sulla Lista Chats anche se vuota (dato che in futuro potrebbe popolarsi)
-        *      per ricevere update in tempo reale sulle CHATs.
-        *      ATTENZIONE: il Listener salva i dati al suo interno come la lista "previousChats" etc
-        *
-        *   2) Ad ogni aggiornamento di una o + chat del DB , il Listener confronta la OLDCHatList con la newChatList
-        *      ovvero la Lista delle nuove Chat appena arrivate
-        *      con la NEWChatList per scovare le chat modificate, così da poter ritornare solo le Chat cambiate.
-        */
-        fun listenToUserChatsChanges(
-            userId: String,
-            onChatChanged: (List<Chat>, List<Chat>) -> Unit, // oldList + changedList
-            onError: (Exception) -> Unit
-        ): ListenerRegistration {
+    /*
+    *   1) Crea un Listener PERMANENTE sulla Lista Chats anche se vuota (dato che in futuro potrebbe popolarsi)
+    *      per ricevere update in tempo reale sulle CHATs.
+    *      ATTENZIONE: il Listener salva i dati al suo interno come la lista "previousChats" etc
+    *
+    *   2) Ad ogni aggiornamento di una o + chat del DB , il Listener confronta la OLDCHatList con la newChatList
+    *      ovvero la Lista delle nuove Chat appena arrivate
+    *      con la NEWChatList per scovare le chat modificate, così da poter ritornare solo le Chat cambiate.
+    */
+    fun listenToUserChatsChanges(
+        userId: String,
+        onChatChanged: (List<Chat>, List<Chat>, Boolean) -> Unit, // oldList + changedList
+        onError: (Exception) -> Unit
+    ): ListenerRegistration {
 
-            var oldChatList: List<Chat> = emptyList()
+        var oldChatList: List<Chat> = emptyList()
 
-            return BaseRepository.db.collection("chats")
-                .whereArrayContains("members", userId)
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        onError(error)
-                        return@addSnapshotListener
-                    }
+        return BaseRepository.db.collection("chats")
+            .whereArrayContains("members", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    onError(error)
+                    return@addSnapshotListener
+                }
 
-                    if (snapshot != null) {
-                        // Liste Updated Fresche Fresche di Listener
-                        val newChatList = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                if (snapshot != null) {
+                    // Liste Updated Fresche Fresche di Listener
+                    val newChatList = snapshot.documents.mapNotNull { it.toObject(Chat::class.java) }
+                    // Show Notify (only if "LastMassage subisce dei cambiamenti")
+                    var notify = false
 
-                        // CONFRONTO: oldCHatList VS newChatList
-                        val changedChats = newChatList.filter { newChat ->
-                            val old = oldChatList.find { it.chatId == newChat.chatId }
-                            old == null || old.lastMsg != newChat.lastMsg
+                    // CONFRONTO: oldCHatList VS newChatList
+                    /*
+                    *       LOGICA CONFRONTO:
+                    *
+                    *           1) Creazione di una FLAG `notify` inizialmente `false`, mostra se almeno 1 chat "changed"
+                    *              subisce una variazione nel campo `lastMsg`.
+                    *
+                    *           2) Filtro -> CRITERI DI CONFRONTO (pretendo update al mutare di: "lastMsg", "lastOpenedBy", o quando istanzio il Listener e ha la lista vuota):
+                    *
+                    *               - "old == null"                          -> quando ho la lista attuale(old) vuota, faccio sempre Update
+                    *               - "old.lastMsg != newChat.lastMsg"       -> LastMessage diverso (nuovo messaggio arrivato)
+                    *               - "lastOpenedBy cambiato"                -> aggiornamento della sessione
+                    *
+                    *               - EXTRA :
+                    *                    SOLO se `lastMsg` è cambiato(arrivo di un newMessage), settiamo la FLAG `notify = true`
+                    *                    così da poter distinguere un "vero nuovo messaggio" da un semplice "update session".
+                    *
+                    *           3) Alla fine del filtro, ritorniamo:
+                    *               → la lista delle changedChats
+                    *               → il valore booleano `notify`, per decidere se notificare o meno
+                    */
+                    val changedChats = newChatList.filter { newChat ->
+
+                        val old = oldChatList.find { it.chatId == newChat.chatId }
+
+                        val changed = old == null ||                                      // 1 -> chat nuova o non ancora salvata
+                                old.lastMsg != newChat.lastMsg ||                         // 2 -> nuovo messaggio ricevuto
+                                !areMapsEqual(old.lastOpenedBy, newChat.lastOpenedBy)     // 3 -> aggiornamento sessione lettura
+
+                        // se LastMessage è cambiato -> segna che c'è da notificare
+                        if (changed && old != null && old.lastMsg != newChat.lastMsg) {
+                            notify = true
                         }
 
-                        // CALLBACK di aggiornamento per arricchire in Base al Caso in cui siamo
-                        onChatChanged(newChatList, changedChats)
+                        changed
 
-                        // SALVO la nuovaChatList come quella attuale (oldChatList)
-                        oldChatList = newChatList
+//                        val old = oldChatList.find { it.chatId == newChat.chatId }
+//
+//                        // CRITERI DI CONFRONTO (pretendo update al mutare di: "lastMsg", "lastOpenedBy")
+//                        old == null ||                                              // 1 -> lista attuale(old) empty
+//                        old.lastMsg != newChat.lastMsg ||                           // 2 -> lastMessage differente
+//                        !areMapsEqual(old.lastOpenedBy, newChat.lastOpenedBy)       // 3 -> timeStamp ultima visione della Chat (UPDATE SESSION)
                     }
+
+                    // CALLBACK di aggiornamento per arricchire in Base al Caso in cui siamo
+                    onChatChanged(newChatList, changedChats, notify)
+
+                    // SALVO la nuovaChatList come quella attuale (oldChatList)
+                    oldChatList = newChatList
                 }
-        }
+            }
+    }
+
 
 
                                             // REAL-TIME-DB FUNCTION (app Aperta: solo "ChatOpen")
@@ -245,5 +287,31 @@ object ChatRepository {
             onError(DatabaseError.fromException(Exception("Failed to generate message ID")))
         }
     }
+
+                                            // SESSIONE CHAT (update timeStamp ultima visione chat)
+
+        // OK
+    fun updateChatLastOpened(
+        chatId: String,
+        uid: String,
+        timestamp: Timestamp,
+        onSuccess: () -> Unit = {},
+        onError: (Exception) -> Unit = {}
+    ) {
+        val updateField = "lastOpenedBy.$uid"
+
+        val updateData = mapOf(
+            updateField to timestamp
+        )
+
+        BaseRepository.db
+            .collection("chats")
+            .document(chatId)
+            .update(updateData)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e -> onError(e) }
+    }
+
+
 
 }

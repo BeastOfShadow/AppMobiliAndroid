@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.firebase.Timestamp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -25,6 +26,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Date
 
 
 @HiltViewModel
@@ -61,15 +63,11 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
 
-    // LOADING UNIFICATO (loadMessages + setUidContact)
-    val isLoading = derivedStateOf {
-        isLoadingContact.value || _isLoadingMessages.value
-    }
-
-
     // Listener REF per ascoltare il DB_RealTime
     private var messageListener: ValueEventListener? = null
     private var chatIdInUse: String? = null
+
+
 
     fun getRoleByUid(uid: String) {
         UserRepository.getUserByUid(
@@ -83,6 +81,13 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
             }
         )
     }
+
+    fun updateChatSession(chatId: String) {
+
+        val uid = BaseRepository.currentUid()!!
+        ChatRepository.updateChatLastOpened(chatId, uid, Timestamp.now())
+    }
+
 
     /*
         la Fun effettua la CREAZIONE DI UN LISTENER al DB REALTIME:
@@ -102,19 +107,25 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
         // se la chat non esiste non creo il LISTENER
         if (chatId == "notFound") {
-            Log.d("DEBUG", "Chat non esistente, LISTENER non creato.")
+            //Log.d("DEBUG-CHATOPEN-loadMessage", "Chat non esistente, LISTENER non creato.")
             return
 
             // nessun problema: _listMessage rimane VUOTO
         }
         // -> richiamando loadMessage evito LISTENER DUPLICATO
         if(chatIdInUse == chatId) {
-            Log.d("DEBUG", "Listener già creato in precedenza per la chat $chatId")
+            //Log.d("DEBUG-CHATOPEN-loadMessage", "Listener già creato in precedenza per la chat $chatId")
             return
         }
         else{
             chatIdInUse = chatId
         }
+
+
+
+        Log.d("DEBUG-CHATOPEN-loadMessage", "chatId $chatId")
+
+
 
         val dbRef = BaseRepository.dbRealTime.child("messages").child(chatId)
 
@@ -123,12 +134,14 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
                 // IMPORTANTE : Se il nodo non esiste ancora, set lista vuota e chiudi loading altrimenti ciclo wait infinito
                 if (!snapshot.exists()) {
-                    Log.d("DEBUG", "Nessun nodo messaggi esistente per questa chat.")
+                    Log.d("DEBUG-CHATOPEN-loadMessage", "Nodo INESISTENTE per questa chat.")
                     _messageList.value = emptyList()
                     _isLoadingMessages.value = false
                     return
                 }
 
+
+                Log.d("DEBUG-CHATOPEN-loadMessage", "Nodo esistente per questa chat.")
                 val messages = mutableListOf<Message>()
                 snapshot.children.forEach { child ->
                     try {
@@ -137,14 +150,18 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                             messages.add(message)
                         }
                     } catch (e: Exception) {
-                        Log.e("DEBUG", "Errore nella deserializzazione del messaggio: ${e.message}")
+                        Log.e("DEBUG-CHATOPEN-loadMessage", "Errore nella deserializzazione del messaggio: ${e.message}")
                     }
                 }
                 _messageList.value = messages.sortedBy { it.timeStamp }
                 _isLoadingMessages.value = false
+
+                Log.d("DEBUG-CHATOPEN-LISTENER-RT", "CREAZIONE Listener RIUSCITA.")
             }
 
             override fun onCancelled(error: DatabaseError) {
+
+                Log.d("DEBUG-CHATOPEN-LISTENER-RT", "CREAZIONE Listener RT FALLITA.")
                 _messageList.value = emptyList()
                 _errorMessage.value = error.message
                 _isLoadingMessages.value = false
@@ -242,17 +259,28 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                 // crea newChat (in base al Role) poi updateChatId
                 val currentUid = BaseRepository.currentUid()!!
 
+                // UnreadMessage Manager
+                val now = Timestamp.now() // -> mio
+                val oneSecondBefore = Timestamp(Date(now.toDate().time - 1000)) // -> contatto
+
+                val lastOpenedMap = mapOf(
+                    currentUid to now,  // my lastOpenedChat
+                    uidContact to oneSecondBefore   // contact lastOpenedChat
+                )
+
                 val newChat = if (userRole.lowercase() == "caregiver") {
                     Chat(
                         caregiver = currentUid,
                         employee = uidContact,
-                        members = listOf(currentUid, uidContact)
+                        members = listOf(currentUid, uidContact),
+                        lastOpenedBy = lastOpenedMap
                     )
                 } else {
                     Chat(
                         caregiver = uidContact,
                         employee = currentUid,
-                        members = listOf(currentUid, uidContact)
+                        members = listOf(currentUid, uidContact),
+                        lastOpenedBy = lastOpenedMap
                     )
                 }
 
@@ -319,7 +347,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
     ) {
         val json = JSONObject().apply {
             put("token", deviceToken)
-            put("title", "Nuovo messaggio da $senderName")
+            put("title", "Message from $senderName")
             put("body", text)
         }
 
@@ -349,15 +377,43 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
 
     // OK
+    /*
+    *   ONCLEARED() :
+    *
+    *       Il metodo è pensato per essere gestito dal FrameWork Android/Jetpack
+    *       in modo che venga chiamata ogni volta che il viewModel viene distrutto.
+    *
+    *       NB: non posso chiamarla direttamente.
+    *
+    */
     override fun onCleared() {
         super.onCleared()
         // Distruzione del Listener in seguito all'uscita dalla pagina
         if (chatIdInUse != null && messageListener != null) {
             val dbRef = BaseRepository.dbRealTime.child("messages").child(chatIdInUse!!)
             dbRef.removeEventListener(messageListener as ValueEventListener)
-            Log.d("DEBUG", "Listener ELIMINATO!.")
+            Log.d("DEBUG-LISTENER-RT", "Listener ELIMINATO!.")
         }
     }
+
+        // sostitutiva alla "onCleared()", elimina il RT-Listener manualmente quando Esco dall'app e sono in ChatOpen
+    fun deleteRealTimeListener() {
+        if (chatIdInUse != null && messageListener != null) {
+            val dbRef = BaseRepository.dbRealTime.child("messages").child(chatIdInUse!!)
+            dbRef.removeEventListener(messageListener as ValueEventListener)
+
+            messageListener = null
+            chatIdInUse = null
+
+            Log.d("DEBUG-CHATOPEN-LISTENER-RT", "Listener ELIMINATO manualmente.")
+        }
+    }
+
+    fun isRealTimeListenerOn(): Boolean {
+        if(messageListener != null) return true
+        else return false
+    }
+
 
         // OK (setta uidContact + get User&AvatarUserUrl)
     fun setUidContact(uid: String){
@@ -366,7 +422,6 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
 
         Log.d("DEBUG", "UIDContact SET ricevuto: $uid")
 
-        //
         ChatUtils.getUserAndAndAvatarByUid(
             uidUser = uid,
             onSuccess = { user, url ->
@@ -376,7 +431,7 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
                 isLoadingContact.value = false
             },
             onError = {
-                Log.e("DEBUG", "Errore nel recupero avatar/user", it)
+                Log.e("DEBUG-LOAD-MESSAGE", "Errore nel recupero avatar/user", it)
 
                 isLoadingContact.value = false
             }

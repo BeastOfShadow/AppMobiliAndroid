@@ -40,13 +40,16 @@ import it.uniupo.ktt.R
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.ChatOpenViewModel
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChatPageTitle(
     navController: NavController,
+    chatId: String,
     nome: String,
     avatarUrl: String,
+    viewModel: ChatOpenViewModel,
     modifier: Modifier
 )
 {
@@ -63,6 +66,14 @@ fun ChatPageTitle(
         ) {
             FilledIconButton(
                 onClick = {
+                    // CASO 1) update SESSION (pre-existent Chat)
+                    if(chatId != "notFound"){
+                        viewModel.updateChatSession(chatId)
+                    }
+                    // CASO 2) update SESSION (chat created after entering ChatOpen)
+                    else if(viewModel.savedChatId.value != "notFound"){
+                        viewModel.updateChatSession(viewModel.savedChatId.value)
+                    }
                     navController.popBackStack("chat", inclusive = false) //return
                 },
                 modifier = Modifier.size(34.dp),
@@ -141,8 +152,10 @@ fun ChatPageTitlePreview() {
 
     ChatPageTitle(
         navController = navController,
+        chatId = "notFound",
         nome = "LUIGI CAPUANI",
         avatarUrl = "R.drawable.profile_female_default",
+        viewModel = ChatOpenViewModel(),
         modifier = Modifier
             .scale(1.3f),
     )

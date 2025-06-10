@@ -152,7 +152,7 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                 .verticalScroll(rememberScrollState())
                         ){
                             Column{
-                                // itera lista e crea Lable contatti
+                                // itera lista e crea ChatContactLabel + controllo LastUidSender (badge unreadMsg)
                                 sortedChatList.forEach { enrichedChat ->
 
 
@@ -160,9 +160,25 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                     // scompongo la lista arricchita
                                     val chat = enrichedChat.chat
 
-                                    // in base a role arricchisco
                                     val otherParticipantUid = if (currentUid == chat.caregiver) chat.employee else chat.caregiver
                                     val displayName = "${enrichedChat.name} ${enrichedChat.surname}"
+
+                                    // ---------------------------------- UNREAD BADGE ----------------------------------
+                                    /*
+                                    *        LOGICA:
+                                    *
+                                    *       confronto il TimeSTamp dell'ultimo messaggio pervenuto in Chat
+                                    *       con il TimeStamp della mia ultima personale presenza nella CHat
+                                    *       in questo modo sono sicuro se ho visto o no l'ultimo messaggio.
+                                    */
+                                    val myLastOpenedTimeStamp = chat.lastOpenedBy[currentUid]?.toDate()
+                                    val lastMsgTimeStamp = chat.lastTimeStamp.toDate()
+
+                                    val showBadge = lastMsgTimeStamp.after(myLastOpenedTimeStamp)
+
+                                    Log.d("DEBUG-BADGE", "LastMsg=${lastMsgTimeStamp}, MyLastOpened=${myLastOpenedTimeStamp}")
+                                    Log.d("DEBUG-BADGE", "ShowBadge=$showBadge")
+                                    // ---------------------------------- UNREAD BADGE ----------------------------------
 
                                     ChatContactLable(
                                         nome = displayName,
@@ -170,9 +186,12 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                         modifier = Modifier
                                             .scale(1.3f),
                                         imgUrl = enrichedChat.avatarUrl,
+                                        showBadge = showBadge,
                                         onClick = {
-                                            // GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
+                                            // 1) Close Badge
+                                            homeVM.clearHighlightedChat()
 
+                                            // 2) GOTO -> "ChatOpen",  passing "chatId, uidEmployee"
                                             Log.d("DEBUG-CHAT OPEN", "INPUT -> chatId : ${chat.chatId}, contactUid: $otherParticipantUid ")
                                             navController.navigate("chat open/${chat.chatId}/$otherParticipantUid")
                                         }

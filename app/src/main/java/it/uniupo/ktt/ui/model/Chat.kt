@@ -10,7 +10,10 @@ data class Chat(
 
     val lastMsg: String = "",
     val uidLastSender: String = "",
-    val lastTimeStamp: Timestamp = Timestamp.now()
+    val lastTimeStamp: Timestamp = Timestamp.now(),
+
+    // UnreadMessage (Map: Uid-> lastOpenedTimeStamp)
+    val lastOpenedBy: Map<String, Timestamp> = emptyMap()
     ){
     fun isValid(): Boolean {
         return caregiver.isNotBlank() &&
