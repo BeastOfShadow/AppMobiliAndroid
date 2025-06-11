@@ -105,11 +105,6 @@ class MainActivity : ComponentActivity() {
                     handleIntentIfNeeded(currentIntent, navController)
                 }
             }
-
-//            DisposableEffect(navController) {
-//                handleIntentIfNeeded(currentIntent, navController)
-//                onDispose { }
-//            }
             // ------------- INTENT LAUNCH (onCreate) -------------
 
             val lifecycleOwner = LocalLifecycleOwner.current
@@ -338,10 +333,10 @@ class MainActivity : ComponentActivity() {
     *                 con il "NEW-INTENT"
     */
     override fun onNewIntent(intent: Intent) {
-        Log.d("DEBUG-INTENT", "BackGround New-Intent")
-
         super.onNewIntent(intent)
         setIntent(intent)
+
+        Log.d("DEBUG-INTENT", "BackGround New-Intent")
     }
 
     private fun handleIntentIfNeeded(intent: Intent?, navController: NavHostController) {

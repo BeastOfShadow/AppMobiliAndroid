@@ -1,7 +1,6 @@
 package it.uniupo.ktt.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
