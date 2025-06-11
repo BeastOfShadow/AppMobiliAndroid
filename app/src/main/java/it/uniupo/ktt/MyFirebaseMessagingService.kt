@@ -53,6 +53,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = "default_channel_id"
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
+        // ------------------------------- CREAZIONE NOTIFICA (se non esistente) -------------------------------
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.main_icon_push_notify) // svg- image nell'Assets
 
@@ -63,7 +64,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+        // ------------------------------- CREAZIONE NOTIFICA (se non esistente) -------------------------------
 
+
+        // ------------------------------- CREAZIONE CHANNEL (se non esistente) -------------------------------
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -81,6 +85,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
             notificationManager.createNotificationChannel(channel)
         }
+        // ------------------------------- CREAZIONE CHANNEL (se non esistente) -------------------------------
 
         notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
