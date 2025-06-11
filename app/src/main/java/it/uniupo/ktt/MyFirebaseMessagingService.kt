@@ -14,6 +14,7 @@ import com.google.firebase.messaging.RemoteMessage
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.os.Build
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -54,16 +55,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         // ------------------------------- CREAZIONE NOTIFICA (se non esistente) -------------------------------
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+        val notification = NotificationCompat.Builder(this, channelId)
+
             .setSmallIcon(R.drawable.main_icon_push_notify) // svg- image nell'Assets
 
             .setContentTitle(title)
             .setContentText(messageBody)
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageBody))
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.main_icon_circle))
+
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
         // ------------------------------- CREAZIONE NOTIFICA (se non esistente) -------------------------------
 
 
@@ -87,7 +92,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
         // ------------------------------- CREAZIONE CHANNEL (se non esistente) -------------------------------
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 
     override fun onNewToken(token: String) {
