@@ -20,7 +20,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 exports.sendFCM = functions.https.onRequest(async (req, res) => {
-  const {token, title, body} = req.body;
+  const {token, title, body, chatId, uidContact, navigateTo} = req.body;
 
   if (!token || !title || !body) {
     return res.status(400).send("Missing required fields");
@@ -30,6 +30,9 @@ exports.sendFCM = functions.https.onRequest(async (req, res) => {
     data: {
       title: title,
       body: body,
+      chatId: chatId || "",
+      uidContact: uidContact || "",
+      navigateTo: navigateTo || "",
     },
     token: token,
   };

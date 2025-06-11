@@ -345,10 +345,25 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
         senderName: String,
         text: String
     ) {
+
+        val chatId = getEffectiveChatId()
+        val uidContact = contactUser.value?.uid
+
+        if (chatId == "notFound" || uidContact == null){
+            Log.e("DEBUG-PUSH", "Errore ChatId OR ContactUid non trovati")
+            return
+        }
+        Log.d("DEBUG-INTENT", "sendPushNotification INFO: chatId: $chatId, uidCOntact: $uidContact")
+
         val json = JSONObject().apply {
             put("token", deviceToken)
             put("title", "Message from$senderName")
             put("body", text)
+
+            // EXTRAS: navigation to.. when APP in BACKGROUND or CLOSED
+            put("chatId", chatId)
+            put("uidContact", uidContact)
+            put("navigateTo", "chatOpen")
         }
 
         val requestBody = json.toString()
@@ -437,5 +452,22 @@ class ChatOpenViewModel @Inject constructor() : ViewModel() {
             }
         )
     }
+
+    /*
+    *       HELPER per la "sendPushNotification":
+    *
+    *           quando chiamo la "sendPushNotification" devo passarle:
+    *              1 - il contactUid (che abbiamo già perchè popolato appena si entra nel viewModel dopo la call
+    *                  di "setUidContact")
+    *              2 - il chatId che ricaviamo da questa funzione Helper (facile, se entriamo e la Chat esiste già
+    *                  basta scegliere "chatIdInUse", impostato subito dopo l'attivazione del RealTime Listener.
+    *                  Altrimenti se la Chat viene creata dopo verrà salvato in "savedChatId")
+    *
+    */
+    fun getEffectiveChatId(): String {
+        return if (chatIdInUse != null) chatIdInUse!!
+        else savedChatId.value
+    }
+
 
 }

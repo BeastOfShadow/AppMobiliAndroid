@@ -36,6 +36,7 @@ import it.uniupo.ktt.ui.pages.employee.currentTask.CurrentSubtaskPage
 import it.uniupo.ktt.ui.pages.employee.statistics.EP_StatisticPage
 import it.uniupo.ktt.ui.pages.TaskRatingScreen
 import android.Manifest
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.collectAsState
@@ -50,12 +51,14 @@ import it.uniupo.ktt.ui.pages.employee.taskmanager.ViewTaskScreen
 import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import it.uniupo.ktt.ui.components.global.foregroundBadge
 
@@ -71,15 +74,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+
+
         enableEdgeToEdge()
 
         setContent {
             val navController = rememberNavController()
             val startDestination by remember { mutableStateOf(if (BaseRepository.currentUser() == null) "login" else "home") }
 
-
             // -------------------- VIEWMODEL GLOBALE (lifetime = MainActivity) ---------------------
-
             /*
             *       APP in FOREGROUND:
             *
@@ -93,6 +96,21 @@ class MainActivity : ComponentActivity() {
             */
             val homeVM: HomeScreenViewModel = hiltViewModel() // -> ENRICHED CHATS (globalmente dispo nell'APP)
             val highlightedChat by homeVM.highlightedChat.collectAsState()
+
+            // ------------- INTENT LAUNCH (onCreate) -------------
+            val currentIntent by rememberUpdatedState(newValue = intent)
+
+            LaunchedEffect(Unit) {
+                if(highlightedChat == null){
+                    handleIntentIfNeeded(currentIntent, navController)
+                }
+            }
+
+//            DisposableEffect(navController) {
+//                handleIntentIfNeeded(currentIntent, navController)
+//                onDispose { }
+//            }
+            // ------------- INTENT LAUNCH (onCreate) -------------
 
             val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -149,7 +167,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
             // ------ *** LYFE-CYCLE -> LISTENER CHAT *** ------
-
             // -------------------- VIEWMODEL GLOBALE (lifetime = MainActivity) ---------------------
 
 
@@ -314,4 +331,49 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    // ------------------------------- ESECUZIONE INTENT (Push Notify) -------------------------------
+    /*
+    *   FONDAMENTALE: si occupa del comportamento dell'app quando è in BackGround, aggiorna l' "OLD-INTENT"
+    *                 con il "NEW-INTENT"
+    */
+    override fun onNewIntent(intent: Intent) {
+        Log.d("DEBUG-INTENT", "BackGround New-Intent")
+
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
+    private fun handleIntentIfNeeded(intent: Intent?, navController: NavHostController) {
+
+        val navigateTo = intent?.getStringExtra("navigateTo")
+        val chatId = intent?.getStringExtra("chatId")
+        val uidContact = intent?.getStringExtra("uidContact")
+
+        if (navigateTo == "chatOpen" && !chatId.isNullOrEmpty() && !uidContact.isNullOrEmpty()) {
+            Log.d("DEBUG-INTENT", "Received intent with chatId")
+
+            /*
+            *       PROCEDURA:
+            *
+            *           NB: la startDestination (la Home in questo caso) viene sempre PUSHATA nello STACK
+            *               prima dell'esecuzione dell' "handleINtentIfNeeded"
+            *
+            *           L'handleIntentIfNeeded si occupa di Pushare le seguenti Page nello Stack (chatPage
+            *           && ChatOpen) nel caso in cui non siano ancora presenti nello Stack
+            *
+            */
+            navController.navigate("chat") {
+                launchSingleTop = true
+            }
+
+            navController.navigate("chat open/$chatId/$uidContact") {
+                launchSingleTop = true
+            }
+        }
+        else{
+            Log.d("DEBUG-INTENT", "Intent without INFO: chatId: $chatId, uidCOntact: $uidContact")
+        }
+    }
+    // ------------------------------- ESECUZIONE INTENT (Push Notify) -------------------------------
 }

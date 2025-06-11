@@ -32,9 +32,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         remoteMessage.data.let { data ->
 
             if (!appIsInForeground) {
+                // BASE
                 val title = data["title"] ?: "Titolo di default"
                 val body = data["body"] ?: "Messaggio di default"
-                sendNotification(title, body)
+
+                // NAVIGATION
+                val chatId = data["chatId"]
+                val uidContact = data["uidContact"]
+                val navigateTo = data["navigateTo"]
+
+                sendNotification(title, body, chatId, uidContact, navigateTo)
             }
 
         }
@@ -42,10 +49,28 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     }
 
-    private fun sendNotification(title: String, messageBody: String) {
+    private fun sendNotification(title: String, messageBody: String, chatId: String? , uidContact: String?, navigateTo: String?) {
+
+        /*
+        *       INTENT:
+        *
+        *           L'Intent è un Istanza di Classe "PendingIntent", ovvero un oggetto che permette
+        *           di eseguire il suo contenuto in un secondo momento, in questo caso una volta passato
+        *           alla MainActivity. In questo modo cliccando sulla Notifica Deleghiamo queste azioni
+        *           alla MainActivity consegnandole degli input essenziali per la configurazione corretta
+        *           della Navigazione.
+        *
+        */
         val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            Log.d("DEBUG-INTENT", "MessagingService INFO: chatId: $chatId, uidCOntact: $uidContact")
+            putExtra("chatId", chatId)
+            putExtra("uidContact", uidContact)
+            putExtra("navigateTo", navigateTo)
         }
+
+
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
@@ -64,7 +89,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setStyle(NotificationCompat.BigTextStyle().bigText(messageBody))
             .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.main_icon_circle))
 
-            .setAutoCancel(true)
+            .setAutoCancel(true) // rimozione notifica al suo Click
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
