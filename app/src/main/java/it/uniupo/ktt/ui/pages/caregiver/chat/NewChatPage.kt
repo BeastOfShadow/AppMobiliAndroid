@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
@@ -205,7 +206,7 @@ fun NewChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                 // scotti lista e crea ChatLable contatti
                                 sortedContactsList.forEach { contact ->
                                     ChatContactLable(
-                                        nome = "${contact.contact.name} ${contact.contact.surname}",
+                                        nome = AnnotatedString("${contact.contact.name} ${contact.contact.surname}"),
                                         lastMessage = "send a message",
                                         modifier = Modifier
                                             .scale(1.3f),

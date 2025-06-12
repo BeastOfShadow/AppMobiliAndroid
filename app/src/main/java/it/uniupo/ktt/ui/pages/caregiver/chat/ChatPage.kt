@@ -39,6 +39,7 @@ import it.uniupo.ktt.ui.components.chats.ChatSearchBar
 import it.uniupo.ktt.ui.components.chats.NewChatButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -142,8 +143,23 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                             //.scale(1.3f)
                         )
 
-                        // ordina la lista in base alla data dell'ultimo messaggio
-                        val sortedChatList = enrichedChats.sortedBy { it.chat.lastTimeStamp }
+
+
+                        // ORDINAMENTO DI BASE: ordina la lista in base alla data dell'ultimo messaggio && Ricerca Stringa
+                        // ------------------------ FILTRAGGIO LISTA CHAT ------------------------
+                        val normalizedQuery = searchQuery.trim().lowercase()
+
+                        val filteredAndSortedList = if (normalizedQuery.isEmpty()) {
+                            enrichedChats.sortedByDescending { it.chat.lastTimeStamp }
+                        } else {
+                            enrichedChats.filter {
+                                val fullName = "${it.name} ${it.surname}".lowercase()
+                                fullName.contains(normalizedQuery)
+                            }.sortedByDescending { it.chat.lastTimeStamp }
+                        }
+                        // ------------------------ FILTRAGGIO LISTA CHAT ------------------------
+
+
 
                         Box(
                             modifier = Modifier
@@ -153,7 +169,7 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                         ){
                             Column{
                                 // itera lista e crea ChatContactLabel + controllo LastUidSender (badge unreadMsg)
-                                sortedChatList.forEach { enrichedChat ->
+                                filteredAndSortedList.forEach { enrichedChat ->
 
 
 
@@ -161,7 +177,9 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                     val chat = enrichedChat.chat
 
                                     val otherParticipantUid = if (currentUid == chat.caregiver) chat.employee else chat.caregiver
+
                                     val displayName = "${enrichedChat.name} ${enrichedChat.surname}"
+                                    val annotatedName = highlightQuery(displayName, searchQuery) // Evidenzia Stringa
 
                                     // ---------------------------------- UNREAD BADGE ----------------------------------
                                     /*
@@ -181,7 +199,7 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
                                     // ---------------------------------- UNREAD BADGE ----------------------------------
 
                                     ChatContactLable(
-                                        nome = displayName,
+                                        nome = annotatedName,
                                         lastMessage = chat.lastMsg,
                                         modifier = Modifier
                                             .scale(1.3f),
@@ -236,3 +254,30 @@ fun ChatPage(navController: NavController, homeVM: HomeScreenViewModel) {
     }
 }
 
+@Composable
+fun highlightQuery(fullText: String, query: String): AnnotatedString {
+    val annotated = buildAnnotatedString {
+        val lowerFull = fullText.lowercase()
+        val lowerQuery = query.lowercase()
+        val startIndex = lowerFull.indexOf(lowerQuery)
+
+        if (startIndex >= 0) {
+            append(fullText.substring(0, startIndex))
+
+            // Stile Stringa evidenziata
+            withStyle(
+                style = SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF9C46FF)
+                    )) {
+                append(fullText.substring(startIndex, startIndex + query.length))
+            }
+
+            append(fullText.substring(startIndex + query.length))
+
+        } else {
+            append(fullText)
+        }
+    }
+    return annotated
+}
