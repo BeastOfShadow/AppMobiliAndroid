@@ -31,9 +31,18 @@ class TaskViewModel : ViewModel() {
     private val _tasks = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
 
-    fun loadTodayTasksForEmployee(uid: String) {
+    fun loadTodayTasksEmpolyee(uid: String) {
         viewModelScope.launch {
             val allTasks = getTasksByEmployeeId(uid)
+            val todayTasks = allTasks.filter { isToday(it.createdAt) }
+                .sortedBy { it.createdAt }
+            _tasks.value = todayTasks
+        }
+    }
+
+    fun loadTodayTasksCaregiver(uid: String) {
+        viewModelScope.launch {
+            val allTasks = getTasksByCaregiverId(uid)
             val todayTasks = allTasks.filter { isToday(it.createdAt) }
                 .sortedBy { it.createdAt }
             _tasks.value = todayTasks
@@ -191,6 +200,21 @@ class TaskViewModel : ViewModel() {
             snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
         } catch (e: Exception) {
             emptyList() // o throw e
+        }
+    }
+
+    suspend fun getTasksByCaregiverId(uid: String): List<Task> {
+        val db = BaseRepository.db
+        return try {
+            val snapshot = db.collection("tasks")
+                .whereEqualTo("caregiver", uid)
+                //.orderBy("createdAt", Query.Direction.ASCENDING)
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { it.toObject(Task::class.java) }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

@@ -7,11 +7,17 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.firebase.ChatUtils
+import it.uniupo.ktt.ui.firebase.TaskRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.EnrichedChat
+import it.uniupo.ktt.ui.model.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -405,6 +411,65 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
         }
     }
 
+    private val _isLoadingTasks = MutableStateFlow(false)     // Wait Flag (caricamento EnrichedChats)
+    val isLoadingTasks: StateFlow<Boolean> = _isLoadingTasks.asStateFlow()
+
+    private val _userTasksList = MutableStateFlow<List<Task>>(emptyList())
+    val userTasksList: StateFlow<List<Task>> = _userTasksList.asStateFlow()
+
+    private var taskListener: ListenerRegistration? = null
 
 
+    suspend fun getUserRole(userId: String): String? {
+        return try {
+            val userDoc = BaseRepository.db.collection("users").document(userId).get().await()
+            userDoc.getString("role")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+
+    fun observeUserTasks(userId: String) {
+        if (taskListener != null) {
+            Log.d("LifecycleTask", "GIA LOGGATO-> Listener già attivo (non creato nuovamente).")
+            return
+        }
+
+        _isLoadingTasks.value = true
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val role = getUserRole(userId)
+            if (role == null) {
+                Log.e("HomeScreenViewModel", "Ruolo utente non trovato")
+                _isLoadingTasks.value = false
+                return@launch
+            }
+
+            Log.d("LifecycleTask", "LOGIN-> Listener creato per ruolo $role.")
+
+            taskListener = TaskRepository.listenToUserTasksChanges(
+                userId = userId,
+                role = role,
+                onTasksChanged = { tasks ->
+                    _userTasksList.value = tasks
+                    _isLoadingTasks.value = false
+                },
+                onError = {
+                    Log.e("HomeScreenViewModel", "Errore nel listener dei task: ${it.message}")
+                }
+            )
+        }
+    }
+
+
+    fun stopObservingTasks() {
+        taskListener?.remove()
+        taskListener = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopObservingTasks()
+    }
 }

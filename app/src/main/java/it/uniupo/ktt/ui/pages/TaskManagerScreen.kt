@@ -32,6 +32,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,11 +73,12 @@ import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun TaskManagerScreen(navController: NavController) {
+fun TaskManagerScreen(navController: NavController, homeVm: HomeScreenViewModel) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("task manager") { inclusive = true }
@@ -87,20 +89,19 @@ fun TaskManagerScreen(navController: NavController) {
     val taskViewModel : TaskViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
 
-    var readyTasks by remember { mutableStateOf(emptyList<Task>()) }
-    var ongoingTasks by remember { mutableStateOf(emptyList<Task>()) }
-    var completedTasks by remember { mutableStateOf(emptyList<Task>()) }
-    var ratedTasks by remember { mutableStateOf(emptyList<Task>()) }
-
     LaunchedEffect(Unit) {
         val uid = currentUid()
         if (uid != null) {
-            readyTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.READY.toString()).filter { isToday(it.createdAt) }
-            ongoingTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.ONGOING.toString()).filter { isToday(it.createdAt) }
-            completedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.COMPLETED.toString()).filter { isToday(it.createdAt) }
-            ratedTasks = taskViewModel.getTasksByStatus(uid, TaskStatus.RATED.toString()).filter { isToday(it.createdAt) }
+            homeVm.observeUserTasks(uid)  // deve aggiornare userTasksList correttamente!
         }
     }
+
+    val tasks by homeVm.userTasksList.collectAsState()
+
+    val readyTasks = tasks.filter { it.status == TaskStatus.READY.toString() }
+    val ongoingTasks = tasks.filter { it.status == TaskStatus.ONGOING.toString() }
+    val completedTasks = tasks.filter { it.status == TaskStatus.COMPLETED.toString() }
+    val ratedTasks = tasks.filter { it.status == TaskStatus.RATED.toString() }
 
     // Lista filtri basata su liste non vuote
     val nonEmptyFilters = listOf(
@@ -251,22 +252,6 @@ fun TaskManagerScreen(navController: NavController) {
                                                 .clickable {
                                                     coroutineScope.launch {
                                                         taskViewModel.startTask(task.id)
-
-                                                        val uid = currentUid()
-                                                        if (uid != null) {
-                                                            readyTasks = taskViewModel
-                                                                .getTasksByStatus(uid, TaskStatus.READY.toString())
-                                                                .filter { isToday(it.createdAt) }
-                                                            ongoingTasks = taskViewModel
-                                                                .getTasksByStatus(uid, TaskStatus.ONGOING.toString())
-                                                                .filter { isToday(it.createdAt) }
-                                                            completedTasks = taskViewModel
-                                                                .getTasksByStatus(uid, TaskStatus.COMPLETED.toString())
-                                                                .filter { isToday(it.createdAt) }
-                                                            ratedTasks = taskViewModel
-                                                                .getTasksByStatus(uid, TaskStatus.RATED.toString())
-                                                                .filter { isToday(it.createdAt) }
-                                                        }
                                                     }
                                                 }
                                                 .background(
@@ -622,8 +607,8 @@ fun TaskManagerScreen(navController: NavController) {
 }
 
 
-@Preview
+/*@Preview
 @Composable
 fun TaskManagerScreenPreview() {
     TaskManagerScreen(navController = NavController(context = LocalContext.current))
-}
+}*/
