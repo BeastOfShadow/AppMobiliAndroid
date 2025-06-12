@@ -209,7 +209,7 @@ class MainActivity : ComponentActivity() {
                         composable("register") { RegisterScreen(navController) }
                         composable("home") { HomeScreen(navController, homeVM) }
 
-                        composable("task manager") { TaskManagerScreen(navController) }
+                        composable("task manager") { TaskManagerScreen(navController, homeVM) }
                         composable("new task") { NewTaskScreen(navController) }
                         composable(
                             route = "task_rating/{taskId}",

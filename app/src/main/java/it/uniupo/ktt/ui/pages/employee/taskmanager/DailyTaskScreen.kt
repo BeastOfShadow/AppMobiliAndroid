@@ -77,7 +77,7 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
         currentUid()?.let { uid ->
             Log.e(tag, "LaunchedEffect - observing user tasks for uid: $uid")
             homeVm.observeUserTasks(uid)
-            taskViewModel.loadTodayTasksForEmployee(uid)
+            taskViewModel.loadTodayTasksEmpolyee(uid)
         }
     }
 
@@ -228,7 +228,7 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
                                                                 )
                                                             }
                                                             currentUid()?.let { uid ->
-                                                                taskViewModel.loadTodayTasksForEmployee(uid)
+                                                                taskViewModel.loadTodayTasksEmpolyee(uid)
                                                             }
                                                         }
                                                     }
