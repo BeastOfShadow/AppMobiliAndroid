@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -58,31 +59,39 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
+    val tag = "DailyTaskScreen"
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
+        Log.e(tag, "User not logged in, navigating to landing")
         navController.navigate("landing") {
             popUpTo("daily task") { inclusive = true }
             launchSingleTop = true
         }
+        return
     }
 
-    val taskViewModel : TaskViewModel = viewModel()
-    val subTaskViewModel : SubTaskViewModel = viewModel()
+    val taskViewModel: TaskViewModel = viewModel()
+    val subTaskViewModel: SubTaskViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
 
-    val tasks by homeVm.userTasksList.collectAsState()
-    val isLoadingTasks by homeVm.isLoadingTasks.collectAsState()
-
-    Log.e("DailyTaskScreen", "Tasks: $tasks")
-    val allDailyTasks = tasks.filter { isToday(it.createdAt) }.sortedBy { it.createdAt }
-    Log.e("DailyTaskScreen", "All Daily Tasks: $allDailyTasks")
-
-    /*LaunchedEffect(Unit) {
-        val uid = currentUid()
-        if (uid != null) {
+    LaunchedEffect(Unit) {
+        currentUid()?.let { uid ->
+            Log.e(tag, "LaunchedEffect - observing user tasks for uid: $uid")
             homeVm.observeUserTasks(uid)
             taskViewModel.loadTodayTasksForEmployee(uid)
         }
-    }*/
+    }
+
+    val tasks by homeVm.userTasksList.collectAsState()
+    val isLoading by homeVm.isLoadingTasks.collectAsState()
+    Log.e(tag, "Collected tasks: $tasks")
+    Log.e(tag, "Loading state: $isLoading")
+
+    val todayTasks = tasks.filter {
+        isToday(it.createdAt)
+                && (it.status == TaskStatus.ONGOING.toString()
+                    || it.status == TaskStatus.RATED.toString()
+                    || it.status == TaskStatus.COMPLETED.toString()) }.sortedBy { it.createdAt }
+    Log.e(tag, "Filtered today's tasks: $todayTasks")
 
     Box(
         modifier = Modifier
@@ -95,12 +104,8 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            PageTitle(
-                navController = navController,
-                title = "Daily Tasks"
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
+            PageTitle(navController = navController, title = "Daily Tasks")
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "Task List",
@@ -110,14 +115,15 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             when {
-                isLoadingTasks -> {
+                isLoading -> {
+                    Log.e(tag, "Tasks are loading...")
                     CircularProgressIndicator()
                 }
-                tasks.isEmpty() -> {
+                todayTasks.isEmpty() -> {
+                    Log.e(tag, "No tasks found for today.")
                     Text(
                         text = "No tasks today",
                         fontWeight = FontWeight.Light,
@@ -126,56 +132,55 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                } else -> {
+                }
+                else -> {
                     Column {
-                        allDailyTasks.forEachIndexed { index, task ->
+                        todayTasks.forEachIndexed { index, task ->
+                            val canStart = task.status !in listOf(
+                                TaskStatus.COMPLETED.toString(),
+                                TaskStatus.RATED.toString()
+                            ) && todayTasks.subList(0, index).all {
+                                it.status in listOf(
+                                    TaskStatus.COMPLETED.toString(),
+                                    TaskStatus.RATED.toString()
+                                )
+                            }
+
+                            Log.e(tag, "Task $index: id=${task.id}, canStart=$canStart, status=${task.status}, active=${task.active}")
+
                             Box(
                                 modifier = Modifier
                                     .padding(start = 10.dp)
                                     .fillMaxWidth()
-                                    .shadow(
-                                        4.dp,
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        clip = false
-                                    )
-                                    .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                    .shadow(4.dp, MaterialTheme.shapes.extraLarge)
+                                    .background(primary, MaterialTheme.shapes.extraLarge)
                                     .clickable {
+                                        Log.e(tag, "Clicked on task id=${task.id}")
                                         navController.navigate("view_task/${task.id}")
                                     }
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize(),
+                                    modifier = Modifier.fillMaxSize(),
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .size(27.dp)
-                                            .background(
-                                                color = lightGray,
-                                                shape = CircleShape
-                                            ),
+                                            .background(lightGray, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(
-                                            text = "${index + 1}",
-                                            fontSize = 14.sp,
-                                            color = buttonTextColor,
-                                        )
+                                        Text(text = "${index + 1}", fontSize = 14.sp, color = buttonTextColor)
                                     }
-
                                     Spacer(modifier = Modifier.height(12.dp))
-
                                     Text(
                                         text = "Task name:",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
-                                        color = titleColor,
+                                        color = titleColor
                                     )
-
                                     Text(
                                         text = task.title,
                                         fontWeight = FontWeight.Light,
@@ -183,88 +188,80 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.fillMaxWidth(0.8f)
                                     )
-
                                     Spacer(modifier = Modifier.height(20.dp))
 
-                                    val canStart = !(task.status == TaskStatus.COMPLETED.toString() || task.status == TaskStatus.RATED.toString())
-                                            && allDailyTasks.subList(0, index).all {
-                                        it.status == TaskStatus.COMPLETED.toString() || it.status == TaskStatus.RATED.toString()
-                                    }
-
-                                    if(task.status == TaskStatus.COMPLETED.toString() || task.status == TaskStatus.RATED.toString()){
-                                        Image(
-                                            painter = painterResource(id = R.drawable.task_done),
-                                            contentDescription = "Task Completed",
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .padding(top = 8.dp)
-                                        )
-                                    } else if (task.active) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.task_running),
-                                            contentDescription = "Task Completed",
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .padding(top = 8.dp)
-                                        )
-                                    } else if (canStart) {
-                                        val subTasks = taskViewModel.getSubtasksByTaskId(task.id)
-
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .shadow(4.dp, shape = CircleShape, clip = false)
-                                                .clickable {
-                                                    coroutineScope.launch {
-                                                        taskViewModel.startTaskEmployee(task.id)
-
-                                                        if(subTasks.isNotEmpty())
-                                                            subTaskViewModel.updateSubtaskStatus(task.id, subTasks.first().id, SubtaskStatus.RUNNING.toString())
-
-                                                        val uid = currentUid()
-                                                        if (uid != null) {
-                                                            taskViewModel.loadTodayTasksForEmployee(uid)
-                                                        }
-                                                    }
-                                                }
-                                                .background(
-                                                    color = tertiary,
-                                                    shape = CircleShape
-                                                )
-                                                .padding(vertical = 8.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.RocketLaunch,
-                                                contentDescription = "Start",
-                                                tint = buttonTextColor,
-                                                modifier = Modifier.size(24.dp)
+                                    when {
+                                        task.status in listOf(
+                                            TaskStatus.COMPLETED.toString(),
+                                            TaskStatus.RATED.toString()
+                                        ) -> {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.task_done),
+                                                contentDescription = "Task Completed",
+                                                modifier = Modifier.size(44.dp)
                                             )
                                         }
-                                    } else {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(44.dp)
-                                                .shadow(4.dp, shape = CircleShape, clip = false)
-                                                .background(
-                                                    color = tertiary,
-                                                    shape = CircleShape
-                                                )
-                                                .then(Modifier.background(Color.Gray.copy(alpha = 0.4f), shape = CircleShape))
-                                                .padding(vertical = 8.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.RocketLaunch,
-                                                contentDescription = "Start",
-                                                tint = buttonTextColor,
-                                                modifier = Modifier.size(24.dp)
+                                        task.active -> {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.task_running),
+                                                contentDescription = "Task Running",
+                                                modifier = Modifier.size(44.dp)
                                             )
+                                        }
+                                        canStart -> {
+                                            val subTasks = taskViewModel.getSubtasksByTaskId(task.id)
+                                            Log.e(tag, "Subtasks for task ${task.id}: $subTasks")
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .shadow(4.dp, CircleShape)
+                                                    .clickable {
+                                                        Log.e(tag, "Starting task id=${task.id}")
+                                                        coroutineScope.launch {
+                                                            taskViewModel.startTaskEmployee(task.id)
+                                                            subTasks.firstOrNull()?.let { st ->
+                                                                Log.e(tag, "Starting first subtask id=${st.id}")
+                                                                subTaskViewModel.updateSubtaskStatus(
+                                                                    task.id,
+                                                                    st.id,
+                                                                    SubtaskStatus.RUNNING.toString()
+                                                                )
+                                                            }
+                                                            currentUid()?.let { uid ->
+                                                                taskViewModel.loadTodayTasksForEmployee(uid)
+                                                            }
+                                                        }
+                                                    }
+                                                    .background(tertiary, CircleShape)
+                                                    .padding(8.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.RocketLaunch,
+                                                    contentDescription = "Start",
+                                                    tint = buttonTextColor
+                                                )
+                                            }
+                                        }
+                                        else -> {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(44.dp)
+                                                    .shadow(4.dp, CircleShape)
+                                                    .background(tertiary.copy(alpha = 0.4f), CircleShape)
+                                                    .padding(8.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.RocketLaunch,
+                                                    contentDescription = "Start disabled",
+                                                    tint = buttonTextColor
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
-
                             Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
@@ -273,11 +270,3 @@ fun DailyTaskScreen(navController: NavController, homeVm: HomeScreenViewModel) {
         }
     }
 }
-
-
-/*@Preview
-@Composable
-fun DailyTaskScreenPreview() {
-    DailyTaskScreen(navController = NavController(context = LocalContext.current))
-}
-*/

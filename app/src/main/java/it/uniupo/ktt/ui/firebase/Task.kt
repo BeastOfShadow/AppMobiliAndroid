@@ -12,7 +12,7 @@ object TaskRepository {
         onError: (Exception) -> Unit
     ): ListenerRegistration {
         return BaseRepository.db.collection("tasks")
-            .whereEqualTo("userId", userId)  // o la proprietà che identifica l'utente
+            .whereEqualTo("employee", userId)  // o la proprietà che identifica l'utente
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onError(error)
