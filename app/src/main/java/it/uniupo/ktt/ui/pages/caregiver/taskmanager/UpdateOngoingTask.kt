@@ -40,6 +40,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -88,13 +89,15 @@ import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 @Composable
-fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
+fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm: HomeScreenViewModel) {
+    val tag = "UpdateOngoingTaskScreen"
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("task manager") { inclusive = true }
@@ -106,14 +109,9 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
     val subTaskViewModel : SubTaskViewModel = viewModel()
     val task = taskViewModel.getTaskById(taskId)
 
-    var subTasks by remember { mutableStateOf<List<SubTask>>(emptyList()) }
-
     var showDeleteDialog by remember { mutableStateOf(false) }
     var subtaskToDelete by remember { mutableStateOf<SubTask?>(null) }
 
-    LaunchedEffect(taskId) {
-        subTasks = subTaskViewModel.fetchSubtask(taskId)
-    }
 
     Box(
         modifier = Modifier
@@ -178,27 +176,26 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                 }
             }
 
-            if(subTasks.isNotEmpty())
-            {
-                Text(
-                    text = "Subtask List:",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
-                )
+            Text(
+                text = "Subtask List:",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 20.dp, bottom = 20.dp)
+            )
 
-                val coroutineScope = rememberCoroutineScope()
-                var showDialog by remember { mutableStateOf(false) }
-                var showEditDialog by remember { mutableStateOf(false) }
-                var editSubtaskIndex by remember { mutableStateOf(-1) }
-                var editSubtaskDescription by remember { mutableStateOf("") }
-                var editSelectedImageUri = remember { mutableStateOf<Uri?>(null) }
+            val coroutineScope = rememberCoroutineScope()
+            var showDialog by remember { mutableStateOf(false) }
+            var showEditDialog by remember { mutableStateOf(false) }
+            var editSubtaskIndex by remember { mutableStateOf(-1) }
+            var editSubtaskDescription by remember { mutableStateOf("") }
+            var editSelectedImageUri = remember { mutableStateOf<Uri?>(null) }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if(subTasks.isNotEmpty()) {
                     subTasks.forEachIndexed { index, subtask ->
                         Box(
                             modifier = Modifier
@@ -282,7 +279,9 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                     )
 
                                     Icon(
-                                        if(subtask.descriptionImgStorageLocation != "") {Icons.Outlined.Check} else {
+                                        if (subtask.descriptionImgStorageLocation != "") {
+                                            Icons.Outlined.Check
+                                        } else {
                                             Icons.Outlined.Clear
                                         },
                                         "Large floating action button",
@@ -298,7 +297,7 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    if(subtask.status == SubtaskStatus.AVAILABLE.toString()) {
+                                    if (subtask.status == SubtaskStatus.AVAILABLE.toString()) {
                                         Image(
                                             painter = painterResource(id = R.drawable.chat_delete),
                                             contentDescription = "Delete",
@@ -344,10 +343,10 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                                 modifier = Modifier.padding(horizontal = 4.dp)
                                             )
 
-                                            if(subtask.employeeImgStorageLocation != "" ||
+                                            if (subtask.employeeImgStorageLocation != "" ||
                                                 subtask.caregiverImgStorageLocation != "" ||
                                                 subtask.caregiverComment.isNotBlank() ||
-                                                    subtask.employeeComment.isNotBlank()
+                                                subtask.employeeComment.isNotBlank()
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Outlined.Check,
@@ -359,7 +358,7 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                                         }
                                     }
 
-                                    if(subtask.status == SubtaskStatus.AVAILABLE.toString()) {
+                                    if (subtask.status == SubtaskStatus.AVAILABLE.toString()) {
                                         Image(
                                             painter = painterResource(id = R.drawable.edit_rewrite),
                                             contentDescription = "Edit",
@@ -382,156 +381,149 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
                             }
                         }
                     }
+                }
 
-                    // Pulsante per aggiungere nuovo subtask
+                // Pulsante per aggiungere nuovo subtask
+                Box(
+                    modifier = Modifier
+                        .padding(start = 10.dp)
+                        .width(100.dp)
+                        .height(100.dp)
+                        .clickable {
+                            showDialog = true
+                        }
+                        .shadow(
+                            4.dp,
+                            shape = MaterialTheme.shapes.extraLarge,
+                            clip = false)
+                        .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                        .padding(16.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
                     Box(
                         modifier = Modifier
-                            .padding(start = 10.dp)
-                            .width(100.dp)
-                            .height(100.dp)
-                            .clickable {
-                                showDialog = true
-                            }
-                            .shadow(
-                                4.dp,
-                                shape = MaterialTheme.shapes.extraLarge,
-                                clip = false)
-                            .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                            .padding(16.dp)
-                            .align(Alignment.CenterVertically)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(90.dp)
-                                .background(
-                                    color = tertiary,
-                                    shape = CircleShape
-                                )
-                                .align(Alignment.Center)
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                "Large floating action button",
-                                tint = buttonTextColor,
-                                modifier = Modifier.size(55.dp)
-                                    .align(Alignment.Center)
+                            .size(90.dp)
+                            .background(
+                                color = tertiary,
+                                shape = CircleShape
                             )
-                        }
+                            .align(Alignment.Center)
+                    ) {
+                        Icon(
+                            Icons.Filled.Add,
+                            "Large floating action button",
+                            tint = buttonTextColor,
+                            modifier = Modifier.size(55.dp)
+                                .align(Alignment.Center)
+                        )
                     }
                 }
+            }
 
-                if (showDeleteDialog && subtaskToDelete != null) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteDialog = false },
-                        title = { Text("Confirm Delete") },
-                        text = { Text("Are you sure you want to delete this subtask?") },
-                        confirmButton = {
-                            Button(
-                                onClick = {
-                                    val subToDel = subtaskToDelete!!
+            if (showDeleteDialog && subtaskToDelete != null) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Confirm Delete") },
+                    text = { Text("Are you sure you want to delete this subtask?") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                val subToDel = subtaskToDelete!!
+                                coroutineScope.launch {
+                                    Log.d("UI", "Delete requested for subtask ${subtaskToDelete?.id}")
+                                    subTaskViewModel.deleteTaskById(taskId, subToDel.id)
+                                    Log.d("UI", "Deleted subtask, fetching updated list")
+                                    subTasks = subTaskViewModel.fetchSubtask(taskId)
+                                }
+                                showDeleteDialog = false
+                                subtaskToDelete = null
+                            }
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = {
+                                showDeleteDialog = false
+                                subtaskToDelete = null
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+
+            if (showDialog) {
+                SubtaskImage(
+                    title = "Add Subtask",
+                    initialDescription = "",
+                    initialImageUri = null,
+                    showDialog = true,
+                    onDismiss = {
+                        showDialog = false
+                    },
+                    onSave = { description, imageUri ->
+                        coroutineScope.launch {
+                            val nextIndex = subTasks.maxOfOrNull { it.listNumber }?.plus(1) ?: 1
+                            subTaskViewModel.addSubtask(
+                                taskId = taskId,
+                                description = description,
+                                imageUri = imageUri?.toString() ?: "",
+                                listNumber = nextIndex,
+                                storageLocation = "descriptionSubtaskImages",
+                                onSuccess = {
                                     coroutineScope.launch {
-                                        Log.d("UI", "Delete requested for subtask ${subtaskToDelete?.id}")
-                                        subTaskViewModel.deleteTaskById(taskId, subToDel.id)
-                                        Log.d("UI", "Deleted subtask, fetching updated list")
                                         subTasks = subTaskViewModel.fetchSubtask(taskId)
                                     }
-                                    showDeleteDialog = false
-                                    subtaskToDelete = null
+                                },
+                                onError = {
+                                    Log.e("UpdateSubtask", "Errore durante l'aggiunta del subtask")
                                 }
-                            ) {
-                                Text("Delete")
-                            }
-                        },
-                        dismissButton = {
-                            Button(
-                                onClick = {
-                                    showDeleteDialog = false
-                                    subtaskToDelete = null
-                                }
-                            ) {
-                                Text("Cancel")
-                            }
+                            )
                         }
-                    )
-                }
+                        showDialog = false
+                    }
+                )
+            }
 
-                if (showDialog) {
-                    SubtaskImage(
-                        title = "Add Subtask",
-                        initialDescription = "",
-                        initialImageUri = null,
-                        showDialog = true,
-                        onDismiss = {
-                            showDialog = false
-                        },
-                        onSave = { description, imageUri ->
-                            coroutineScope.launch {
-                                val nextIndex = subTasks.maxOfOrNull { it.listNumber }?.plus(1) ?: 1
-                                subTaskViewModel.addSubtask(
-                                    taskId = taskId,
+            if (showEditDialog && editSubtaskIndex >= 0) {
+                val subtask = subTasks[editSubtaskIndex]
+                SubtaskImage(
+                    title = "Edit Subtask",
+                    initialDescription = editSubtaskDescription,
+                    initialImageUri = editSelectedImageUri.value,
+                    showDialog = true,
+                    onDismiss = {
+                        showEditDialog = false
+                        editSubtaskIndex = -1
+                    },
+                    onSave = { description, imageUri ->
+                        coroutineScope.launch {
+                            subTaskViewModel.updateSubtask(
+                                taskId,
+                                subtask.copy(
+                                    id = subtask.id,
                                     description = description,
-                                    imageUri = imageUri?.toString() ?: "",
-                                    listNumber = nextIndex,
-                                    storageLocation = "descriptionSubtaskImages",
-                                    onSuccess = {
-                                        coroutineScope.launch {
-                                            subTasks = subTaskViewModel.fetchSubtask(taskId)
-                                        }
-                                    },
-                                    onError = {
-                                        Log.e("UpdateSubtask", "Errore durante l'aggiunta del subtask")
+                                    descriptionImgStorageLocation = imageUri?.toString() ?: ""
+                                ),
+                                storageLocation = "descriptionSubtaskImages",
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        subTasks = subTaskViewModel.fetchSubtask(taskId)
                                     }
-                                )
-                            }
-                            showDialog = false
+                                },
+                                onError = {
+                                    Log.e("UpdateSubtask", "Errore durante l'aggiornamento del subtask")
+                                }
+                            )
                         }
-                    )
-                }
-
-                if (showEditDialog && editSubtaskIndex >= 0) {
-                    val subtask = subTasks[editSubtaskIndex]
-                    SubtaskImage(
-                        title = "Edit Subtask",
-                        initialDescription = editSubtaskDescription,
-                        initialImageUri = editSelectedImageUri.value,
-                        showDialog = true,
-                        onDismiss = {
-                            showEditDialog = false
-                            editSubtaskIndex = -1
-                        },
-                        onSave = { description, imageUri ->
-                            coroutineScope.launch {
-                                subTaskViewModel.updateSubtask(
-                                    taskId,
-                                    subtask.copy(
-                                        id = subtask.id,
-                                        description = description,
-                                        descriptionImgStorageLocation = imageUri?.toString() ?: ""
-                                    ),
-                                    storageLocation = "descriptionSubtaskImages",
-                                    onSuccess = {
-                                        coroutineScope.launch {
-                                            subTasks = subTaskViewModel.fetchSubtask(taskId)
-                                        }
-                                    },
-                                    onError = {
-                                        Log.e("UpdateSubtask", "Errore durante l'aggiornamento del subtask")
-                                    }
-                                )
-                            }
-                            showEditDialog = false
-                            editSubtaskIndex = -1
-                        }
-                    )
-                }
+                        showEditDialog = false
+                        editSubtaskIndex = -1
+                    }
+                )
             }
         }
     }
-}
-
-
-@Preview
-@Composable
-fun UpdateOngoingTaskScreenPreview() {
-    UpdateOngoingTaskScreen(navController = NavController(context = LocalContext.current), "dhfdsjh")
 }
