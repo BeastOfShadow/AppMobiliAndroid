@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import it.uniupo.ktt.R
+import it.uniupo.ktt.time.formatSecondsToHHMM
 import it.uniupo.ktt.time.isToday
 import it.uniupo.ktt.ui.components.PageTitle
 import it.uniupo.ktt.ui.components.task.taskmanager.ChipsFilter
@@ -98,10 +99,10 @@ fun TaskManagerScreen(navController: NavController, homeVm: HomeScreenViewModel)
 
     val tasks by homeVm.userTasksList.collectAsState()
 
-    val readyTasks = tasks.filter { it.status == TaskStatus.READY.toString() }
-    val ongoingTasks = tasks.filter { it.status == TaskStatus.ONGOING.toString() }
-    val completedTasks = tasks.filter { it.status == TaskStatus.COMPLETED.toString() }
-    val ratedTasks = tasks.filter { it.status == TaskStatus.RATED.toString() }
+    val readyTasks = tasks.filter { it.status == TaskStatus.READY.toString() && isToday(it.createdAt) }
+    val ongoingTasks = tasks.filter { it.status == TaskStatus.ONGOING.toString() && isToday(it.createdAt) }
+    val completedTasks = tasks.filter { it.status == TaskStatus.COMPLETED.toString() && isToday(it.createdAt) }
+    val ratedTasks = tasks.filter { it.status == TaskStatus.RATED.toString() && isToday(it.createdAt) }
 
     // Lista filtri basata su liste non vuote
     val nonEmptyFilters = listOf(
@@ -477,8 +478,8 @@ fun TaskManagerScreen(navController: NavController, homeVm: HomeScreenViewModel)
                                                         .width(38.dp)
                                                 ) {
                                                     Text(
-                                                        text = "12:47",
-                                                        fontSize = 14.sp,
+                                                        text = formatSecondsToHHMM(task.completionTimeActual),
+                                                        fontSize = 12.sp,
                                                         color = subtitleColor,
                                                         modifier = Modifier.align(Alignment.Center)
                                                     )
