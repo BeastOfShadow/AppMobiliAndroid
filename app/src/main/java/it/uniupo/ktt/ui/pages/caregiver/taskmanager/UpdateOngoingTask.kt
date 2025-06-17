@@ -106,7 +106,17 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm
 
     val taskViewModel : TaskViewModel = viewModel()
     val subTaskViewModel : SubTaskViewModel = viewModel()
-    val task = taskViewModel.getTaskById(taskId)
+
+    LaunchedEffect(Unit) {
+        currentUid()?.let { uid ->
+            homeVm.observeUserTasks(uid) // Assumendo che aggiorni userSubTasksMap
+            taskViewModel.loadTodayTasksCaregiver(uid) // Assumendo che aggiorni task flow
+        }
+    }
+
+    val obsTask by homeVm.userTasksList.collectAsState()
+
+    val task = obsTask.find { it.id == taskId }
     val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
     var subTasks = userSubTasksMap[taskId] ?: emptyList()
 
@@ -385,7 +395,8 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm
 
                 // Pulsante per aggiungere nuovo subtask
                 if (task != null) {
-                    if(!(task.active && subTasks.isEmpty())) {
+                    // Text("Task status completed? ${!(task.active && subTasks.isEmpty()) && task.status != TaskStatus.COMPLETED.toString() && task.status != TaskStatus.RATED.toString()}")
+                    if(!(task.active && subTasks.isEmpty()) && task.status != TaskStatus.COMPLETED.toString() && task.status != TaskStatus.RATED.toString()) {
                         Box(
                             modifier = Modifier
                                 .padding(start = 10.dp)
@@ -421,7 +432,7 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm
                                 )
                             }
                         }
-                    } else {
+                    } else if(subTasks.isEmpty()) {
                         Text("There are no subtasks.")
                     }
                 }

@@ -305,7 +305,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
-                            CurrentSubtaskPage(navController = navController, taskId = taskId)
+                            CurrentSubtaskPage(navController = navController, taskId = taskId, homeVM)
                         }
 
                         //Statistics
