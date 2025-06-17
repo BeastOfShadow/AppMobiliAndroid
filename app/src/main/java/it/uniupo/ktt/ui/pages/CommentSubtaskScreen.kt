@@ -32,6 +32,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,12 +65,13 @@ import it.uniupo.ktt.ui.theme.lightGray
 import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.tasks.await
 
 @Composable
-fun CommentSubtaskScreen(navController: NavController, taskId: String, subtaskId: String) {
+fun CommentSubtaskScreen(navController: NavController, taskId: String, subtaskId: String, homeVm: HomeScreenViewModel) {
   if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
     navController.navigate("landing") {
       popUpTo("task manager") { inclusive = true }
@@ -79,14 +81,12 @@ fun CommentSubtaskScreen(navController: NavController, taskId: String, subtaskId
 
   val subTaskViewModel : SubTaskViewModel = viewModel()
   val taskViewModel : TaskViewModel = viewModel()
-  var subTask by remember { mutableStateOf<SubTask?>(null) }
+  val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
+  val subTasks = userSubTasksMap[taskId] ?: emptyList()
+  val subTask = subTasks.find { it.id == subtaskId }
 
   val visibleImage = remember { mutableStateOf(false) }
   val removeImage = remember { mutableStateOf(false) }
-
-  LaunchedEffect(subtaskId) {
-    subTask = subTaskViewModel.getSubtaskById(taskId, subtaskId)
-  }
 
   val careGiverComment = remember { mutableStateOf("") }
 
@@ -634,11 +634,4 @@ fun CommentSubtaskScreen(navController: NavController, taskId: String, subtaskId
       }
     }
   }
-}
-
-
-@Preview
-@Composable
-fun CommentSubtaskScreen() {
-  CommentSubtaskScreen(navController = NavController(context = LocalContext.current), "disihh", "cv")
 }

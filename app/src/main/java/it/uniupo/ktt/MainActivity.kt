@@ -238,7 +238,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
-                            ViewTaskScreen(navController = navController, taskId = taskId)
+                            ViewTaskScreen(navController = navController, taskId = taskId, homeVM)
                         }
                         composable(
                             route = "subtask_view/{taskId}/{subtaskId}",
@@ -253,7 +253,8 @@ class MainActivity : ComponentActivity() {
                             SubTaskViewScreen(
                                 navController = navController,
                                 taskId = taskId,
-                                subtaskId = subtaskId
+                                subtaskId = subtaskId,
+                                homeVm = homeVM
                             )
                         }
 
@@ -270,7 +271,8 @@ class MainActivity : ComponentActivity() {
                             CommentSubtaskScreen(
                                 navController = navController,
                                 taskId = taskId,
-                                subtaskId = subtaskId
+                                subtaskId = subtaskId,
+                                homeVm = homeVM
                             )
                         }
 

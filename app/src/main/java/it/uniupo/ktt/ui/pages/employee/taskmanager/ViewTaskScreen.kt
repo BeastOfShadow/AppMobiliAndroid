@@ -42,6 +42,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,9 +99,10 @@ import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 import com.google.maps.android.compose.Marker // Ensure this import is present
 import it.uniupo.ktt.ui.subtaskstatus.SubtaskStatus
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 
 @Composable
-fun ViewTaskScreen(navController: NavController, taskId: String) {
+fun ViewTaskScreen(navController: NavController, taskId: String, homeVm: HomeScreenViewModel) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("view_task") { inclusive = true }
@@ -110,8 +112,8 @@ fun ViewTaskScreen(navController: NavController, taskId: String) {
 
     val viewModel: TaskViewModel = viewModel()
     val task = viewModel.getTaskById(taskId)
-    val subtasks = viewModel.getSubtasksByTaskId(taskId)
-    var isLocationSaved by remember { mutableStateOf(false) }
+    val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
+    val subtasks = userSubTasksMap[taskId] ?: emptyList()
     var savedLocation by remember { mutableStateOf<LatLng?>(null) }
     var showMapDialog by remember { mutableStateOf(false) }
     var selectedLatLng by remember { mutableStateOf(LatLng(45.0703, 7.6869)) } // Torino come default
@@ -623,11 +625,4 @@ fun ViewTaskScreen(navController: NavController, taskId: String) {
             dismissButton = null
         )
     }
-}
-
-
-@Preview
-@Composable
-fun ViewTaskScreenPreview() {
-    ViewTaskScreen(navController = NavController(context = LocalContext.current), "dscjfdsljl")
 }

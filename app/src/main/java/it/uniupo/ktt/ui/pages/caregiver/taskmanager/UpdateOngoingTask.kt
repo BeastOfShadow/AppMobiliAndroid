@@ -384,38 +384,45 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm
                 }
 
                 // Pulsante per aggiungere nuovo subtask
-                Box(
-                    modifier = Modifier
-                        .padding(start = 10.dp)
-                        .width(100.dp)
-                        .height(100.dp)
-                        .clickable {
-                            showDialog = true
+                if (task != null) {
+                    if(!(task.active && subTasks.isEmpty())) {
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 10.dp)
+                                .width(100.dp)
+                                .height(100.dp)
+                                .clickable {
+                                    showDialog = true
+                                }
+                                .shadow(
+                                    4.dp,
+                                    shape = MaterialTheme.shapes.extraLarge,
+                                    clip = false
+                                )
+                                .background(primary, shape = MaterialTheme.shapes.extraLarge)
+                                .padding(16.dp)
+                                .align(Alignment.CenterVertically)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(90.dp)
+                                    .background(
+                                        color = tertiary,
+                                        shape = CircleShape
+                                    )
+                                    .align(Alignment.Center)
+                            ) {
+                                Icon(
+                                    Icons.Filled.Add,
+                                    "Large floating action button",
+                                    tint = buttonTextColor,
+                                    modifier = Modifier.size(55.dp)
+                                        .align(Alignment.Center)
+                                )
+                            }
                         }
-                        .shadow(
-                            4.dp,
-                            shape = MaterialTheme.shapes.extraLarge,
-                            clip = false)
-                        .background(primary, shape = MaterialTheme.shapes.extraLarge)
-                        .padding(16.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(90.dp)
-                            .background(
-                                color = tertiary,
-                                shape = CircleShape
-                            )
-                            .align(Alignment.Center)
-                    ) {
-                        Icon(
-                            Icons.Filled.Add,
-                            "Large floating action button",
-                            tint = buttonTextColor,
-                            modifier = Modifier.size(55.dp)
-                                .align(Alignment.Center)
-                        )
+                    } else {
+                        Text("There are no subtasks.")
                     }
                 }
             }

@@ -36,6 +36,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,13 +81,14 @@ import it.uniupo.ktt.ui.theme.primary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
-fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: String) {
+fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: String, homeVm: HomeScreenViewModel) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("subtask_view") { inclusive = true }
@@ -96,15 +98,14 @@ fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: S
 
     val viewModel: SubTaskViewModel = viewModel()
     val taskViewModel: TaskViewModel = viewModel()
-    var subTask by remember { mutableStateOf<SubTask?>(null) }
 
+    val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
+    val subTasks = userSubTasksMap[taskId] ?: emptyList()
+    val subTask = subTasks.find { it.id == subtaskId }
     var visibleImage by remember { mutableStateOf(false) }
     var visibleEmployeeImage by remember { mutableStateOf(false) }
     var visibleCaregiverImage by remember { mutableStateOf(false) }
 
-    LaunchedEffect(subtaskId) {
-        subTask = viewModel.getSubtaskById(taskId, subtaskId)
-    }
 
     Box(
         modifier = Modifier
@@ -617,11 +618,4 @@ fun SubTaskViewScreen(navController: NavController, taskId: String, subtaskId: S
             }
         }
     }
-}
-
-
-@Preview
-@Composable
-fun SubTaskViewScreenPreview() {
-    SubTaskViewScreen(navController = NavController(context = LocalContext.current), "cdsshhf", "dscjfdsljl")
 }
