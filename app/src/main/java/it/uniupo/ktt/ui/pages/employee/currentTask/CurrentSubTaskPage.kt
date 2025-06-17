@@ -83,7 +83,7 @@ fun CurrentSubtaskPage(navController: NavController, taskId: String) {
 
     val taskViewModel : TaskViewModel = viewModel()
     val subtaskViewModel : SubTaskViewModel = viewModel()
-    val coroutineScope = rememberCoroutineScope()
+    rememberCoroutineScope()
 
     val task = taskViewModel.getTaskById(taskId)
     val subTasks = taskViewModel.getSubtasksByTaskId(taskId)
