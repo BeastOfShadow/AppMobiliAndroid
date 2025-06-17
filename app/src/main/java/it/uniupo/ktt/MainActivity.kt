@@ -289,7 +289,7 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
 
-                            UpdateOngoingTaskScreen(navController = navController, taskId = taskId)
+                            UpdateOngoingTaskScreen(navController = navController, taskId = taskId, homeVm = homeVM)
                         }
 
                         //new ROUTE

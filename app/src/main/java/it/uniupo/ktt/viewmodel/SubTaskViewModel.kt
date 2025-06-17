@@ -9,6 +9,7 @@ import it.uniupo.ktt.ui.firebase.BaseRepository
 import it.uniupo.ktt.ui.firebase.TaskRepository
 import it.uniupo.ktt.ui.model.SubTask
 import it.uniupo.ktt.ui.storage.uploadImageToStorage
+import it.uniupo.ktt.ui.subtaskstatus.SubtaskStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -368,7 +369,8 @@ class SubTaskViewModel : ViewModel() {
                 id = newSubtaskId,
                 description = description,
                 descriptionImgStorageLocation = imageUri ?: "",
-                listNumber = listNumber
+                listNumber = listNumber,
+                status = SubtaskStatus.AVAILABLE.toString()
             )
 
             subtaskDoc.set(newSubtask)
@@ -386,7 +388,8 @@ class SubTaskViewModel : ViewModel() {
                         id = newSubtaskId,
                         description = description,
                         descriptionImgStorageLocation = storagePath,
-                        listNumber = listNumber
+                        listNumber = listNumber,
+                        status = SubtaskStatus.AVAILABLE.toString()
                     )
 
                     subtaskDoc.set(newSubtask)

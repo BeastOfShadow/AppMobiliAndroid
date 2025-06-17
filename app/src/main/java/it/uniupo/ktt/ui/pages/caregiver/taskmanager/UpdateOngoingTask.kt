@@ -97,7 +97,6 @@ import java.util.UUID
 
 @Composable
 fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm: HomeScreenViewModel) {
-    val tag = "UpdateOngoingTaskScreen"
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("task manager") { inclusive = true }
@@ -108,10 +107,11 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm
     val taskViewModel : TaskViewModel = viewModel()
     val subTaskViewModel : SubTaskViewModel = viewModel()
     val task = taskViewModel.getTaskById(taskId)
+    val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
+    var subTasks = userSubTasksMap[taskId] ?: emptyList()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var subtaskToDelete by remember { mutableStateOf<SubTask?>(null) }
-
 
     Box(
         modifier = Modifier
