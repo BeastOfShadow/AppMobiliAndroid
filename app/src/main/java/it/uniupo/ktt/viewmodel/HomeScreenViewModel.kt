@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.ListenerRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
 import it.uniupo.ktt.ui.firebase.BaseRepository
+import it.uniupo.ktt.ui.firebase.BaseRepository.db
 import it.uniupo.ktt.ui.firebase.ChatRepository
 import it.uniupo.ktt.ui.firebase.ChatUtils
 import it.uniupo.ktt.ui.firebase.TaskRepository
 import it.uniupo.ktt.ui.model.Chat
 import it.uniupo.ktt.ui.model.EnrichedChat
+import it.uniupo.ktt.ui.model.SubTask
 import it.uniupo.ktt.ui.model.Task
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -419,17 +421,6 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
 
     private var taskListener: ListenerRegistration? = null
 
-
-    suspend fun getUserRole(userId: String): String? {
-        return try {
-            val userDoc = BaseRepository.db.collection("users").document(userId).get().await()
-            userDoc.getString("role")
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-
     fun observeUserTasks(userId: String) {
         if (taskListener != null) {
             Log.d("LifecycleTask", "GIA LOGGATO-> Listener già attivo (non creato nuovamente).")
@@ -454,6 +445,12 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
                 onTasksChanged = { tasks ->
                     _userTasksList.value = tasks
                     _isLoadingTasks.value = false
+
+                    tasks.forEach { task ->
+                        listenToSubTasksForTask(task.id)
+                    }
+
+                    removeListenersForRemovedTasks(tasks)
                 },
                 onError = {
                     Log.e("HomeScreenViewModel", "Errore nel listener dei task: ${it.message}")
@@ -462,14 +459,72 @@ class HomeScreenViewModel @Inject constructor() : ViewModel(){
         }
     }
 
-
     fun stopObservingTasks() {
         taskListener?.remove()
         taskListener = null
     }
 
+    // Mappa per tenere traccia dei listener aperti per ogni task
+    private val subTaskListeners = mutableMapOf<String, ListenerRegistration>()
+
+    // StateFlow per tenere la mappa taskId -> lista di subtask
+    private val _userSubTasksMap = MutableStateFlow<Map<String, List<SubTask>>>(emptyMap())
+    val userSubTasksMap: StateFlow<Map<String, List<SubTask>>> = _userSubTasksMap.asStateFlow()
+
+    fun listenToSubTasksForTask(taskId: String) {
+        // Se esiste già un listener per questo task, non crearne un altro
+        if (subTaskListeners.containsKey(taskId)) return
+
+        val listener = db.collection("tasks")
+            .document(taskId)
+            .collection("subtasks")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("HomeScreenViewModel", "Errore listener subtask $taskId: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                if (snapshot != null) {
+                    val subTasks = snapshot.documents.mapNotNull { it.toObject(SubTask::class.java) }
+
+                    // Aggiorna la mappa mantenendo intatti gli altri task
+                    _userSubTasksMap.value = _userSubTasksMap.value.toMutableMap().apply {
+                        put(taskId, subTasks)
+                    }
+                }
+            }
+
+        // Salva il listener per poterlo rimuovere poi
+        subTaskListeners[taskId] = listener
+    }
+
+    // Funzione per rimuovere listener di task rimossi
+    fun removeListenersForRemovedTasks(currentTasks: List<Task>) {
+        val currentTaskIds = currentTasks.map { it.id }.toSet()
+        val toRemove = subTaskListeners.keys.filter { it !in currentTaskIds }
+
+        toRemove.forEach { taskId ->
+            subTaskListeners[taskId]?.remove()
+            subTaskListeners.remove(taskId)
+
+            // Rimuovi anche i dati nella mappa
+            _userSubTasksMap.value = _userSubTasksMap.value.toMutableMap().apply {
+                remove(taskId)
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopObservingTasks()
+    }
+
+    suspend fun getUserRole(userId: String): String? {
+        return try {
+            val userDoc = BaseRepository.db.collection("users").document(userId).get().await()
+            userDoc.getString("role")
+        } catch (e: Exception) {
+            null
+        }
     }
 }

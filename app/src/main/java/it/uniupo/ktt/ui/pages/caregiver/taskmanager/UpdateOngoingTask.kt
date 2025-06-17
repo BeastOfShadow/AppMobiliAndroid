@@ -40,6 +40,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -88,13 +89,14 @@ import it.uniupo.ktt.ui.theme.secondary
 import it.uniupo.ktt.ui.theme.subtitleColor
 import it.uniupo.ktt.ui.theme.tertiary
 import it.uniupo.ktt.ui.theme.titleColor
+import it.uniupo.ktt.viewmodel.HomeScreenViewModel
 import it.uniupo.ktt.viewmodel.SubTaskViewModel
 import it.uniupo.ktt.viewmodel.TaskViewModel
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 @Composable
-fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
+fun UpdateOngoingTaskScreen(navController: NavController, taskId: String, homeVm: HomeScreenViewModel) {
     if (!LocalInspectionMode.current && FirebaseAuth.getInstance().currentUser == null) {
         navController.navigate("landing") {
             popUpTo("task manager") { inclusive = true }
@@ -105,15 +107,11 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
     val taskViewModel : TaskViewModel = viewModel()
     val subTaskViewModel : SubTaskViewModel = viewModel()
     val task = taskViewModel.getTaskById(taskId)
-
-    var subTasks by remember { mutableStateOf<List<SubTask>>(emptyList()) }
+    val userSubTasksMap by homeVm.userSubTasksMap.collectAsState()
+    var subTasks = userSubTasksMap[taskId] ?: emptyList()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var subtaskToDelete by remember { mutableStateOf<SubTask?>(null) }
-
-    LaunchedEffect(taskId) {
-        subTasks = subTaskViewModel.fetchSubtask(taskId)
-    }
 
     Box(
         modifier = Modifier
@@ -527,11 +525,4 @@ fun UpdateOngoingTaskScreen(navController: NavController, taskId: String) {
             }
         }
     }
-}
-
-
-@Preview
-@Composable
-fun UpdateOngoingTaskScreenPreview() {
-    UpdateOngoingTaskScreen(navController = NavController(context = LocalContext.current), "dhfdsjh")
 }
